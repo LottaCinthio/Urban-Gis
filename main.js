@@ -33,25 +33,34 @@ require([
   });
 
 analysisFiles.forEach(info => {
-    let renderer;
+    let layerRenderer;
 
+    // 1. Logic for Playgrounds (Points)
     if (info.name === "Playgrounds") {
-      // Use a predefined "Park" symbol for the playgrounds
-      renderer = {
+      layerRenderer = {
         type: "simple",
         symbol: {
-          type: "web-style", 
+          type: "web-style", // This pulls the ArcGIS playground/park icon
           name: "park",
           styleName: "Esri2DPointSymbolsStyle"
         }
       };
-    } else {
-      // Logic for Buildings and Parking
+    } 
+    // 2. Logic for Buildings and Parking (Polygons)
+    else {
       const symbolLayer = info.height > 0 
-        ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
+        ? { 
+            type: "extrude", 
+            size: info.height, 
+            material: { color: info.color } 
+          }
+        : { 
+            type: "fill", 
+            material: { color: info.color }, 
+            outline: { color: [255, 255, 255, 0.4], size: 1 } 
+          };
       
-      renderer = {
+      layerRenderer = {
         type: "simple",
         symbol: {
           type: "polygon-3d",
@@ -63,11 +72,10 @@ analysisFiles.forEach(info => {
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      // Playgrounds need to be clamped to the ground to be visible
       elevationInfo: { 
         mode: "on-the-ground" 
       },
-      renderer: renderer
+      renderer: layerRenderer
     });
     map.add(layer);
   });
