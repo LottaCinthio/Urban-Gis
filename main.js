@@ -36,43 +36,17 @@ analysisFiles.forEach(info => {
     let renderer;
 
     if (info.name === "Playgrounds") {
-      // High-quality ArcGIS Playground Symbol (CIM Symbol)
+      // Use a predefined "Park" symbol for the playgrounds
       renderer = {
         type: "simple",
         symbol: {
-          type: "cim",
-          data: {
-            type: "CIMSymbolReference",
-            symbol: {
-              type: "CIMPointSymbol",
-              symbolLayers: [
-                {
-                  type: "CIMVectorMarker",
-                  enable: true,
-                  size: 20, // Adjust size to make it more visible
-                  frame: { xmin: 0, ymin: 0, xmax: 17, ymax: 17 },
-                  markerGraphics: [{
-                    type: "CIMMarkerGraphic",
-                    geometry: {
-                      rings: [[[8.5, 0.2], [7.1, 0.2], [3.2, 11], [0.2, 11], [0.2, 12.5], [3.7, 12.5], [4.2, 11], [12.8, 11], [13.3, 12.5], [16.8, 12.5], [16.8, 11], [13.8, 11], [9.9, 0.2], [8.5, 0.2]]]
-                    },
-                    symbol: {
-                      type: "CIMPolygonSymbol",
-                      symbolLayers: [{
-                        type: "CIMSolidFill",
-                        enable: true,
-                        color: [34, 139, 34, 255] // Forest Green
-                      }]
-                    }
-                  }]
-                }
-              ]
-            }
-          }
+          type: "web-style", 
+          name: "park",
+          styleName: "Esri2DPointSymbolsStyle"
         }
       };
     } else {
-      // Standard logic for Buildings and Parking
+      // Logic for Buildings and Parking
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
         : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
@@ -89,8 +63,10 @@ analysisFiles.forEach(info => {
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      // Points need to be clamped to the ground so they don't float
-      elevationInfo: { mode: "on-the-ground" },
+      // Playgrounds need to be clamped to the ground to be visible
+      elevationInfo: { 
+        mode: "on-the-ground" 
+      },
       renderer: renderer
     });
     map.add(layer);
