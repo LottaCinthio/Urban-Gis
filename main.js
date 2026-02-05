@@ -41,36 +41,57 @@ require([
  analysisFiles.forEach(info => {
     let renderer;
 
-    if (info.name === "Bus Stops" || info.name === "Playgrounds") {
-      const iconUrl = info.name === "Bus Stops" 
-        ? "https://static.arcgis.com/images/Symbols/Transportation/Bus.png"
-        : "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png";
-
+    // Separate logic for Playgrounds
+    if (info.name === "Playgrounds") {
       renderer = {
         type: "simple",
         symbol: {
           type: "point-3d",
           symbolLayers: [{
             type: "icon",
-            resource: { href: iconUrl },
-            size: 20 // This is the base size
+            resource: { href: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png" },
+            size: 20
           }]
         },
-        // THIS FORCES THE SCALING
         visualVariables: [{
           type: "size",
           valueExpression: "$view.scale",
           stops: [
-            { scale: 500, size: 24 },    // Big when close
-            { scale: 5000, size: 12 },   // Smaller when medium distance
-            { scale: 50000, size: 4 }    // Tiny when high up
+            { scale: 1000, size: 25 },
+            { scale: 10000, size: 10 },
+            { scale: 50000, size: 5 }
           ]
         }]
       };
-    } else {
+    } 
+    // Separate logic for Bus Stops
+    else if (info.name === "Bus Stops") {
+      renderer = {
+        type: "simple",
+        symbol: {
+          type: "point-3d",
+          symbolLayers: [{
+            type: "icon",
+            resource: { href: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png" },
+            size: 20
+          }]
+        },
+        visualVariables: [{
+          type: "size",
+          valueExpression: "$view.scale",
+          stops: [
+            { scale: 1000, size: 25 },
+            { scale: 10000, size: 10 },
+            { scale: 50000, size: 5 }
+          ]
+        }]
+      };
+    } 
+    // Logic for Buildings and Parking
+    else {
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color } };
+        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
       
       renderer = {
         type: "simple",
@@ -81,7 +102,11 @@ require([
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { mode: "on-the-ground" },
+      elevationInfo: { 
+        mode: "on-the-ground",
+        // This tiny offset helps Playgrounds stay on top of Parking spots
+        offset: info.name === "Playgrounds" ? 0.5 : 0 
+      },
       renderer: renderer
     });
     map.add(layer);
