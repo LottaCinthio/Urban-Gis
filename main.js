@@ -32,21 +32,22 @@ require([
     ground: "world-elevation"
   });
 
-  analysisFiles.forEach(info => {
+ analysisFiles.forEach(info => {
     let renderer;
 
     if (info.name === "Playgrounds") {
-      // Logic for Points (Playgrounds) - Creating a 3D Cylinder
+      // Logic for Points (Playgrounds) using the ArcGIS Web Style
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d", 
+          type: "point-3d", // Required for 3D visibility
           symbolLayers: [{
-            type: "object", 
-            resource: { primitive: "cylinder" },
-            width: 10,  // 10 meters wide
-            height: 20, // 20 meters tall (easier to see from the sky)
-            material: { color: [76, 230, 0] } // Bright Green
+            type: "icon", 
+            size: 18,
+            resource: {
+              // This is the specific ArcGIS playground style name
+              href: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png"
+            }
           }]
         }
       };
@@ -66,13 +67,13 @@ require([
       url: "./data/" + info.file,
       title: info.name,
       elevationInfo: { 
-        mode: "relative-to-ground" // Changed to relative to sit on top of terrain
+        mode: "on-the-ground" // Ensures icons sit on top of terrain and parking blue
       },
       renderer: renderer
     });
     map.add(layer);
   });
-  
+
   const view = new SceneView({
     container: "viewDiv",
     map: map,
