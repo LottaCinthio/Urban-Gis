@@ -53,14 +53,22 @@ require([
           symbolLayers: [{
             type: "icon",
             resource: { href: iconUrl },
-            // This defines the width in the real world (meters)
-            size: 25, 
-            sizeUnit: "meters" 
+            size: 20 // Default base size
           }]
-        }
+        },
+        // THIS FORCES THE SCALING: Large when near, small when far
+        visualVariables: [{
+          type: "size",
+          valueExpression: "$view.scale",
+          stops: [
+            { scale: 500, size: 40 },    // Very large when you are right next to the building
+            { scale: 2000, size: 20 },   // Normal size at street level
+            { scale: 10000, size: 8 },   // Small when viewing the neighborhood
+            { scale: 50000, size: 2 }    // Just a tiny dot when viewing the whole city
+          ]
+        }]
       };
     } else {
-      // Logic for Buildings and Parking
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
         : { type: "fill", material: { color: info.color } };
@@ -72,19 +80,18 @@ require([
     }
 
     const layer = new GeoJSONLayer({
-      // The "?v=" part ensures the browser doesn't cache the data file
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       elevationInfo: { 
         mode: "relative-to-ground",
-        // Keeping them slightly off the ground to prevent them from disappearing
-        offset: 3 
+        // Lifts them up to ensure they aren't hidden by the parking lots
+        offset: 5 
       },
       renderer: renderer
     });
     map.add(layer);
   });
-
+  
   const view = new SceneView({
     container: "viewDiv",
     map: map,
