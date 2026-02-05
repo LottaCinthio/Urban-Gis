@@ -23,7 +23,7 @@ require([
       name: "Playgrounds", 
       file: "Playgrounds.geojson", 
       height: 0, 
-      color: [100, 255, 100, 1] // Green for playgrounds
+      color: [76, 230, 0] // Bright Green
     }
   ];
 
@@ -33,44 +33,65 @@ require([
   });
 
 analysisFiles.forEach(info => {
-    let symbol;
+    let renderer;
 
-    // Logic for Point data (Playgrounds)
     if (info.name === "Playgrounds") {
-      symbol = {
-        type: "point-3d", 
-        symbolLayers: [{
-          type: "icon", // Standard icon pins
-          size: 12,
-          resource: { primitive: "circle" },
-          material: { color: info.color },
-          outline: { color: "white", size: 1 }
-        }]
+      // High-quality ArcGIS Playground Symbol (CIM Symbol)
+      renderer = {
+        type: "simple",
+        symbol: {
+          type: "cim",
+          data: {
+            type: "CIMSymbolReference",
+            symbol: {
+              type: "CIMPointSymbol",
+              symbolLayers: [
+                {
+                  type: "CIMVectorMarker",
+                  enable: true,
+                  size: 20, // Adjust size to make it more visible
+                  frame: { xmin: 0, ymin: 0, xmax: 17, ymax: 17 },
+                  markerGraphics: [{
+                    type: "CIMMarkerGraphic",
+                    geometry: {
+                      rings: [[[8.5, 0.2], [7.1, 0.2], [3.2, 11], [0.2, 11], [0.2, 12.5], [3.7, 12.5], [4.2, 11], [12.8, 11], [13.3, 12.5], [16.8, 12.5], [16.8, 11], [13.8, 11], [9.9, 0.2], [8.5, 0.2]]]
+                    },
+                    symbol: {
+                      type: "CIMPolygonSymbol",
+                      symbolLayers: [{
+                        type: "CIMSolidFill",
+                        enable: true,
+                        color: [34, 139, 34, 255] // Forest Green
+                      }]
+                    }
+                  }]
+                }
+              ]
+            }
+          }
+        }
       };
-    } 
-    // Logic for Polygon data (Buildings and Parking)
-    else {
+    } else {
+      // Standard logic for Buildings and Parking
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
         : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
       
-      symbol = {
-        type: "polygon-3d",
-        symbolLayers: [symbolLayer]
+      renderer = {
+        type: "simple",
+        symbol: {
+          type: "polygon-3d",
+          symbolLayers: [symbolLayer]
+        }
       };
     }
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { 
-        mode: "relative-to-ground",
-        offset: info.name === "Jönköping Buildings" ? 0.2 : 0 
-      },
-      renderer: {
-        type: "simple",
-        symbol: symbol
-      }
+      // Points need to be clamped to the ground so they don't float
+      elevationInfo: { mode: "on-the-ground" },
+      renderer: renderer
     });
     map.add(layer);
   });
