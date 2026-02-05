@@ -23,7 +23,7 @@ require([
       name: "Playgrounds", 
       file: "Playgrounds.geojson", 
       height: 0, 
-      color: [100, 255, 100, 1] // Green for playgrounds
+      color: [76, 230, 0] // Bright Green
     }
   ];
 
@@ -32,39 +32,46 @@ require([
     ground: "world-elevation"
   });
 
- analysisFiles.forEach(info => {
+  analysisFiles.forEach(info => {
     let renderer;
 
     if (info.name === "Playgrounds") {
-      // 1. The Playground Pin Logic
+      // Use a predefined "Park" symbol for the playgrounds
       renderer = {
         type: "simple",
         symbol: {
-          type: "cim",
-          data: { /* ... icon details ... */ }
+          type: "web-style", 
+          name: "park",
+          styleName: "Esri2DPointSymbolsStyle"
         }
       };
     } else {
-      // 2. The Building & Parking Logic
+      // Logic for Buildings and Parking
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color } };
+        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
       
       renderer = {
         type: "simple",
-        symbol: { type: "polygon-3d", symbolLayers: [symbolLayer] }
+        symbol: {
+          type: "polygon-3d",
+          symbolLayers: [symbolLayer]
+        }
       };
     }
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { mode: "on-the-ground" }, // Keeps points and blue areas on the floor
+      // Playgrounds need to be clamped to the ground to be visible
+      elevationInfo: { 
+        mode: "on-the-ground" 
+      },
       renderer: renderer
     });
     map.add(layer);
   });
-  
+
   const view = new SceneView({
     container: "viewDiv",
     map: map,
