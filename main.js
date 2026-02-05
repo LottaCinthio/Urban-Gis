@@ -6,7 +6,7 @@ require([
   "esri/widgets/LayerList"
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
-  // 1. THE LIST: Filled in with your Jönköping file
+  // 1. THE LIST: Corrected filename and properties
   const analysisFiles = [
     { 
       name: "Jönköping Buildings", 
@@ -19,15 +19,15 @@ require([
   // 2. CREATE THE MAP
   const map = new Map({
     basemap: "gray-vector",
-    ground: "world-elevation" // This enables the 3D topography you see
+    ground: "world-elevation" // Enables 3D terrain
   });
 
-  // 3. THE LOOP: Added Elevation fixes
+  // 3. THE LOOP: Added Elevation logic to prevent "Underground" buildings
   analysisFiles.forEach(info => {
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      // FIX 1: This pulls buildings out of the ground
+      // MANDATORY: Sit buildings on top of the Jönköping hills
       elevationInfo: {
         mode: "relative-to-ground",
         offset: 0
@@ -37,7 +37,7 @@ require([
         symbol: {
           type: "polygon-3d",
           symbolLayers: [{
-            type: "extrude",
+            type: "extrude", // This creates the 3D volume
             size: info.height,
             material: { color: info.color }
           }]
@@ -51,16 +51,15 @@ require([
     map.add(layer);
   });
 
-  // 4. THE VIEW
+  // 4. THE VIEW: Moved camera from Stockholm to Jönköping
   const view = new SceneView({
     container: "viewDiv",
     map: map,
-    // FIX 2: Updated coordinates from Stockholm to Jönköping!
     camera: {
       position: {
-        longitude: 14.1618, 
+        longitude: 14.1618, // Jönköping center
         latitude: 57.7826, 
-        z: 1500 // Height of the camera in meters
+        z: 1500
       },
       tilt: 45
     }
