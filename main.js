@@ -16,7 +16,7 @@ require([
     { 
       name: "Parking Spots", 
       file: "Parkingspots.geojson", 
-      height: 1, // Flat on the ground
+      height: 10, // Flat on the ground
       color: [255, 255, 0, 0.7] // Yellow (so they stand out)
     }
   ];
