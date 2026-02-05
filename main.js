@@ -49,13 +49,13 @@ require([
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d", 
+          type: "point-3d",
           symbolLayers: [{
             type: "icon",
             resource: { href: iconUrl },
-            size: 22,
-            // 'relative-to-scene' makes them scale slightly better than 'screen'
-            anchor: "bottom"
+            // CHANGING 'size' TO 'world' UNITS
+            size: 25, 
+            sizeUnit: "meters" // This makes them scale like buildings!
           }]
         }
       };
@@ -75,11 +75,10 @@ require([
       title: info.name,
       elevationInfo: { 
         mode: "relative-to-ground",
-        offset: 5 // Lifted even higher to ensure they clear the buildings and parking
+        // Lifting playgrounds higher (10m) to make sure they aren't hidden
+        offset: info.name === "Playgrounds" ? 10 : 2 
       },
-      renderer: renderer,
-      // Helps ensure the layer is refreshed
-      outFields: ["*"]
+      renderer: renderer
     });
     map.add(layer);
   });
