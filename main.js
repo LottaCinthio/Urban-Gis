@@ -41,27 +41,20 @@ require([
  analysisFiles.forEach(info => {
     let renderer;
 
-    if (info.name === "Bus Stops") {
-      // 2D Bus Symbol logic
+    if (info.name === "Bus Stops" || info.name === "Playgrounds") {
+      // Logic for Points (Bus Stops and Playgrounds) to scale with zoom
+      const iconUrl = info.name === "Bus Stops" 
+        ? "https://static.arcgis.com/images/Symbols/Transportation/Bus.png"
+        : "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png";
+
       renderer = {
         type: "simple",
         symbol: {
-          type: "picture-marker",
-          url: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png",
-          width: "22px",
-          height: "22px"
-        }
-      };
-    } else if (info.name === "Playgrounds") {
-      // Playground icon logic
-      renderer = {
-        type: "simple",
-        symbol: {
-          type: "point-3d", 
+          type: "point-3d", // This allows the symbol to exist in 3D space
           symbolLayers: [{
-            type: "icon", 
-            size: 24,
-            resource: { href: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png" }
+            type: "icon", // Icons scale naturally with the camera distance
+            size: 18,     // Base size in points; it will shrink as you zoom out
+            resource: { href: iconUrl }
           }]
         }
       };
@@ -80,7 +73,9 @@ require([
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { mode: "on-the-ground" }, 
+      elevationInfo: { 
+        mode: "on-the-ground" 
+      },
       renderer: renderer
     });
     map.add(layer);
