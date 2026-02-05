@@ -7,10 +7,17 @@ require([
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
   const analysisFiles = [
-    { 
+   { 
       name: "Jönköping Buildings", 
       file: "buildings.geojson", 
-      color: [255, 255, 255, 0.9] // Professional White
+      height: 15, // Tall buildings
+      color: [255, 255, 255, 0.9] // White
+    },
+    { 
+      name: "Parking Spots", 
+      file: "Parkingspots.geojson", 
+      height: 1, // Flat on the ground
+      color: [255, 255, 0, 0.7] // Yellow (so they stand out)
     }
   ];
 
@@ -19,20 +26,18 @@ require([
     ground: "world-elevation"
   });
 
-  analysisFiles.forEach(info => {
+ analysisFiles.forEach(info => {
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: {
-        mode: "relative-to-ground"
-      },
+      elevationInfo: { mode: "relative-to-ground" },
       renderer: {
         type: "simple",
         symbol: {
           type: "polygon-3d",
           symbolLayers: [{
             type: "extrude",
-            size: 15, // FORCED HEIGHT: Since your file has no 'height' property
+            size: info.height, // Uses the height we set in the list above
             material: { color: info.color }
           }]
         }
@@ -40,7 +45,7 @@ require([
     });
     map.add(layer);
   });
-
+  
   const view = new SceneView({
     container: "viewDiv",
     map: map,
