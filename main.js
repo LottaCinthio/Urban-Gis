@@ -5,28 +5,6 @@ require([
   "esri/widgets/LayerList"
 ], function(Map, SceneView, GeoJSONLayer, LayerList) {
 
-  // 1. THE LIST: The files you want to show
-  const analysisFiles = [
-    { 
-      name: "Jönköping Buildings", 
-      file: "buildings.geojson", 
-      height: 15, 
-      color: [255, 255, 255, 0.9] 
-    },
-    { 
-      name: "Parking Spots", 
-      file: "Parkingspots.geojson", 
-      height: 0, 
-      color: [0, 197, 255, 0.6] 
-    },
-    { 
-      name: "Playgrounds", 
-      file: "Playgrounds.geojson", 
-      height: 0, 
-      color: [76, 230, 0] 
-    }
-  ];
-
   const map = new Map({
     basemap: "topo-vector",
     ground: "world-elevation"
@@ -36,57 +14,65 @@ require([
     container: "viewDiv",
     map: map,
     camera: {
-      position: [14.16, 57.78, 2000],
+      position: [14.162, 57.782, 2000],
       tilt: 45
     }
   });
 
-  // 2. THE LOOP: This handles adding the layers
-  analysisFiles.forEach(info => {
-    let layerRenderer;
-
-    if (info.name === "Playgrounds") {
-      // Logic for Points (Playgrounds) using a simple circular marker
-      layerRenderer = {
-        type: "simple",
-        symbol: {
-          type: "simple-marker", 
-          style: "circle",
-          color: [76, 230, 0],
-          size: "12px",
-          outline: { color: "white", width: 1 }
-        }
-      };
-    } else {
-      // Logic for Polygons (Buildings and Parking)
-      const symbolLayer = info.height > 0 
-        ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
-      
-      layerRenderer = {
-        type: "simple",
-        symbol: {
-          type: "polygon-3d",
-          symbolLayers: [symbolLayer]
-        }
-      };
+  // 1. Buildings Layer
+  const buildingsLayer = new GeoJSONLayer({
+    url: "./data/buildings.geojson",
+    title: "Jönköping Buildings",
+    elevationInfo: { mode: "relative-to-ground" },
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "polygon-3d",
+        symbolLayers: [{
+          type: "extrude",
+          size: 15,
+          material: { color: [255, 255, 255, 0.9] }
+        }]
+      }
     }
-
-    const layer = new GeoJSONLayer({
-      url: "./data/" + info.file,
-      title: info.name,
-      elevationInfo: { mode: "on-the-ground" },
-      renderer: layerRenderer
-    });
-    map.add(layer);
   });
+
+  // 2. Parking Spots Layer
+  const parkingLayer = new GeoJSONLayer({
+    url: "./data/Parkingspots.geojson", // Note the Capital P
+    title: "Parking Spots",
+    elevationInfo: { mode: "on-the-ground" },
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "polygon-3d",
+        symbolLayers: [{
+          type: "fill",
+          material: { color: [0, 197, 255, 0.6] }
+        }]
+      }
+    }
+  });
+
+  // 3. Playgrounds Layer (Point Data)
+  const playgroundLayer = new GeoJSONLayer({
+    url: "./data/Playgrounds.geojson", // Note the Capital P
+    title: "Playgrounds",
+    elevationInfo: { mode: "on-the-ground" },
+    renderer: {
+      type: "simple",
+      symbol: {
+        type: "web-style", 
+        name: "playground",
+        styleName: "Esri2DPointSymbolsStyle"
+      }
+    }
+  });
+
+  map.addMany([parkingLayer, buildingsLayer, playgroundLayer]);
 
   view.when(() => {
     const layerList = new LayerList({ view: view });
     view.ui.add(layerList, "bottom-left");
   });
 });
-//name: "Building Footprints", 
-//    file: "buildings.geojson", 
-//     height: 25, 
-//     color: [79, 129, 189, 0.8] // Blue
