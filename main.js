@@ -41,54 +41,36 @@ require([
  analysisFiles.forEach(info => {
     let renderer;
 
-    // Separate logic for Playgrounds
-    if (info.name === "Playgrounds") {
+    if (info.name === "Bus Stops" || info.name === "Playgrounds") {
+      const iconUrl = info.name === "Bus Stops" 
+        ? "https://static.arcgis.com/images/Symbols/Transportation/Bus.png"
+        : "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png";
+
       renderer = {
         type: "simple",
         symbol: {
           type: "point-3d",
           symbolLayers: [{
             type: "icon",
-            resource: { href: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png" },
-            size: 20
+            resource: { href: iconUrl },
+            size: 24, // Base size
+            material: { color: [255, 255, 255] }
           }]
         },
+        // This ensures they scale but stay within a readable range
         visualVariables: [{
           type: "size",
+          field: "ObjectID", // We use a dummy field to trigger the scaling
           valueExpression: "$view.scale",
           stops: [
-            { scale: 1000, size: 25 },
-            { scale: 10000, size: 10 },
-            { scale: 50000, size: 5 }
+            { scale: 500, size: 30 },   // Large when very close
+            { scale: 2000, size: 20 },  // Normal when near
+            { scale: 10000, size: 10 }, // Smaller when far
+            { scale: 50000, size: 5 }   // Tiny dots when very far
           ]
         }]
       };
-    } 
-    // Separate logic for Bus Stops
-    else if (info.name === "Bus Stops") {
-      renderer = {
-        type: "simple",
-        symbol: {
-          type: "point-3d",
-          symbolLayers: [{
-            type: "icon",
-            resource: { href: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png" },
-            size: 20
-          }]
-        },
-        visualVariables: [{
-          type: "size",
-          valueExpression: "$view.scale",
-          stops: [
-            { scale: 1000, size: 25 },
-            { scale: 10000, size: 10 },
-            { scale: 50000, size: 5 }
-          ]
-        }]
-      };
-    } 
-    // Logic for Buildings and Parking
-    else {
+    } else {
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
         : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
@@ -103,15 +85,14 @@ require([
       url: "./data/" + info.file,
       title: info.name,
       elevationInfo: { 
-        mode: "on-the-ground",
-        // This tiny offset helps Playgrounds stay on top of Parking spots
-        offset: info.name === "Playgrounds" ? 0.5 : 0 
+        mode: "relative-to-ground",
+        offset: 2 // Lift them 2 meters off the ground so they don't vanish
       },
       renderer: renderer
     });
     map.add(layer);
   });
-
+  
   const view = new SceneView({
     container: "viewDiv",
     map: map,
