@@ -24,6 +24,12 @@ require([
       file: "Playgrounds.geojson", 
       height: 0, 
       color: [76, 230, 0] // Bright Green
+    },
+    { 
+      name: "Bus Stops", 
+      file: "Busstops.geojson", 
+      height: 0, 
+      color: [0, 92, 230] // Blue for bus stops
     }
   ];
 
@@ -35,19 +41,27 @@ require([
  analysisFiles.forEach(info => {
     let renderer;
 
-    if (info.name === "Playgrounds") {
-      // Logic for Points (Playgrounds) using the ArcGIS Web Style
+    if (info.name === "Bus Stops") {
+      // 2D Bus Symbol logic
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d", // Required for 3D visibility
+          type: "picture-marker",
+          url: "https://static.arcgis.com/images/Symbols/Transportation/Bus.png",
+          width: "22px",
+          height: "22px"
+        }
+      };
+    } else if (info.name === "Playgrounds") {
+      // Playground icon logic
+      renderer = {
+        type: "simple",
+        symbol: {
+          type: "point-3d", 
           symbolLayers: [{
             type: "icon", 
-            size: 18,
-            resource: {
-              // This is the specific ArcGIS playground style name
-              href: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png"
-            }
+            size: 24,
+            resource: { href: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png" }
           }]
         }
       };
@@ -66,14 +80,12 @@ require([
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { 
-        mode: "on-the-ground" // Ensures icons sit on top of terrain and parking blue
-      },
+      elevationInfo: { mode: "on-the-ground" }, 
       renderer: renderer
     });
     map.add(layer);
   });
-
+  
   const view = new SceneView({
     container: "viewDiv",
     map: map,
