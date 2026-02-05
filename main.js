@@ -49,26 +49,15 @@ require([
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d",
+          type: "point-3d", 
           symbolLayers: [{
             type: "icon",
             resource: { href: iconUrl },
-            size: 24, // Base size
-            material: { color: [255, 255, 255] }
+            size: 22,
+            // 'relative-to-scene' makes them scale slightly better than 'screen'
+            anchor: "bottom"
           }]
-        },
-        // This ensures they scale but stay within a readable range
-        visualVariables: [{
-          type: "size",
-          field: "ObjectID", // We use a dummy field to trigger the scaling
-          valueExpression: "$view.scale",
-          stops: [
-            { scale: 500, size: 30 },   // Large when very close
-            { scale: 2000, size: 20 },  // Normal when near
-            { scale: 10000, size: 10 }, // Smaller when far
-            { scale: 50000, size: 5 }   // Tiny dots when very far
-          ]
-        }]
+        }
       };
     } else {
       const symbolLayer = info.height > 0 
@@ -86,13 +75,15 @@ require([
       title: info.name,
       elevationInfo: { 
         mode: "relative-to-ground",
-        offset: 2 // Lift them 2 meters off the ground so they don't vanish
+        offset: 5 // Lifted even higher to ensure they clear the buildings and parking
       },
-      renderer: renderer
+      renderer: renderer,
+      // Helps ensure the layer is refreshed
+      outFields: ["*"]
     });
     map.add(layer);
   });
-  
+
   const view = new SceneView({
     container: "viewDiv",
     map: map,
