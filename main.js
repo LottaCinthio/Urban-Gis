@@ -18,6 +18,12 @@ require([
       file: "Parkingspots.geojson", 
       height: 0, // Flat on the ground
       color: [255, 255, 0, 0.7] // Yellow (so they stand out)
+    },
+    { 
+      name: "Playgrounds", 
+      file: "Playgrounds.geojson", 
+      height: 0, 
+      color: [100, 255, 100, 1] // Green for playgrounds
     }
   ];
 
@@ -26,33 +32,44 @@ require([
     ground: "world-elevation"
   });
 
- analysisFiles.forEach(info => {
-    // Determine the type of symbol based on height
-    const symbolLayer = info.height > 0 
-      ? {
-          type: "extrude",
-          size: info.height,
-          material: { color: info.color }
-        }
-      : {
-          type: "fill", // Flat layer like in your ArcGIS screenshot
+analysisFiles.forEach(info => {
+    let symbol;
+
+    // Logic for Point data (Playgrounds)
+    if (info.name === "Playgrounds") {
+      symbol = {
+        type: "point-3d", 
+        symbolLayers: [{
+          type: "icon", // Standard icon pins
+          size: 12,
+          resource: { primitive: "circle" },
           material: { color: info.color },
-          outline: { color: [255, 255, 255, 0.4], size: 1 }
-        };
+          outline: { color: "white", size: 1 }
+        }]
+      };
+    } 
+    // Logic for Polygon data (Buildings and Parking)
+    else {
+      const symbolLayer = info.height > 0 
+        ? { type: "extrude", size: info.height, material: { color: info.color } }
+        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
+      
+      symbol = {
+        type: "polygon-3d",
+        symbolLayers: [symbolLayer]
+      };
+    }
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
       elevationInfo: { 
         mode: "relative-to-ground",
-        offset: info.height > 0 ? 0.2 : 0 // Lift buildings 20cm so they sit ON the blue spots
+        offset: info.name === "Jönköping Buildings" ? 0.2 : 0 
       },
       renderer: {
         type: "simple",
-        symbol: {
-          type: "polygon-3d",
-          symbolLayers: [symbolLayer]
-        }
+        symbol: symbol
       }
     });
     map.add(layer);
