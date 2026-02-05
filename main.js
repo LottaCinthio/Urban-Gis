@@ -23,13 +23,13 @@ require([
       name: "Playgrounds", 
       file: "Playgrounds.geojson", 
       height: 0, 
-      color: [76, 230, 0] // Bright Green
+      color: [76, 230, 0]
     },
     { 
       name: "Bus Stops", 
       file: "Busstops.geojson", 
       height: 0, 
-      color: [0, 92, 230] // Blue for bus stops
+      color: [0, 92, 230]
     }
   ];
 
@@ -38,47 +38,77 @@ require([
     ground: "world-elevation"
   });
 
- analysisFiles.forEach(info => {
+  analysisFiles.forEach(info => {
     let renderer;
 
-    // Logic for Points (Both Bus Stops and Playgrounds)
+    // POINT LAYERS: Bus stops & playgrounds
     if (info.name === "Bus Stops" || info.name === "Playgrounds") {
+
+      const iconUrl =
+        info.name === "Bus Stops"
+          ? "./icons/bus.svg"
+          : "./icons/playground.svg";
+
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d", 
+          type: "point-3d",
           symbolLayers: [{
-            type: "object", // Object type scales naturally with zoom
-            resource: { primitive: "cylinder" },
-            width: 15,  // 15 meters wide
-            height: 8,  // 8 meters tall
-            material: { color: info.color } // Pulls green for playgrounds, blue for bus stops
+            type: "icon",
+            resource: { href: iconUrl },
+
+            // Base size in pixels
+            size: 18,
+
+            // Scale with zoom
+            sizeStops: [
+              { distance: 2000, size: 10 },
+              { distance: 1000, size: 16 },
+              { distance: 500,  size: 24 },
+              { distance: 200,  size: 36 }
+            ],
+
+            outline: {
+              color: "white",
+              size: 1
+            }
           }]
         }
       };
+
     } else {
-      // Logic for Polygons (Buildings and Parking)
+      // POLYGON LAYERS: Buildings & parking
       const symbolLayer = info.height > 0 
-        ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
-      
+        ? {
+            type: "extrude",
+            size: info.height,
+            material: { color: info.color }
+          }
+        : {
+            type: "fill",
+            material: { color: info.color },
+            outline: { color: [255, 255, 255, 0.4], size: 1 }
+          };
+
       renderer = {
         type: "simple",
-        symbol: { type: "polygon-3d", symbolLayers: [symbolLayer] }
+        symbol: {
+          type: "polygon-3d",
+          symbolLayers: [symbolLayer]
+        }
       };
     }
 
     const layer = new GeoJSONLayer({
-      // The version tag (?v=) forces the browser to fetch the newest data
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
-      elevationInfo: { 
+      elevationInfo: {
         mode: "relative-to-ground",
-        // Lifts them 2 meters up to stay on top of parking polygons
-        offset: 2 
+        offset: 1
       },
       renderer: renderer
     });
+
     map.add(layer);
   });
 
@@ -87,9 +117,9 @@ require([
     map: map,
     camera: {
       position: {
-        x: 14.274, // Longitude
-        y: 57.797, // Latitude
-        z: 1000    // Altitude in meters
+        x: 14.274,
+        y: 57.797,
+        z: 1000
       },
       tilt: 50
     }
