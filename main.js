@@ -41,37 +41,26 @@ require([
  analysisFiles.forEach(info => {
     let renderer;
 
+    // Logic for Points (Both Bus Stops and Playgrounds)
     if (info.name === "Bus Stops" || info.name === "Playgrounds") {
-      const iconUrl = info.name === "Bus Stops" 
-        ? "https://static.arcgis.com/images/Symbols/Transportation/Bus.png"
-        : "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png";
-
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d",
+          type: "point-3d", 
           symbolLayers: [{
-            type: "icon",
-            resource: { href: iconUrl },
-            size: 20 // Default base size
+            type: "object", // Object type scales naturally with zoom
+            resource: { primitive: "cylinder" },
+            width: 15,  // 15 meters wide
+            height: 8,  // 8 meters tall
+            material: { color: info.color } // Pulls green for playgrounds, blue for bus stops
           }]
-        },
-        // THIS FORCES THE SCALING: Large when near, small when far
-        visualVariables: [{
-          type: "size",
-          valueExpression: "$view.scale",
-          stops: [
-            { scale: 500, size: 40 },    // Very large when you are right next to the building
-            { scale: 2000, size: 20 },   // Normal size at street level
-            { scale: 10000, size: 8 },   // Small when viewing the neighborhood
-            { scale: 50000, size: 2 }    // Just a tiny dot when viewing the whole city
-          ]
-        }]
+        }
       };
     } else {
+      // Logic for Polygons (Buildings and Parking)
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color } };
+        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
       
       renderer = {
         type: "simple",
@@ -80,18 +69,19 @@ require([
     }
 
     const layer = new GeoJSONLayer({
+      // The version tag (?v=) forces the browser to fetch the newest data
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       elevationInfo: { 
         mode: "relative-to-ground",
-        // Lifts them up to ensure they aren't hidden by the parking lots
-        offset: 5 
+        // Lifts them 2 meters up to stay on top of parking polygons
+        offset: 2 
       },
       renderer: renderer
     });
     map.add(layer);
   });
-  
+
   const view = new SceneView({
     container: "viewDiv",
     map: map,
