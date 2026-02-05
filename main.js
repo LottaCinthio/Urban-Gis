@@ -6,23 +6,24 @@ require([
   "esri/widgets/LayerList"
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
-  const analysisFiles = [
+ const analysisFiles = [
     { 
       name: "Jönköping Buildings", 
       file: "buildings.geojson", 
-      color: [255, 255, 255, 0.9] // Professional White
+      height: 15, 
+      color: [255, 255, 255, 0.9] 
     },
     { 
       name: "Parking Spots", 
       file: "Parkingspots.geojson", 
-      height: 0, // Set to 0 to keep them flat
-      color: [0, 197, 255, 0.6] // Using that ArcGIS "Parking Blue"
+      height: 0, 
+      color: [0, 197, 255, 0.6] 
     },
     { 
       name: "Playgrounds", 
       file: "Playgrounds.geojson", 
       height: 0, 
-      color: [76, 230, 0] // Bright Green
+      color: [100, 255, 100, 1] // Green for playgrounds
     }
   ];
 
@@ -31,7 +32,7 @@ require([
     ground: "world-elevation"
   });
 
-  analysisFiles.forEach(info => {
+ analysisFiles.forEach(info => {
     let renderer;
 
     if (info.name === "Playgrounds") {
@@ -63,7 +64,7 @@ require([
     });
     map.add(layer);
   });
-
+  
   const view = new SceneView({
     container: "viewDiv",
     map: map,
