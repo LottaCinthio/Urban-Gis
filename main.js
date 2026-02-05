@@ -16,7 +16,7 @@ require([
     { 
       name: "Parking Spots", 
       file: "Parkingspots.geojson", 
-      height: 10, // Flat on the ground
+      height: 0, // Flat on the ground
       color: [255, 255, 0, 0.7] // Yellow (so they stand out)
     }
   ];
@@ -27,19 +27,31 @@ require([
   });
 
  analysisFiles.forEach(info => {
+    // Determine the type of symbol based on height
+    const symbolLayer = info.height > 0 
+      ? {
+          type: "extrude",
+          size: info.height,
+          material: { color: info.color }
+        }
+      : {
+          type: "fill", // Flat layer like in your ArcGIS screenshot
+          material: { color: info.color },
+          outline: { color: [255, 255, 255, 0.4], size: 1 }
+        };
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { mode: "relative-to-ground" },
+      elevationInfo: { 
+        mode: "relative-to-ground",
+        offset: info.height > 0 ? 0.2 : 0 // Lift buildings 20cm so they sit ON the blue spots
+      },
       renderer: {
         type: "simple",
         symbol: {
           type: "polygon-3d",
-          symbolLayers: [{
-            type: "extrude",
-            size: info.height, // Uses the height we set in the list above
-            material: { color: info.color }
-          }]
+          symbolLayers: [symbolLayer]
         }
       }
     });
