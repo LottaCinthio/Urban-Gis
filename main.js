@@ -32,27 +32,23 @@ require([
     ground: "world-elevation"
   });
 
-analysisFiles.forEach(info => {
+aanalysisFiles.forEach(info => {
     let layerRenderer;
 
-    // 1. Logic for Playgrounds (Point data)
     if (info.name === "Playgrounds") {
+      // Logic for Playgrounds (Point data)
       layerRenderer = {
         type: "simple",
         symbol: {
-          type: "simple-marker", // Very reliable for Point data
-          style: "diamond",
-          color: [76, 230, 0, 1], // Bright Green
-          size: "14px",
-          outline: {
-            color: [255, 255, 255],
-            width: 1
-          }
+          type: "picture-marker",
+          // Standard ArcGIS Playground Icon URL
+          url: "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png",
+          width: "24px",
+          height: "24px"
         }
       };
-    } 
-    // 2. Logic for Polygons (Buildings and Parking)
-    else {
+    } else {
+      // Logic for Buildings and Parking (Polygon data)
       const symbolLayer = info.height > 0 
         ? { 
             type: "extrude", 
@@ -74,11 +70,10 @@ analysisFiles.forEach(info => {
       };
     }
 
-   const layer = new GeoJSONLayer({
+    const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      // Add this line to help with Point visibility
-      featureReduction: info.name === "Playgrounds" ? { type: "selection" } : null,
+      // Important: "absolute-height" or "on-the-ground" ensures points aren't hidden
       elevationInfo: { 
         mode: "on-the-ground" 
       },
