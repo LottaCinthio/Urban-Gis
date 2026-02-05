@@ -6,29 +6,32 @@ require([
   "esri/widgets/LayerList"
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
-  // 1. THE LIST: Just add new lines here when you have new files!
+  // 1. THE LIST: Filled in with your Jönköping file
   const analysisFiles = [
     { 
-    name: "Jönköping Buildings", 
-    file: "buildings.geojson", // This must match your filename exactly!
-    height: 30, 
-    color: [0, 120, 255, 0.8] 
-  }
-    
-    // Add your next analysis layer here...
+      name: "Jönköping Buildings", 
+      file: "buildings.geojson", 
+      height: 30, 
+      color: [0, 120, 255, 0.8] 
+    }
   ];
 
   // 2. CREATE THE MAP
   const map = new Map({
     basemap: "gray-vector",
-    ground: "world-elevation"
+    ground: "world-elevation" // This enables the 3D topography you see
   });
 
-  // 3. THE LOOP: This automatically creates each layer from your list
+  // 3. THE LOOP: Added Elevation fixes
   analysisFiles.forEach(info => {
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
+      // FIX 1: This pulls buildings out of the ground
+      elevationInfo: {
+        mode: "relative-to-ground",
+        offset: 0
+      },
       renderer: {
         type: "simple",
         symbol: {
@@ -42,7 +45,7 @@ require([
       },
       popupTemplate: {
         title: "{name}",
-        content: "Analysis Attribute: {height} m"
+        content: "Building Height: {height} m"
       }
     });
     map.add(layer);
@@ -52,11 +55,12 @@ require([
   const view = new SceneView({
     container: "viewDiv",
     map: map,
+    // FIX 2: Updated coordinates from Stockholm to Jönköping!
     camera: {
       position: {
-        longitude: 18.0686,
-        latitude: 59.3293,
-        z: 1500
+        longitude: 14.1618, 
+        latitude: 57.7826, 
+        z: 1500 // Height of the camera in meters
       },
       tilt: 45
     }
@@ -65,9 +69,7 @@ require([
   // 5. WIDGETS
   view.ui.add(new Search({ view: view }), "top-right");
   view.ui.add(new LayerList({ view: view }), "bottom-left");
-
 });
-
 
 //name: "Building Footprints", 
 //    file: "buildings.geojson", 
