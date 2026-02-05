@@ -6,7 +6,7 @@ require([
   "esri/widgets/LayerList"
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
- const analysisFiles = [
+  const analysisFiles = [
     { 
       name: "Jönköping Buildings", 
       file: "buildings.geojson", 
@@ -32,20 +32,26 @@ require([
     ground: "world-elevation"
   });
 
- analysisFiles.forEach(info => {
+  analysisFiles.forEach(info => {
     let renderer;
 
+    // Fixed logic for Playgrounds
     if (info.name === "Playgrounds") {
-      // 1. The Playground Pin Logic
       renderer = {
         type: "simple",
         symbol: {
-          type: "cim",
-          data: { /* ... icon details ... */ }
+          type: "point-3d", // Required for points in a 3D SceneView
+          symbolLayers: [{
+            type: "icon", 
+            size: 14,
+            resource: { primitive: "circle" },
+            material: { color: info.color },
+            outline: { color: "white", size: 1 }
+          }]
         }
       };
     } else {
-      // 2. The Building & Parking Logic
+      // Logic for Buildings and Parking
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
         : { type: "fill", material: { color: info.color } };
@@ -59,7 +65,9 @@ require([
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { mode: "on-the-ground" }, // Keeps points and blue areas on the floor
+      elevationInfo: { 
+        mode: "on-the-ground" 
+      },
       renderer: renderer
     });
     map.add(layer);
@@ -70,9 +78,9 @@ require([
     map: map,
     camera: {
       position: {
-        longitude: 14.274, // Centered on your data's coordinates
-        latitude: 57.797, 
-        z: 1000
+        x: 14.274, // Longitude
+        y: 57.797, // Latitude
+        z: 1000    // Altitude in meters
       },
       tilt: 50
     }
