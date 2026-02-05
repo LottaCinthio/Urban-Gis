@@ -42,7 +42,6 @@ require([
     let renderer;
 
     if (info.name === "Bus Stops" || info.name === "Playgrounds") {
-      // Logic for Points (Bus Stops and Playgrounds) to scale with zoom
       const iconUrl = info.name === "Bus Stops" 
         ? "https://static.arcgis.com/images/Symbols/Transportation/Bus.png"
         : "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png";
@@ -50,19 +49,28 @@ require([
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d", // This allows the symbol to exist in 3D space
+          type: "point-3d",
           symbolLayers: [{
-            type: "icon", // Icons scale naturally with the camera distance
-            size: 18,     // Base size in points; it will shrink as you zoom out
-            resource: { href: iconUrl }
+            type: "icon",
+            resource: { href: iconUrl },
+            size: 20 // This is the base size
           }]
-        }
+        },
+        // THIS FORCES THE SCALING
+        visualVariables: [{
+          type: "size",
+          valueExpression: "$view.scale",
+          stops: [
+            { scale: 500, size: 24 },    // Big when close
+            { scale: 5000, size: 12 },   // Smaller when medium distance
+            { scale: 50000, size: 4 }    // Tiny when high up
+          ]
+        }]
       };
     } else {
-      // Logic for Polygons (Buildings and Parking)
       const symbolLayer = info.height > 0 
         ? { type: "extrude", size: info.height, material: { color: info.color } }
-        : { type: "fill", material: { color: info.color }, outline: { color: [255, 255, 255, 0.4], size: 1 } };
+        : { type: "fill", material: { color: info.color } };
       
       renderer = {
         type: "simple",
@@ -73,14 +81,12 @@ require([
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
-      elevationInfo: { 
-        mode: "on-the-ground" 
-      },
+      elevationInfo: { mode: "on-the-ground" },
       renderer: renderer
     });
     map.add(layer);
   });
-  
+
   const view = new SceneView({
     container: "viewDiv",
     map: map,
