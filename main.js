@@ -74,9 +74,11 @@ analysisFiles.forEach(info => {
       };
     }
 
-    const layer = new GeoJSONLayer({
+   const layer = new GeoJSONLayer({
       url: "./data/" + info.file,
       title: info.name,
+      // Add this line to help with Point visibility
+      featureReduction: info.name === "Playgrounds" ? { type: "selection" } : null,
       elevationInfo: { 
         mode: "on-the-ground" 
       },
