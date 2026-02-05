@@ -2,77 +2,81 @@ require([
   "esri/Map",
   "esri/views/SceneView",
   "esri/layers/GeoJSONLayer",
+  "esri/widgets/Search",
   "esri/widgets/LayerList"
-], function(Map, SceneView, GeoJSONLayer, LayerList) {
+], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
+
+  const analysisFiles = [
+    { 
+      name: "Jönköping Buildings", 
+      file: "buildings.geojson", 
+      color: [255, 255, 255, 0.9] // Professional White
+    },
+    { 
+      name: "Parking Spots", 
+      file: "Parkingspots.geojson", 
+      height: 0, // Set to 0 to keep them flat
+      color: [0, 197, 255, 0.6] // Using that ArcGIS "Parking Blue"
+    },
+    { 
+      name: "Playgrounds", 
+      file: "Playgrounds.geojson", 
+      height: 0, 
+      color: [76, 230, 0] // Bright Green
+    }
+  ];
 
   const map = new Map({
-    basemap: "topo-vector",
+    basemap: "gray-vector",
     ground: "world-elevation"
+  });
+
+  analysisFiles.forEach(info => {
+    let renderer;
+
+    if (info.name === "Playgrounds") {
+      // 1. The Playground Pin Logic
+      renderer = {
+        type: "simple",
+        symbol: {
+          type: "cim",
+          data: { /* ... icon details ... */ }
+        }
+      };
+    } else {
+      // 2. The Building & Parking Logic
+      const symbolLayer = info.height > 0 
+        ? { type: "extrude", size: info.height, material: { color: info.color } }
+        : { type: "fill", material: { color: info.color } };
+      
+      renderer = {
+        type: "simple",
+        symbol: { type: "polygon-3d", symbolLayers: [symbolLayer] }
+      };
+    }
+
+    const layer = new GeoJSONLayer({
+      url: "./data/" + info.file,
+      title: info.name,
+      elevationInfo: { mode: "on-the-ground" }, // Keeps points and blue areas on the floor
+      renderer: renderer
+    });
+    map.add(layer);
   });
 
   const view = new SceneView({
     container: "viewDiv",
     map: map,
     camera: {
-      position: [14.162, 57.782, 2000],
-      tilt: 45
+      position: {
+        longitude: 14.274, // Centered on your data's coordinates
+        latitude: 57.797, 
+        z: 1000
+      },
+      tilt: 50
     }
   });
 
-  // 1. Buildings Layer
-  const buildingsLayer = new GeoJSONLayer({
-    url: "./data/buildings.geojson",
-    title: "Jönköping Buildings",
-    elevationInfo: { mode: "relative-to-ground" },
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "polygon-3d",
-        symbolLayers: [{
-          type: "extrude",
-          size: 15,
-          material: { color: [255, 255, 255, 0.9] }
-        }]
-      }
-    }
-  });
-
-  // 2. Parking Spots Layer
-  const parkingLayer = new GeoJSONLayer({
-    url: "./data/Parkingspots.geojson", // Note the Capital P
-    title: "Parking Spots",
-    elevationInfo: { mode: "on-the-ground" },
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "polygon-3d",
-        symbolLayers: [{
-          type: "fill",
-          material: { color: [0, 197, 255, 0.6] }
-        }]
-      }
-    }
-  });
-
-  // 3. Playgrounds Layer (Point Data)
-  const playgroundLayer = new GeoJSONLayer({
-    url: "./data/Playgrounds.geojson", // Note the Capital P
-    title: "Playgrounds",
-    elevationInfo: { mode: "on-the-ground" },
-    renderer: {
-      type: "simple",
-      symbol: {
-        type: "web-style", 
-        name: "playground",
-        styleName: "Esri2DPointSymbolsStyle"
-      }
-    }
-  });
-
-  map.addMany([parkingLayer, buildingsLayer, playgroundLayer]);
-
-  view.when(() => {
-    const layerList = new LayerList({ view: view });
-    view.ui.add(layerList, "bottom-left");
-  });
+  view.ui.add(new Search({ view: view }), "top-right");
+  view.ui.add(new LayerList({ view: view }), "bottom-left");
 });
