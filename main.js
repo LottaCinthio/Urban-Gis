@@ -42,20 +42,16 @@ require([
     let renderer;
 
     if (info.name === "Bus Stops" || info.name === "Playgrounds") {
-      const iconUrl = info.name === "Bus Stops" 
-        ? "https://static.arcgis.com/images/Symbols/Transportation/Bus.png"
-        : "https://static.arcgis.com/images/Symbols/OutdoorRecreation/Playground.png";
-
       renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d",
+          type: "point-3d", 
           symbolLayers: [{
-            type: "icon",
-            resource: { href: iconUrl },
-            // CHANGING 'size' TO 'world' UNITS
-            size: 25, 
-            sizeUnit: "meters" // This makes them scale like buildings!
+            type: "object", // Objects scale perfectly with zoom
+            resource: { primitive: "cylinder" },
+            width: 15, // 15 meters wide
+            height: 5, // 5 meters tall
+            material: { color: info.name === "Bus Stops" ? "blue" : "purple" }
           }]
         }
       };
@@ -71,12 +67,11 @@ require([
     }
 
     const layer = new GeoJSONLayer({
-      url: "./data/" + info.file,
+      url: "./data/" + info.file + "?v=" + new Date().getTime(), // Forces browser to bypass cache
       title: info.name,
       elevationInfo: { 
         mode: "relative-to-ground",
-        // Lifting playgrounds higher (10m) to make sure they aren't hidden
-        offset: info.name === "Playgrounds" ? 10 : 2 
+        offset: info.name === "Playgrounds" ? 5 : 0 
       },
       renderer: renderer
     });
