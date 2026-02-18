@@ -1,52 +1,46 @@
-<div id="sidebar" class="pane-open">
+<body>
+  <div id="viewDiv"></div>
+  <button id="paneToggle" onclick="togglePane()">☰ Data Layers</button>
+
+  <div id="sidebar" class="pane-open">
     <h2>Scenario A: Baseline</h2>
     <hr>
     
     <div class="layer-item highlight-box-blue">
-      <div class="header-row">
-        <input type="checkbox" id="toggleHealthcare" checked>
-        <label><strong>Healthcare Access</strong></label>
-      </div>
+      <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/health.svg" class="legend-icon" style="filter: invert(30%) sepia(100%) saturate(500%) hue-rotate(190deg);"> 
-          <span>Vårdcentral Entrance</span>
+          <img src="./icons/health.svg" class="legend-icon"> <span>Vårdcentral Entrance</span>
         </div>
         <div class="legend-row">
-          <span class="box" style="background: blue;"></span> 
-          <span>Health Facility (3D)</span>
+          <span class="box" style="background: blue;"></span> <span>Health Facility (3D)</span>
         </div>
-        <p style="margin-top:10px; font-weight:bold; font-size: 11px;">WALKING TIME:</p>
-        <div class="header-row">
-          <input type="checkbox" id="toggleHealthWalk" checked>
-          <label>Show Health Zones</label>
-        </div>
-        <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min walk</div>
-        <div class="legend-row"><span class="box" style="background: rgba(155, 89, 182, 0.6);"></span> 10 min walk</div>
-        <div class="legend-row"><span class="box" style="background: rgba(44, 62, 80, 0.5);"></span> 15 min walk</div>
+        <p><strong>WALKING TIME:</strong></p>
+        <input type="checkbox" id="toggleHealthWalk" checked> Show Zones
+        <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min</div>
+        <div class="legend-row"><span class="box" style="background: rgba(155, 89, 182, 0.6);"></span> 10 min</div>
       </div>
     </div>
 
     <div class="layer-item highlight-box">
-      <div class="header-row">
-        <input type="checkbox" id="toggleSchools" checked>
-        <label><strong>Primary Schools</strong></label>
-      </div>
+      <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
       <div class="description">
-        <div class="legend-row"><img src="./icons/school.svg" class="legend-icon"> <span>School Entrance</span></div>
-        <div class="legend-row"><span class="box" style="background: red;"></span> <span>School Building</span></div>
-        <p style="margin-top:10px; font-weight:bold; font-size: 11px;">WALKING TIME:</p>
-        <div class="header-row">
-          <input type="checkbox" id="toggleWalk" checked>
-          <label>Show School Zones</label>
+        <div class="legend-row">
+          <img src="./icons/school.svg" class="legend-icon"> <span>School Entrance</span>
         </div>
-        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min walk</div>
-        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min walk</div>
-        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min walk</div>
+        <div class="legend-row">
+          <span class="box" style="background: red;"></span> <span>School Building (3D)</span>
+        </div>
+        <p><strong>WALKING TIME:</strong></p>
+        <input type="checkbox" id="toggleWalk" checked> Show Zones
+        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min</div>
       </div>
     </div>
+  </div>
 
-    <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked> <label>Other Buildings</label>
-    </div>
-</div>
+  <script>
+    function togglePane() {
+      document.getElementById("sidebar").classList.toggle("pane-closed");
+    }
+  </script>
+</body>
