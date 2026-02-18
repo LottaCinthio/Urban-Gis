@@ -1,88 +1,42 @@
-require([
-  "esri/Map",
-  "esri/views/SceneView",
-  "esri/layers/GeoJSONLayer"
-], function (Map, SceneView, GeoJSONLayer) {
+const layersInfo = [
+    { name: "Health Point", file: "Healthcare_center.geojson", type: "health-icon", id: "toggleHealthcare" },
+    { name: "Health Zones", file: "Walking_zones_to_healthcare.geojson", type: "health-walk", id: "toggleHealthWalk" },
+    { name: "School Points", file: "Primary_schools.geojson", type: "school-icon", id: "toggleSchools" },
+    { name: "School Zones", file: "Walk_zones_to_school.geojson", type: "walk", id: "toggleWalk" },
+    { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" }
+];
 
-  const layersInfo = [
-    { name: "Walking Zones", file: "Walk_zones_to_school.geojson", type: "walk", id: "toggleWalk" },
-    { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
-    { name: "Primary Schools", file: "Primary_schools.geojson", type: "school-icon", id: "toggleSchools" },
-    { name: "Parking Spots", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
-    { name: "Bus Stops", file: "Busstops.geojson", type: "icon", id: "toggleBus" },
-    { name: "Playgrounds", file: "Playgrounds.geojson", type: "icon", id: "togglePlay" }
-  ];
-
-  const map = new Map({ basemap: "gray-vector", ground: "world-elevation" });
-
-  layersInfo.forEach(info => {
-    let renderer;
-
-    if (info.type === "walk") {
-      renderer = {
+// ... inside the renderer logic ...
+if (info.type === "health-walk") {
+    renderer = {
         type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
-          { value: 5, symbol: { type: "simple-fill", color: [46, 204, 113, 0.5], outline: { width: 0 } } },
-          { value: 10, symbol: { type: "simple-fill", color: [241, 196, 15, 0.4], outline: { width: 0 } } },
-          { value: 15, symbol: { type: "simple-fill", color: [230, 126, 34, 0.3], outline: { width: 0 } } }
+            { value: 5, symbol: { type: "simple-fill", color: [52, 152, 219, 0.6], outline: { width: 0 } } },
+            { value: 10, symbol: { type: "simple-fill", color: [155, 89, 182, 0.5], outline: { width: 0 } } },
+            { value: 15, symbol: { type: "simple-fill", color: [44, 62, 80, 0.4], outline: { width: 0 } } }
         ]
-      };
-    } else if (info.type === "building") {
-      renderer = {
-        type: "unique-value", field: "Join_Count",
-        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
-        uniqueValueInfos: [{ value: 1, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 22, material: { color: "red" } }] } }]
-      };
-    } else if (info.type === "parking") {
-      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
-    } else {
-      // Icon Renderer for Schools, Bus, and Playgrounds
-      let iconPath = info.type === "school-icon" ? "./icons/school.svg" : (info.name === "Bus Stops" ? "./icons/bus.svg" : "./icons/playground.svg");
-      renderer = {
+    };
+} else if (info.type === "health-icon") {
+    renderer = {
         type: "simple",
         symbol: {
-          type: "point-3d",
-          symbolLayers: [{
-            type: "icon", resource: { href: iconPath }, 
-            size: info.type === "school-icon" ? 32 : 20, // These are now constant screen sizes
-            outline: { color: "white", size: 1 }
-          }]
+            type: "point-3d",
+            symbolLayers: [{
+                type: "icon", resource: { href: "./icons/health.svg" }, size: 32,
+                outline: { color: "white", size: 1 }
+            }]
         }
-      };
-    }
+    };
+}
 
-    const layer = new GeoJSONLayer({
-      url: "./data/" + info.file + "?v=" + new Date().getTime(),
-      title: info.name,
-      renderer: renderer,
-      // Disappears when scale is larger than 250,000 (zoomed out to Sweden)
-      minScale: 250000, 
-      elevationInfo: { 
+// Set slightly different elevations to prevent the overlapping zones from flickering
+const layer = new GeoJSONLayer({
+    url: "./data/" + info.file + "?v=" + new Date().getTime(),
+    title: info.name,
+    renderer: renderer,
+    elevationInfo: { 
         mode: "relative-to-ground", 
-        // Floats high (45m) to ensure they are above 3D buildings even when zoomed in
-        offset: info.type.includes("icon") ? 45 : 1 
-      }
-    });
-    map.add(layer);
-  });
-
-  const view = new SceneView({
-    container: "viewDiv", 
-    map: map,
-    camera: { position: { x: 14.242, y: 57.782, z: 1500 }, tilt: 45 },
-    // CRITICAL: This keeps icons the same size regardless of camera distance
-    screenSizePerspectiveEnabled: false 
-  });
-
-  view.when(() => {
-    layersInfo.forEach(info => {
-      const checkbox = document.getElementById(info.id);
-      if (checkbox) {
-        checkbox.addEventListener("change", (e) => {
-          const lyr = map.layers.find(l => l.title === info.name);
-          if (lyr) lyr.visible = e.target.checked;
-        });
-      }
-    });
-  });
+        // Lifts health zones slightly higher than school zones to keep them visible
+        offset: info.type === "health-walk" ? 1.5 : (info.type.includes("icon") ? 45 : 0.5) 
+    }
 });

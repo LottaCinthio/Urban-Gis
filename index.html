@@ -1,82 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Öxnehaga 3D Urban Dashboard</title>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://js.arcgis.com/4.29/"></script>
-  <script src="main.js"></script>
-</head>
-<body>
-  <div id="viewDiv"></div>
-
-  <button id="paneToggle" onclick="togglePane()">☰ Data Layers</button>
-
-  <div id="sidebar" class="pane-open">
+<div id="sidebar" class="pane-open">
     <h2>Scenario A: Baseline</h2>
     <hr>
     
+    <div class="layer-item highlight-box-blue">
+      <div class="header-row">
+        <input type="checkbox" id="toggleHealthcare" checked>
+        <label><strong>Healthcare Access</strong></label>
+      </div>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/health.svg" class="legend-icon" style="filter: invert(30%) sepia(100%) saturate(500%) hue-rotate(190deg);"> 
+          <span>Vårdcentral Entrance</span>
+        </div>
+        <div class="legend-row">
+          <span class="box" style="background: blue;"></span> 
+          <span>Health Facility (3D)</span>
+        </div>
+        <p style="margin-top:10px; font-weight:bold; font-size: 11px;">WALKING TIME:</p>
+        <div class="header-row">
+          <input type="checkbox" id="toggleHealthWalk" checked>
+          <label>Show Health Zones</label>
+        </div>
+        <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min walk</div>
+        <div class="legend-row"><span class="box" style="background: rgba(155, 89, 182, 0.6);"></span> 10 min walk</div>
+        <div class="legend-row"><span class="box" style="background: rgba(44, 62, 80, 0.5);"></span> 15 min walk</div>
+      </div>
+    </div>
+
     <div class="layer-item highlight-box">
       <div class="header-row">
         <input type="checkbox" id="toggleSchools" checked>
         <label><strong>Primary Schools</strong></label>
       </div>
       <div class="description">
-        <div class="legend-row">
-          <img src="./icons/school.svg" class="legend-icon"> 
-          <span>School Entrance Location</span>
-        </div>
-        <div class="legend-row">
-          <span class="box" style="background: red;"></span> 
-          <span>School Building (3D)</span>
-        </div>
-        
-        <p style="margin-top:15px; font-weight:bold; color:#333; font-size: 11px;">SERVICE AREA (WALKING TIME):</p>
+        <div class="legend-row"><img src="./icons/school.svg" class="legend-icon"> <span>School Entrance</span></div>
+        <div class="legend-row"><span class="box" style="background: red;"></span> <span>School Building</span></div>
+        <p style="margin-top:10px; font-weight:bold; font-size: 11px;">WALKING TIME:</p>
         <div class="header-row">
           <input type="checkbox" id="toggleWalk" checked>
-          <label>Show Accessibility Map</label>
+          <label>Show School Zones</label>
         </div>
-        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min (Optimal)</div>
-        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min (Average)</div>
-        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min (Maximum)</div>
+        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min walk</div>
+        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min walk</div>
+        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min walk</div>
       </div>
     </div>
 
     <div class="layer-item">
-      <input type="checkbox" id="toggleBus" checked> <label><strong>Bus Stops</strong></label>
-      <div class="description">
-        <div class="legend-row"><img src="./icons/bus.svg" class="legend-icon"> Public Transport Access</div>
-      </div>
+      <input type="checkbox" id="toggleBuildings" checked> <label>Other Buildings</label>
     </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="togglePlay" checked> <label><strong>Playgrounds</strong></label>
-      <div class="description">
-        <div class="legend-row"><img src="./icons/playground.svg" class="legend-icon"> Recreation Areas</div>
-      </div>
-    </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="toggleParking" checked> <label><strong>Parking Spots</strong></label>
-      <div class="description">
-        <div class="legend-row"><span class="box" style="background: rgba(0, 197, 255, 0.7);"></span> Public Parking Area</div>
-      </div>
-    </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked> <label><strong>Other Buildings</strong></label>
-      <div class="description">
-        <div class="legend-row"><span class="box" style="background: white; border: 1px solid #ccc;"></span> Residential / Commercial</div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    function togglePane() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.classList.toggle("pane-closed");
-    }
-  </script>
-</body>
-</html>
+</div>
