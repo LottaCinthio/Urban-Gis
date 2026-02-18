@@ -7,21 +7,23 @@ html, body, #viewDiv {
   position: absolute; top: 0; right: 0;
   width: 280px; height: 100%;
   background: white; box-shadow: -3px 0 10px rgba(0,0,0,0.2);
-  transition: transform 0.3s ease-in-out;
+  transition: 0.4s ease-in-out;
   padding: 20px; overflow-y: auto; z-index: 10;
 }
 
-.pane-closed { transform: translateX(100%); }
-.pane-open { transform: translateX(0); }
+/* This class moves the pane out of view */
+#sidebar.pane-closed {
+  transform: translateX(320px);
+}
 
 #paneToggle {
   position: absolute; top: 20px; right: 20px;
   z-index: 20; padding: 10px 15px;
   background: #333; color: white; border: none;
-  border-radius: 4px; cursor: pointer;
+  border-radius: 5px; cursor: pointer;
 }
 
-.layer-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-.description { font-size: 12px; color: #555; margin-top: 5px; }
-.legend-row { display: flex; align-items: center; margin-bottom: 3px; }
-.box { width: 12px; height: 12px; margin-right: 8px; border-radius: 2px; }
+.layer-item { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+.description { font-size: 12px; color: #666; margin-top: 8px; }
+.legend-row { display: flex; align-items: center; margin-bottom: 4px; }
+.box { width: 14px; height: 14px; margin-right: 10px; border-radius: 2px; }

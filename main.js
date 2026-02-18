@@ -4,18 +4,18 @@ require([
   "esri/layers/GeoJSONLayer"
 ], function (Map, SceneView, GeoJSONLayer) {
 
-  const analysisFiles = [
+  const layersInfo = [
     { name: "Walking Zones", file: "Walk_zones_to_school.geojson", type: "walk", id: "toggleWalk" },
-    { name: "Parking Spots", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
     { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
     { name: "Primary Schools", file: "Primary_schools.geojson", type: "school-icon", id: "toggleSchools" },
+    { name: "Parking Spots", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
     { name: "Bus Stops", file: "Busstops.geojson", type: "icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "icon", id: "togglePlay" }
   ];
 
   const map = new Map({ basemap: "gray-vector", ground: "world-elevation" });
 
-  analysisFiles.forEach(info => {
+  layersInfo.forEach(info => {
     let renderer;
 
     if (info.type === "walk") {
@@ -36,15 +36,15 @@ require([
     } else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } else {
-      // Icons (Schools, Bus, Play)
+      // Icon Renderer for Schools, Bus, and Playgrounds
       let iconPath = info.type === "school-icon" ? "./icons/school.svg" : (info.name === "Bus Stops" ? "./icons/bus.svg" : "./icons/playground.svg");
       renderer = {
         type: "simple",
         symbol: {
           type: "point-3d",
           symbolLayers: [{
-            type: "icon", resource: { href: iconPath }, size: info.type === "school-icon" ? 30 : 18,
-            outline: { color: "white", size: 1.5 }
+            type: "icon", resource: { href: iconPath }, size: info.type === "school-icon" ? 30 : 20,
+            outline: { color: "white", size: 1 }
           }]
         }
       };
@@ -54,11 +54,10 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      minScale: 100000,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        // Lifts icons high enough to not be hidden by 3D building roofs
-        offset: info.type.includes("icon") ? 30 : (info.type === "parking" ? 1 : 0.2) 
+        // Lifts icons high enough to sit on top of buildings
+        offset: info.type.includes("icon") ? 35 : 1 
       }
     });
     map.add(layer);
@@ -69,13 +68,19 @@ require([
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
-  // Toggle Logic
+  // Enable constant size for icons
+  view.environment.lighting.directShadowsEnabled = true;
+
+  // Toggle Logic - Links checkboxes to layer visibility
   view.when(() => {
-    analysisFiles.forEach(info => {
-      document.getElementById(info.id).addEventListener("change", (e) => {
-        const lyr = map.layers.find(l => l.title === info.name);
-        if (lyr) lyr.visible = e.target.checked;
-      });
+    layersInfo.forEach(info => {
+      const checkbox = document.getElementById(info.id);
+      if (checkbox) {
+        checkbox.addEventListener("change", (e) => {
+          const lyr = map.layers.find(l => l.title === info.name);
+          if (lyr) lyr.visible = e.target.checked;
+        });
+      }
     });
   });
 });
