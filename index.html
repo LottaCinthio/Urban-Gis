@@ -8,17 +8,19 @@
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
   <style>
+    /* Styling for the icon descriptions in the pane */
     .legend-icon {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       vertical-align: middle;
-      margin-right: 8px;
+      margin-right: 10px;
     }
     .legend-row {
       display: flex;
       align-items: center;
-      margin-top: 5px;
-      margin-bottom: 10px;
+      padding: 5px 0;
+      font-size: 0.9em;
+      color: #333;
     }
     .box {
       width: 15px;
@@ -43,7 +45,7 @@
       <div class="description">
         <div class="legend-row">
           <img src="./icons/health.svg" class="legend-icon"> 
-          <span>Vårdcentral Entrance</span>
+          <span><strong>Map Symbol:</strong> Vårdcentral Entrance</span>
         </div>
         
         <p><strong>WALKING TIME:</strong></p>
@@ -59,7 +61,7 @@
       <div class="description">
         <div class="legend-row">
           <img src="./icons/school.svg" class="legend-icon"> 
-          <span>School Entrance</span>
+          <span><strong>Map Symbol:</strong> School Entrance</span>
         </div>
         <p><strong>WALKING TIME:</strong></p>
         <input type="checkbox" id="toggleWalk" checked> <label>Show School Zones</label>
