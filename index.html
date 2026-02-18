@@ -1,3 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Öxnehaga 3D Dashboard</title>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <script src="main.js"></script>
+
+  <style>
+    /* EMERGENCY CSS STYLES */
+    html, body, #viewDiv {
+      padding: 0; margin: 0; height: 100%; width: 100%;
+      font-family: 'Segoe UI', sans-serif; overflow: hidden;
+    }
+
+    #sidebar {
+      position: absolute; top: 0; right: 0;
+      width: 280px; height: 100%;
+      background: white; box-shadow: -3px 0 10px rgba(0,0,0,0.2);
+      transition: 0.4s ease-in-out;
+      padding: 20px; overflow-y: auto; z-index: 10;
+    }
+
+    /* This moves the pane off screen when closed */
+    #sidebar.pane-closed { transform: translateX(320px); }
+
+    #paneToggle {
+      position: absolute; top: 20px; right: 20px;
+      z-index: 20; padding: 10px 15px;
+      background: #333; color: white; border: none;
+      border-radius: 5px; cursor: pointer;
+    }
+
+    .highlight-box-blue { background: #f0f4ff; border: 1px solid #ccd5ff; border-radius: 8px; padding: 10px; margin-bottom: 20px; }
+    .highlight-box { background: #f0f7ff; border: 1px solid #d0e4ff; border-radius: 8px; padding: 10px; margin-bottom: 20px; }
+
+    .layer-item { margin-bottom: 15px; }
+    .description { font-size: 11px; color: #444; margin-top: 5px; }
+    .legend-row { display: flex; align-items: center; margin-bottom: 6px; }
+
+    /* THIS FIXES THE GIANT ICON ISSUE */
+    .legend-icon { width: 22px !important; height: 22px !important; margin-right: 10px; display: inline-block; }
+    .box { width: 12px; height: 12px; margin-right: 10px; border-radius: 2px; display: inline-block; }
+  </style>
+</head>
 <body>
   <div id="viewDiv"></div>
   <button id="paneToggle" onclick="togglePane()">☰ Data Layers</button>
@@ -7,13 +53,10 @@
     <hr>
     
     <div class="layer-item highlight-box-blue">
-      <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare</strong>
+      <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/health.svg" class="legend-icon"> <span>Vårdcentral Entrance</span>
-        </div>
-        <div class="legend-row">
-          <span class="box" style="background: blue;"></span> <span>Health Facility (3D)</span>
+          <img src="./icons/health.svg" class="legend-icon"> <span>Vårdcentral</span>
         </div>
         <p><strong>WALKING TIME:</strong></p>
         <input type="checkbox" id="toggleHealthWalk" checked> Show Zones
@@ -26,10 +69,7 @@
       <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/school.svg" class="legend-icon"> <span>School Entrance</span>
-        </div>
-        <div class="legend-row">
-          <span class="box" style="background: red;"></span> <span>School Building (3D)</span>
+          <img src="./icons/school.svg" class="legend-icon"> <span>Entrance</span>
         </div>
         <p><strong>WALKING TIME:</strong></p>
         <input type="checkbox" id="toggleWalk" checked> Show Zones
@@ -40,7 +80,15 @@
 
   <script>
     function togglePane() {
-      document.getElementById("sidebar").classList.toggle("pane-closed");
+      const sb = document.getElementById("sidebar");
+      if (sb.classList.contains("pane-open")) {
+        sb.classList.remove("pane-open");
+        sb.classList.add("pane-closed");
+      } else {
+        sb.classList.remove("pane-closed");
+        sb.classList.add("pane-open");
+      }
     }
   </script>
 </body>
+</html>
