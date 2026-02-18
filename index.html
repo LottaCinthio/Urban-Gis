@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Öxnehaga 3D Accessibility Analysis</title>
+  <title>Öxnehaga 3D Urban Analytics</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
@@ -10,5 +10,31 @@
 </head>
 <body>
   <div id="viewDiv"></div>
+
+  <div id="sidebar">
+    <h2>Data Layers</h2>
+    <hr>
+    
+    <div class="layer-item">
+      <input type="checkbox" id="toggleWalk" checked>
+      <label for="toggleWalk"><strong>Walking Accessibility</strong></label>
+      <div class="description">
+        <p>Walking time to nearest primary school:</p>
+        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.6);"></span> 5 Minutes (Optimal)</div>
+        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.5);"></span> 10 Minutes (Acceptable)</div>
+        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.4);"></span> 15 Minutes (Maximum)</div>
+      </div>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBuildings" checked>
+      <label for="toggleBuildings"><strong>Buildings</strong></label>
+      <div class="description">
+        <div class="legend-row"><span class="box" style="background: red;"></span> Educational Facilities</div>
+        <div class="legend-row"><span class="box" style="background: white; border: 1px solid #ccc;"></span> Residential/Other</div>
+      </div>
+    </div>
+
+    </div>
 </body>
 </html>
