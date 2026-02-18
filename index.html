@@ -23,12 +23,19 @@
         <label><strong>Primary Schools</strong></label>
       </div>
       <div class="description">
-        <div class="legend-row"><span class="box" style="background: red;"></span> School Building</div>
+        <div class="legend-row">
+          <img src="./icons/school.svg" class="legend-icon"> 
+          <span>School Entrance Location</span>
+        </div>
+        <div class="legend-row">
+          <span class="box" style="background: red;"></span> 
+          <span>School Building (3D)</span>
+        </div>
         
-        <p style="margin-top:15px; font-weight:bold; color:#333;">Walking Accessibility Analysis:</p>
+        <p style="margin-top:15px; font-weight:bold; color:#333; font-size: 11px;">SERVICE AREA (WALKING TIME):</p>
         <div class="header-row">
           <input type="checkbox" id="toggleWalk" checked>
-          <label>Show Distances</label>
+          <label>Show Accessibility Map</label>
         </div>
         <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min (Optimal)</div>
         <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min (Average)</div>
@@ -37,16 +44,31 @@
     </div>
 
     <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked> <label>General Buildings</label>
+      <input type="checkbox" id="toggleBus" checked> <label><strong>Bus Stops</strong></label>
+      <div class="description">
+        <div class="legend-row"><img src="./icons/bus.svg" class="legend-icon"> Public Transport Access</div>
+      </div>
     </div>
+
     <div class="layer-item">
-      <input type="checkbox" id="toggleParking" checked> <label>Parking Spots</label>
+      <input type="checkbox" id="togglePlay" checked> <label><strong>Playgrounds</strong></label>
+      <div class="description">
+        <div class="legend-row"><img src="./icons/playground.svg" class="legend-icon"> Recreation Areas</div>
+      </div>
     </div>
+
     <div class="layer-item">
-      <input type="checkbox" id="toggleBus" checked> <label>Bus Stops</label>
+      <input type="checkbox" id="toggleParking" checked> <label><strong>Parking Spots</strong></label>
+      <div class="description">
+        <div class="legend-row"><span class="box" style="background: rgba(0, 197, 255, 0.7);"></span> Public Parking Area</div>
+      </div>
     </div>
+
     <div class="layer-item">
-      <input type="checkbox" id="togglePlay" checked> <label>Playgrounds</label>
+      <input type="checkbox" id="toggleBuildings" checked> <label><strong>Other Buildings</strong></label>
+      <div class="description">
+        <div class="legend-row"><span class="box" style="background: white; border: 1px solid #ccc;"></span> Residential / Commercial</div>
+      </div>
     </div>
   </div>
 

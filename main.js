@@ -36,13 +36,15 @@ require([
     } else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } else {
+      // Icon Renderer for Schools, Bus, and Playgrounds
       let iconPath = info.type === "school-icon" ? "./icons/school.svg" : (info.name === "Bus Stops" ? "./icons/bus.svg" : "./icons/playground.svg");
       renderer = {
         type: "simple",
         symbol: {
           type: "point-3d",
           symbolLayers: [{
-            type: "icon", resource: { href: iconPath }, size: info.type === "school-icon" ? 32 : 20,
+            type: "icon", resource: { href: iconPath }, 
+            size: info.type === "school-icon" ? 32 : 20, // These are now constant screen sizes
             outline: { color: "white", size: 1 }
           }]
         }
@@ -53,18 +55,23 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
+      // Disappears when scale is larger than 250,000 (zoomed out to Sweden)
+      minScale: 250000, 
       elevationInfo: { 
         mode: "relative-to-ground", 
-        // Ensure schools float high (40m) to be visible over 3D buildings
-        offset: info.type.includes("icon") ? 40 : 1 
+        // Floats high (45m) to ensure they are above 3D buildings even when zoomed in
+        offset: info.type.includes("icon") ? 45 : 1 
       }
     });
     map.add(layer);
   });
 
   const view = new SceneView({
-    container: "viewDiv", map: map,
-    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
+    container: "viewDiv", 
+    map: map,
+    camera: { position: { x: 14.242, y: 57.782, z: 1500 }, tilt: 45 },
+    // CRITICAL: This keeps icons the same size regardless of camera distance
+    screenSizePerspectiveEnabled: false 
   });
 
   view.when(() => {
