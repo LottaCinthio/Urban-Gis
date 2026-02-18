@@ -7,32 +7,11 @@ require([
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
   const analysisFiles = [
-    { 
-      name: "Walking Zones (5-15 min)", 
-      file: "Walk_zones_to_school.geojson", 
-      type: "walk" 
-    },
-    { 
-      name: "Jönköping Buildings", 
-      file: "buildings.geojson", 
-      height: 15, 
-      type: "building" 
-    },
-    { 
-      name: "Primary Schools", 
-      file: "Primary_schools.geojson", 
-      type: "school-icon" 
-    },
-    { 
-      name: "Bus Stops", 
-      file: "Busstops.geojson", 
-      type: "icon" 
-    },
-    { 
-      name: "Playgrounds", 
-      file: "Playgrounds.geojson", 
-      type: "icon" 
-    }
+    { name: "Walking Zones", file: "Walk_zones_to_school.geojson", type: "walk" },
+    { name: "Buildings", file: "buildings.geojson", height: 15, type: "building" },
+    { name: "Primary Schools", file: "Primary_schools.geojson", type: "school-icon" },
+    { name: "Bus Stops", file: "Busstops.geojson", type: "icon" },
+    { name: "Playgrounds", file: "Playgrounds.geojson", type: "icon" }
   ];
 
   const map = new Map({
@@ -43,7 +22,7 @@ require([
   analysisFiles.forEach(info => {
     let renderer;
 
-    // 1. Walking Zones Renderer
+    // 1. Walking Zones (Ground Polygons)
     if (info.type === "walk") {
       renderer = {
         type: "unique-value",
@@ -55,7 +34,7 @@ require([
         ]
       };
     } 
-    // 2. 3D Building Renderer (Highlighting Schools)
+    // 2. 3D Buildings
     else if (info.type === "building") {
       renderer = {
         type: "unique-value",
@@ -69,7 +48,7 @@ require([
         ]
       };
     }
-    // 3. Icons Renderer
+    // 3. Constant Size Icons
     else if (info.type === "icon" || info.type === "school-icon") {
       let iconPath = "./icons/playground.svg";
       if (info.name === "Bus Stops") iconPath = "./icons/bus.svg";
@@ -82,8 +61,8 @@ require([
           symbolLayers: [{
             type: "icon",
             resource: { href: iconPath },
-            size: info.type === "school-icon" ? 25 : 18,
-            outline: { color: "white", size: 1 }
+            size: info.type === "school-icon" ? 28 : 20, // Constant pixel size
+            outline: { color: "white", size: 1.5 }
           }]
         }
       };
@@ -93,7 +72,13 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      elevationInfo: { mode: "relative-to-ground", offset: 1 }
+      // FIX: minScale prevents the icons from cluttering the map when zoomed out to Sweden
+      minScale: 50000, 
+      maxScale: 0,
+      elevationInfo: { 
+        mode: "relative-to-ground", 
+        offset: 2 // Lifted slightly so it doesn't disappear into the 3D terrain
+      }
     });
 
     map.add(layer);
