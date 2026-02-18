@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Öxnehaga 3D Urban Analytics</title>
+  <title>Öxnehaga 3D Urban Dashboard</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
@@ -17,26 +17,22 @@
     <h2>Scenario A: Baseline</h2>
     <hr>
     
-    <div class="layer-item">
-      <div class="header-row">
-        <input type="checkbox" id="toggleWalk" checked>
-        <label><strong>Walking Distances</strong></label>
-      </div>
-      <div class="description">
-        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min (Optimal)</div>
-        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min (Average)</div>
-        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min (Maximum)</div>
-      </div>
-    </div>
-
-    <div class="layer-item">
+    <div class="layer-item highlight-box">
       <div class="header-row">
         <input type="checkbox" id="toggleSchools" checked>
         <label><strong>Primary Schools</strong></label>
       </div>
       <div class="description">
         <div class="legend-row"><span class="box" style="background: red;"></span> School Building</div>
-        <p>Icons indicate school entrances.</p>
+        
+        <p style="margin-top:15px; font-weight:bold; color:#333;">Walking Accessibility Analysis:</p>
+        <div class="header-row">
+          <input type="checkbox" id="toggleWalk" checked>
+          <label>Show Distances</label>
+        </div>
+        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min (Optimal)</div>
+        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min (Average)</div>
+        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min (Maximum)</div>
       </div>
     </div>
 

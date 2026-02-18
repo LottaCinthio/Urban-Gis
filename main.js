@@ -36,14 +36,13 @@ require([
     } else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } else {
-      // Icon Renderer for Schools, Bus, and Playgrounds
       let iconPath = info.type === "school-icon" ? "./icons/school.svg" : (info.name === "Bus Stops" ? "./icons/bus.svg" : "./icons/playground.svg");
       renderer = {
         type: "simple",
         symbol: {
           type: "point-3d",
           symbolLayers: [{
-            type: "icon", resource: { href: iconPath }, size: info.type === "school-icon" ? 30 : 20,
+            type: "icon", resource: { href: iconPath }, size: info.type === "school-icon" ? 32 : 20,
             outline: { color: "white", size: 1 }
           }]
         }
@@ -56,8 +55,8 @@ require([
       renderer: renderer,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        // Lifts icons high enough to sit on top of buildings
-        offset: info.type.includes("icon") ? 35 : 1 
+        // Ensure schools float high (40m) to be visible over 3D buildings
+        offset: info.type.includes("icon") ? 40 : 1 
       }
     });
     map.add(layer);
@@ -68,10 +67,6 @@ require([
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
-  // Enable constant size for icons
-  view.environment.lighting.directShadowsEnabled = true;
-
-  // Toggle Logic - Links checkboxes to layer visibility
   view.when(() => {
     layersInfo.forEach(info => {
       const checkbox = document.getElementById(info.id);
