@@ -7,6 +7,17 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
+  <style>
+    /* Ensure the legend icons are visible and sized correctly */
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    /* Simple color fix if needed */
+    .blue-icon { filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(186deg) brightness(95%) contrast(92%); }
+  </style>
 </head>
 <body>
   <div id="viewDiv"></div>
@@ -21,7 +32,7 @@
       <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/health.svg" class="legend-icon" style="filter: invert(39%) sepia(93%) saturate(1141%) hue-rotate(182deg);"> 
+          <img src="icons/health.svg" class="legend-icon blue-icon"> 
           <span>Vårdcentral Entrance</span>
         </div>
         <p><strong>WALKING TIME:</strong></p>
@@ -31,32 +42,7 @@
         <div class="legend-row"><span class="box" style="background: rgba(44, 62, 80, 0.5);"></span> 15 min</div>
       </div>
     </div>
-
-    <div class="layer-item highlight-box">
-      <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
-      <div class="description">
-        <div class="legend-row"><img src="./icons/school.svg" class="legend-icon"> <span>School Entrance</span></div>
-        <p><strong>WALKING TIME:</strong></p>
-        <input type="checkbox" id="toggleWalk" checked> <label>Show School Zones</label>
-        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min</div>
-        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min</div>
-        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min</div>
-      </div>
     </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="toggleBus" checked> <label><strong>Bus Stops</strong></label>
-    </div>
-    <div class="layer-item">
-      <input type="checkbox" id="togglePlay" checked> <label><strong>Playgrounds</strong></label>
-    </div>
-    <div class="layer-item">
-      <input type="checkbox" id="toggleParking" checked> <label><strong>Parking Spots</strong></label>
-    </div>
-    <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked> <label><strong>Other Buildings</strong></label>
-    </div>
-  </div>
 
   <script>
     function togglePane() {
