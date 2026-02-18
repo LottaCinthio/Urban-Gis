@@ -9,6 +9,9 @@ require([
     { name: "Health Zones", file: "Walking_zones_to_healthcare.geojson", type: "health-walk", id: "toggleHealthWalk" },
     { name: "School Points", file: "Primary_schools.geojson", type: "school-icon", id: "toggleSchools" },
     { name: "School Zones", file: "Walk_zones_to_school.geojson", type: "walk", id: "toggleWalk" },
+    { name: "Parking", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
+    { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
+    { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" }
   ];
 
@@ -17,35 +20,51 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // Healthcare Walking Zones
+    // RENDERER: Healthcare Zones (Blue/Purple palette)
     if (info.type === "health-walk") {
       renderer = {
         type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
           { value: 5, symbol: { type: "simple-fill", color: [52, 152, 219, 0.6], outline: { width: 0 } } },
-          { value: 10, symbol: { type: "simple-fill", color: [155, 89, 182, 0.5], outline: { width: 0 } } }
+          { value: 10, symbol: { type: "simple-fill", color: [155, 89, 182, 0.5], outline: { width: 0 } } },
+          { value: 15, symbol: { type: "simple-fill", color: [44, 62, 80, 0.4], outline: { width: 0 } } }
         ]
       };
     } 
-    // School Walking Zones
+    // RENDERER: School Zones (Green/Orange palette)
     else if (info.type === "walk") {
       renderer = {
         type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
-          { value: 5, symbol: { type: "simple-fill", color: [46, 204, 113, 0.5], outline: { width: 0 } } }
+          { value: 5, symbol: { type: "simple-fill", color: [46, 204, 113, 0.5], outline: { width: 0 } } },
+          { value: 10, symbol: { type: "simple-fill", color: [241, 196, 15, 0.4], outline: { width: 0 } } },
+          { value: 15, symbol: { type: "simple-fill", color: [230, 126, 34, 0.3], outline: { width: 0 } } }
         ]
       };
     } 
-    // Icons
-    else if (info.type === "health-icon" || info.type === "school-icon") {
-      let icon = info.type === "health-icon" ? "./icons/health.svg" : "./icons/school.svg";
+    // RENDERER: Constant-size 3D Icons
+    else if (info.type.includes("icon")) {
+      let iconFile = "school.svg";
+      if (info.type === "health-icon") iconFile = "health.svg";
+      if (info.type === "bus-icon") iconFile = "bus.svg";
+      if (info.type === "play-icon") iconFile = "playground.svg";
+
       renderer = {
         type: "simple",
-        symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: icon }, size: 30 }] }
+        symbol: { 
+          type: "point-3d", 
+          symbolLayers: [{ 
+            type: "icon", resource: { href: "./icons/" + iconFile }, 
+            size: info.type.includes("school") || info.type.includes("health") ? 30 : 20,
+            outline: { color: "white", size: 1.5 }
+          }] 
+        }
       };
     }
-    // Buildings
-    else if (info.type === "building") {
+    // RENDERER: Parking & Buildings
+    else if (info.type === "parking") {
+      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
+    } else {
       renderer = {
         type: "unique-value", field: "Join_Count",
         defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
@@ -59,7 +78,8 @@ require([
       renderer: renderer,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        offset: info.type.includes("icon") ? 40 : (info.type === "health-walk" ? 1.5 : 0.5) 
+        // Offsets prevent layers from overlapping on the ground
+        offset: info.type.includes("icon") ? 45 : (info.type.includes("walk") ? 1.5 : 0.5) 
       }
     });
     map.add(layer);
@@ -68,9 +88,10 @@ require([
   const view = new SceneView({
     container: "viewDiv", map: map,
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 },
-    screenSizePerspectiveEnabled: false
+    screenSizePerspectiveEnabled: false // Keeps icons the same size when zooming
   });
 
+  // Toggle Layer Visibility
   view.when(() => {
     layersInfo.forEach(info => {
       const checkbox = document.getElementById(info.id);
