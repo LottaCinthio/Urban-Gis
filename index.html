@@ -8,7 +8,6 @@
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
   <style>
-    /* Styling to ensure icons in the legend look consistent */
     .legend-icon {
       width: 20px;
       height: 20px;
@@ -18,7 +17,15 @@
     .legend-row {
       display: flex;
       align-items: center;
-      margin-bottom: 5px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+    }
+    .box {
+      width: 15px;
+      height: 15px;
+      display: inline-block;
+      margin-right: 8px;
+      border-radius: 2px;
     }
   </style>
 </head>
@@ -35,9 +42,10 @@
       <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/health.svg" class="legend-icon" alt="Health Icon"> 
+          <img src="./icons/health.svg" class="legend-icon"> 
           <span>Vårdcentral Entrance</span>
         </div>
+        
         <p><strong>WALKING TIME:</strong></p>
         <input type="checkbox" id="toggleHealthWalk" checked> <label>Show Health Zones</label>
         <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min</div>
@@ -50,7 +58,7 @@
       <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/school.svg" class="legend-icon" alt="School Icon"> 
+          <img src="./icons/school.svg" class="legend-icon"> 
           <span>School Entrance</span>
         </div>
         <p><strong>WALKING TIME:</strong></p>
