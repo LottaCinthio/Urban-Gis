@@ -51,17 +51,23 @@ require([
         symbol: { 
           type: "point-3d", 
           symbolLayers: [{ 
-            type: "icon", 
-            // Use the relative path from the root of your project
-            resource: { href: "icons/" + iconFile }, 
-            size: 30,
+            type: "icon", resource: { href: "./icons/" + iconFile }, 
+            size: info.type.includes("school") || info.type.includes("health") ? 30 : 20,
             outline: { color: "white", size: 1.5 }
           }] 
         }
       };
     }
-    // ... rest of the renderer logic remains the same ...
-    
+    else if (info.type === "parking") {
+      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
+    } else {
+      renderer = {
+        type: "unique-value", field: "Join_Count",
+        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
+        uniqueValueInfos: [{ value: 1, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 22, material: { color: "red" } }] } }]
+      };
+    }
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
