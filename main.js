@@ -7,13 +7,11 @@ require([
 ], function (Map, SceneView, GeoJSONLayer, Search, LayerList) {
 
   const analysisFiles = [
-    // 1. UPDATED FILENAME: Your Service Area "blobs"
     { 
-      name: "Walking Accessibility to Schools", 
+      name: "Walking Zones (5-15 min)", 
       file: "Walk_zones_to_school.geojson", 
-      type: "analysis" 
+      type: "walk" 
     },
-    // 2. BUILDINGS: Using Join_Count to highlight schools
     { 
       name: "Jönköping Buildings", 
       file: "buildings.geojson", 
@@ -21,19 +19,18 @@ require([
       type: "building" 
     },
     { 
-      name: "Parking Spots", 
-      file: "Parkingspots.geojson", 
-      height: 0, 
-      color: [0, 197, 255, 0.6] 
-    },
-    { 
-      name: "Playgrounds", 
-      file: "Playgrounds.geojson", 
-      type: "icon" 
+      name: "Primary Schools", 
+      file: "Primary_schools.geojson", 
+      type: "school-icon" 
     },
     { 
       name: "Bus Stops", 
       file: "Busstops.geojson", 
+      type: "icon" 
+    },
+    { 
+      name: "Playgrounds", 
+      file: "Playgrounds.geojson", 
       type: "icon" 
     }
   ];
@@ -46,61 +43,57 @@ require([
   analysisFiles.forEach(info => {
     let renderer;
 
-    // RENDERER FOR WALK ZONES: 5, 10, 15 minute isochrones
-    if (info.type === "analysis") {
+    // 1. Walking Zones Renderer
+    if (info.type === "walk") {
       renderer = {
         type: "unique-value",
-        field: "ToBreak", 
+        field: "ToBreak",
         uniqueValueInfos: [
-          { value: 5, symbol: { type: "simple-fill", color: [46, 204, 113, 0.5], outline: { width: 0 } } },
-          { value: 10, symbol: { type: "simple-fill", color: [241, 196, 15, 0.4], outline: { width: 0 } } },
-          { value: 15, symbol: { type: "simple-fill", color: [230, 126, 34, 0.3], outline: { width: 0 } } }
+          { value: 5, symbol: { type: "simple-fill", color: [46, 204, 113, 0.4], outline: { width: 0 } } },
+          { value: 10, symbol: { type: "simple-fill", color: [241, 196, 15, 0.3], outline: { width: 0 } } },
+          { value: 15, symbol: { type: "simple-fill", color: [230, 126, 34, 0.2], outline: { width: 0 } } }
         ]
       };
     } 
-    
-    // RENDERER FOR 3D BUILDINGS: Extrusion and School Highlighting
+    // 2. 3D Building Renderer (Highlighting Schools)
     else if (info.type === "building") {
       renderer = {
         type: "unique-value",
         field: "Join_Count", 
         defaultSymbol: { 
           type: "polygon-3d", 
-          symbolLayers: [{ type: "extrude", size: info.height, material: { color: [255, 255, 255, 0.9] } }] 
+          symbolLayers: [{ type: "extrude", size: info.height, material: { color: [255, 255, 255, 0.8] } }] 
         },
         uniqueValueInfos: [
-          { 
-            value: 1, 
-            symbol: { 
-              type: "polygon-3d", 
-              symbolLayers: [{ type: "extrude", size: info.height + 5, material: { color: "red" } }] 
-            } 
-          }
+          { value: 1, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 25, material: { color: [255, 0, 0, 0.9] } }] } }
         ]
       };
     }
+    // 3. Icons Renderer
+    else if (info.type === "icon" || info.type === "school-icon") {
+      let iconPath = "./icons/playground.svg";
+      if (info.name === "Bus Stops") iconPath = "./icons/bus.svg";
+      if (info.type === "school-icon") iconPath = "./icons/school.svg";
 
-    // RENDERER FOR ICONS: Bus stops & playgrounds
-    else if (info.type === "icon") {
-      const iconUrl = info.name === "Bus Stops" ? "./icons/bus.svg" : "./icons/playground.svg";
       renderer = {
         type: "simple",
         symbol: {
           type: "point-3d",
-          symbolLayers: [{ type: "icon", resource: { href: iconUrl }, size: 18 }]
+          symbolLayers: [{
+            type: "icon",
+            resource: { href: iconPath },
+            size: info.type === "school-icon" ? 25 : 18,
+            outline: { color: "white", size: 1 }
+          }]
         }
       };
     }
 
     const layer = new GeoJSONLayer({
-      // Ensure your data folder path is correct
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      elevationInfo: { 
-        mode: "relative-to-ground", 
-        offset: 1 
-      }
+      elevationInfo: { mode: "relative-to-ground", offset: 1 }
     });
 
     map.add(layer);
@@ -110,8 +103,8 @@ require([
     container: "viewDiv",
     map: map,
     camera: { 
-      position: { x: 14.242, y: 57.782, z: 1500 }, 
-      tilt: 50 
+      position: { x: 14.242, y: 57.782, z: 1200 }, 
+      tilt: 45 
     }
   });
 
