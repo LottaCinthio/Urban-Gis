@@ -7,9 +7,24 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
+  <style>
+    /* Styling to ensure icons in the legend look consistent */
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    .legend-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+  </style>
 </head>
 <body>
   <div id="viewDiv"></div>
+
   <button id="paneToggle" onclick="togglePane()">☰ Data Layers</button>
 
   <div id="sidebar" class="pane-open">
@@ -20,7 +35,7 @@
       <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/health.svg" width="20" height="20" style="vertical-align: middle; margin-right: 5px;"> 
+          <img src="./icons/health.svg" class="legend-icon" alt="Health Icon"> 
           <span>Vårdcentral Entrance</span>
         </div>
         <p><strong>WALKING TIME:</strong></p>
@@ -34,7 +49,10 @@
     <div class="layer-item highlight-box">
       <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
       <div class="description">
-        <div class="legend-row"><img src="./icons/school.svg" width="20" height="20" style="vertical-align: middle;"> <span>School Entrance</span></div>
+        <div class="legend-row">
+          <img src="./icons/school.svg" class="legend-icon" alt="School Icon"> 
+          <span>School Entrance</span>
+        </div>
         <p><strong>WALKING TIME:</strong></p>
         <input type="checkbox" id="toggleWalk" checked> <label>Show School Zones</label>
         <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min</div>
@@ -43,10 +61,18 @@
       </div>
     </div>
 
-    <div class="layer-item"><input type="checkbox" id="toggleBus" checked> <label><strong>Bus Stops</strong></label></div>
-    <div class="layer-item"><input type="checkbox" id="togglePlay" checked> <label><strong>Playgrounds</strong></label></div>
-    <div class="layer-item"><input type="checkbox" id="toggleParking" checked> <label><strong>Parking Spots</strong></label></div>
-    <div class="layer-item"><input type="checkbox" id="toggleBuildings" checked> <label><strong>Other Buildings</strong></label></div>
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBus" checked> <label><strong>Bus Stops</strong></label>
+    </div>
+    <div class="layer-item">
+      <input type="checkbox" id="togglePlay" checked> <label><strong>Playgrounds</strong></label>
+    </div>
+    <div class="layer-item">
+      <input type="checkbox" id="toggleParking" checked> <label><strong>Parking Spots</strong></label>
+    </div>
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBuildings" checked> <label><strong>Other Buildings</strong></label>
+    </div>
   </div>
 
   <script>
