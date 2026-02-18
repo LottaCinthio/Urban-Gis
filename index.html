@@ -8,7 +8,7 @@
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
   <style>
-    /* Styling for the icon descriptions in the pane */
+    /* Styling for the legend descriptions in the sidebar */
     .legend-icon {
       width: 22px;
       height: 22px;
@@ -18,7 +18,7 @@
     .legend-row {
       display: flex;
       align-items: center;
-      padding: 5px 0;
+      padding: 4px 0;
       font-size: 0.9em;
       color: #333;
     }
@@ -26,8 +26,16 @@
       width: 15px;
       height: 15px;
       display: inline-block;
-      margin-right: 8px;
+      margin-right: 10px;
       border-radius: 2px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .description {
+      margin-left: 25px;
+      margin-bottom: 15px;
+    }
+    strong {
+      color: #2c3e50;
     }
   </style>
 </head>
@@ -47,7 +55,6 @@
           <img src="./icons/health.svg" class="legend-icon"> 
           <span><strong>Map Symbol:</strong> Vårdcentral Entrance</span>
         </div>
-        
         <p><strong>WALKING TIME:</strong></p>
         <input type="checkbox" id="toggleHealthWalk" checked> <label>Show Health Zones</label>
         <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min</div>
@@ -72,16 +79,47 @@
     </div>
 
     <div class="layer-item">
-      <input type="checkbox" id="toggleBus" checked> <label><strong>Bus Stops</strong></label>
+      <input type="checkbox" id="toggleBus" checked> <strong>Bus Stops</strong>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/bus.svg" class="legend-icon"> 
+          <span><strong>Map Symbol:</strong> Bus Stop</span>
+        </div>
+      </div>
     </div>
+
     <div class="layer-item">
-      <input type="checkbox" id="togglePlay" checked> <label><strong>Playgrounds</strong></label>
+      <input type="checkbox" id="togglePlay" checked> <strong>Playgrounds</strong>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/playground.svg" class="legend-icon"> 
+          <span><strong>Map Symbol:</strong> Playground Area</span>
+        </div>
+      </div>
     </div>
+
     <div class="layer-item">
-      <input type="checkbox" id="toggleParking" checked> <label><strong>Parking Spots</strong></label>
+      <input type="checkbox" id="toggleParking" checked> <strong>Parking Spots</strong>
+      <div class="description">
+        <div class="legend-row">
+          <span class="box" style="background: rgba(0, 197, 255, 0.6);"></span> 
+          <span><strong>Map Symbol:</strong> Parking Zone</span>
+        </div>
+      </div>
     </div>
+
     <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked> <label><strong>Other Buildings</strong></label>
+      <input type="checkbox" id="toggleBuildings" checked> <strong>Other Buildings</strong>
+      <div class="description">
+        <div class="legend-row">
+          <span class="box" style="background: white; border: 1px solid #ccc;"></span> 
+          <span><strong>Map Symbol:</strong> Residential/Other</span>
+        </div>
+        <div class="legend-row">
+          <span class="box" style="background: red;"></span> 
+          <span><strong>Map Symbol:</strong> High-priority Building</span>
+        </div>
+      </div>
     </div>
   </div>
 
