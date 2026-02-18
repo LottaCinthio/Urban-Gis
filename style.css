@@ -1,33 +1,11 @@
-html, body, #viewDiv {
-  padding: 0; margin: 0; height: 100%; width: 100%;
-  font-family: 'Segoe UI', sans-serif;
-  overflow: hidden; /* Prevents scrollbars on the main map */
-}
-
-#sidebar {
-  position: absolute; top: 0; right: 0;
-  width: 300px; height: 100%;
-  background: white; box-shadow: -3px 0 10px rgba(0,0,0,0.2);
-  transition: 0.4s ease-in-out;
-  padding: 20px; overflow-y: auto; z-index: 10;
-}
-
+html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
+#sidebar { position: absolute; top: 0; right: 0; width: 280px; height: 100%; background: white; 
+           box-shadow: -3px 0 10px rgba(0,0,0,0.2); transition: 0.4s; padding: 20px; overflow-y: auto; z-index: 10; }
 #sidebar.pane-closed { transform: translateX(320px); }
-
-#paneToggle {
-  position: absolute; top: 20px; right: 20px;
-  z-index: 20; padding: 10px 15px;
-  background: #333; color: white; border: none;
-  border-radius: 5px; cursor: pointer;
-}
-
+#paneToggle { position: absolute; top: 20px; right: 20px; z-index: 20; padding: 10px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
 .highlight-box-blue { background: #f0f4ff; border: 1px solid #ccd5ff; border-radius: 8px; padding: 10px; margin-bottom: 20px; }
 .highlight-box { background: #f0f7ff; border: 1px solid #d0e4ff; border-radius: 8px; padding: 10px; margin-bottom: 20px; }
-
-.layer-item { margin-bottom: 15px; }
-.description { font-size: 12px; color: #444; margin-top: 5px; }
+.description { font-size: 11px; color: #444; margin-top: 5px; }
 .legend-row { display: flex; align-items: center; margin-bottom: 6px; }
-
-/* FIX: This keeps the SVG icons small in the sidebar */
-.legend-icon { width: 24px; height: 24px; margin-right: 10px; }
-.box { width: 14px; height: 14px; margin-right: 10px; border-radius: 2px; }
+.legend-icon { width: 20px; height: 20px; margin-right: 8px; }
+.box { width: 12px; height: 12px; margin-right: 10px; border-radius: 2px; }
