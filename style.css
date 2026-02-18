@@ -1,11 +1,51 @@
-html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
-#sidebar { position: absolute; top: 0; right: 0; width: 280px; height: 100%; background: white; 
-           box-shadow: -3px 0 10px rgba(0,0,0,0.2); transition: 0.4s; padding: 20px; overflow-y: auto; z-index: 10; }
+/* Reset the page layout */
+html, body, #viewDiv { 
+  padding: 0; 
+  margin: 0; 
+  height: 100%; 
+  width: 100%; 
+  font-family: 'Segoe UI', sans-serif; 
+}
+
+/* The Sidebar: locked to the right */
+#sidebar { 
+  position: absolute; 
+  top: 0; 
+  right: 0; 
+  width: 280px; 
+  height: 100%; 
+  background: white; 
+  box-shadow: -3px 0 10px rgba(0,0,0,0.2); 
+  transition: 0.4s ease-in-out; 
+  padding: 20px; 
+  overflow-y: auto; 
+  z-index: 10; 
+}
+
+/* Slide animation */
 #sidebar.pane-closed { transform: translateX(320px); }
-#paneToggle { position: absolute; top: 20px; right: 20px; z-index: 20; padding: 10px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+/* The button to open/close */
+#paneToggle { 
+  position: absolute; 
+  top: 20px; 
+  right: 20px; 
+  z-index: 20; 
+  padding: 10px; 
+  background: #333; 
+  color: white; 
+  border: none; 
+  border-radius: 5px; 
+  cursor: pointer; 
+}
+
+/* Visual grouping for data */
 .highlight-box-blue { background: #f0f4ff; border: 1px solid #ccd5ff; border-radius: 8px; padding: 10px; margin-bottom: 20px; }
 .highlight-box { background: #f0f7ff; border: 1px solid #d0e4ff; border-radius: 8px; padding: 10px; margin-bottom: 20px; }
-.description { font-size: 11px; color: #444; margin-top: 5px; }
-.legend-row { display: flex; align-items: center; margin-bottom: 6px; }
-.legend-icon { width: 20px; height: 20px; margin-right: 8px; }
-.box { width: 12px; height: 12px; margin-right: 10px; border-radius: 2px; }
+
+/* Legend details */
+.legend-row { display: flex; align-items: center; margin-bottom: 6px; font-size: 12px; }
+
+/* CRITICAL: This fixes the giant icon problem */
+.legend-icon { width: 22px; height: 22px; margin-right: 10px; }
+.box { width: 14px; height: 14px; margin-right: 10px; border-radius: 2px; }
