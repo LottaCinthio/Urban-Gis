@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Öxnehaga 3D Urban Analytics</title>
+  <title>Öxnehaga 3D Urban Dashboard</title>
   <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://js.arcgis.com/4.29/"></script>
@@ -11,30 +11,62 @@
 <body>
   <div id="viewDiv"></div>
 
-  <div id="sidebar">
-    <h2>Data Layers</h2>
+  <button id="paneToggle" onclick="togglePane()">☰ Data Layers</button>
+
+  <div id="sidebar" class="pane-open">
+    <h2>Project Baseline</h2>
+    <p style="font-size: 11px; color: #888;">Scenario A: Existing Accessibility</p>
     <hr>
     
     <div class="layer-item">
       <input type="checkbox" id="toggleWalk" checked>
-      <label for="toggleWalk"><strong>Walking Accessibility</strong></label>
+      <label><strong>Walking Distances</strong></label>
       <div class="description">
-        <p>Walking time to nearest primary school:</p>
-        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.6);"></span> 5 Minutes (Optimal)</div>
-        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.5);"></span> 10 Minutes (Acceptable)</div>
-        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.4);"></span> 15 Minutes (Maximum)</div>
+        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.8);"></span> 5 min walk</div>
+        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.7);"></span> 10 min walk</div>
+        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.6);"></span> 15 min walk</div>
       </div>
     </div>
 
     <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked>
-      <label for="toggleBuildings"><strong>Buildings</strong></label>
+      <input type="checkbox" id="toggleSchools" checked>
+      <label><strong>Primary Schools</strong></label>
       <div class="description">
-        <div class="legend-row"><span class="box" style="background: red;"></span> Educational Facilities</div>
-        <div class="legend-row"><span class="box" style="background: white; border: 1px solid #ccc;"></span> Residential/Other</div>
+        <div class="legend-row"><span class="box" style="background: red;"></span> School Building</div>
+        <p>Icons show exact entrance locations.</p>
       </div>
     </div>
 
+    <div class="layer-item">
+      <input type="checkbox" id="toggleParking" checked>
+      <label><strong>Parking Spots</strong></label>
+      <div class="description">
+        <div class="legend-row"><span class="box" style="background: rgba(0, 197, 255, 0.7);"></span> Public Parking</div>
+      </div>
     </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBus" checked>
+      <label><strong>Bus Stops</strong></label>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="togglePlay" checked>
+      <label><strong>Playgrounds</strong></label>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBuildings" checked>
+      <label><strong>General Buildings</strong></label>
+    </div>
+  </div>
+
+  <script>
+    function togglePane() {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.classList.toggle("pane-closed");
+      sidebar.classList.toggle("pane-open");
+    }
+  </script>
 </body>
 </html>
