@@ -118,7 +118,7 @@ require([
           const bID = feature.graphic.attributes.Building_ID;
           let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
           
-          if (bID == 500) { // <--- ÄNDRA DETTA NUMMER till samma som ovan
+          if (bID == 8052) { // <--- ÄNDRA DETTA NUMMER till samma som ovan
             content += `
               <div style="text-align: center;">
                 <a href="IFC.html" target="_blank" style="
