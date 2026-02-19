@@ -13,13 +13,15 @@ require([
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
-    // Emergency Services
+    // Hospital Data (Yellow Theme)
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
+    // Fire Station Data (Red Theme)
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
+    // Police Data (Blue Theme)
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
@@ -30,7 +32,7 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // --- RENDERERS ---
+    // --- RENDERER LOGIC ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
@@ -46,9 +48,9 @@ require([
       };
     } 
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Yellow (Hospital) 
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Red 
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blue 
+      let routeColor = [255, 215, 0, 0.9]; // Hospital
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Fire
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Police
 
       renderer = {
         type: "simple",
@@ -84,7 +86,26 @@ require([
     }
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
-    } else {
+    } 
+    else if (info.type === "building") {
+      // Special Renderer: GÖR BYGGNAD 1278510 GRÖN OCH HÖG
+      renderer = {
+        type: "unique-value",
+        field: "OBJECTID",
+        defaultSymbol: {
+          type: "polygon-3d",
+          symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }]
+        },
+        uniqueValueInfos: [{
+          value: 1278510,
+          symbol: {
+            type: "polygon-3d",
+            symbolLayers: [{ type: "extrude", size: 35, material: { color: "#2ecc71" } }]
+          }
+        }]
+      };
+    }
+    else {
       renderer = {
         type: "unique-value", field: "Join_Count",
         defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
@@ -97,7 +118,7 @@ require([
 
     if (info.type.includes("route")) {
       popupTemplate = {
-        title: "Transport Information Hospital",
+        title: "Transport Information Station",
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime;
           if (totalTime) {
@@ -114,9 +135,26 @@ require([
         title: "Building Information",
         content: function(feature) {
           const attrs = feature.graphic.attributes;
-          // Om Building_ID saknas, använd OBJECTID eller grafikens interna ID 
-          const id = attrs.Building_ID || attrs.OBJECTID || feature.graphic.uid || "N/A";
-          return `<b>Building ID:</b> ${id}`;
+          const bID = attrs.OBJECTID || attrs.Building_ID || feature.graphic.uid;
+          
+          let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
+          
+          // Om ID matchar den specifika IFC-byggnaden, lägg till gröna knappen
+          if (bID == 1278510) {
+            content += `
+              <div style="text-align: center;">
+                <a href="IFC.html" target="_blank" style="
+                  display: inline-block;
+                  padding: 10px 20px;
+                  background-color: #2ecc71;
+                  color: white;
+                  text-decoration: none;
+                  border-radius: 5px;
+                  font-weight: bold;
+                ">Go to 3D Model</a>
+              </div>`;
+          }
+          return content;
         }
       };
     }
@@ -125,7 +163,7 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      outFields: ["*"], 
+      outFields: ["*"],
       popupTemplate: popupTemplate,
       elevationInfo: { 
         mode: "relative-to-ground", 
