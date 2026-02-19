@@ -12,7 +12,6 @@ require([
     { name: "Parking", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
-    // Här använder vi den nya filen du skapade med scriptet
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     
     // Emergency Services
@@ -20,7 +19,7 @@ require([
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
-    { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
+    { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
@@ -31,6 +30,7 @@ require([
 
   layersInfo.forEach(info => {
     let renderer;
+    let popupTemplate = null;
 
     // --- RENDERERS ---
     if (info.type === "health-walk" || info.type === "walk") {
@@ -61,7 +61,7 @@ require([
       if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
       else if (info.type === "incident-icon") iconHref += "incident-house.svg";
       else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
-      else if (info.type === "fire-incident-icon") iconHref += "fire-incident-house.svg";
+      else if (info.type === "fire-incident-house") iconHref += "fire-incident-house.svg";
       else if (info.type === "police-icon") iconHref += "police-marker.svg";
       else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
       else if (info.type === "health-icon") iconHref += "health.svg";
@@ -77,50 +77,38 @@ require([
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } 
     else if (info.type === "building") {
+      // 1. GÖR BYGGNAD 8052 GRÖN
       renderer = {
         type: "unique-value",
-        field: "Building_ID", // VIKTIGT: Använder det nya fältet
+        field: "Building_ID",
         defaultSymbol: {
           type: "polygon-3d",
           symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }]
         },
         uniqueValueInfos: [{
-          value: 8052, // <--- ÄNDRA DETTA NUMMER till din byggnads nya ID
+          value: 8052,
           symbol: {
             type: "polygon-3d",
-            symbolLayers: [{ type: "extrude", size: 35, material: { color: "#2ecc71" } }]
+            symbolLayers: [{
+              type: "extrude",
+              size: 40, 
+              material: { color: "#2ecc71" } 
+            }]
           }
         }]
       };
-    }
 
-    // --- POPUP TEMPLATES ---
-    let popupTemplate = null;
-
-    if (info.type.includes("route")) {
-      popupTemplate = {
-        title: "Transport Information",
-        content: function(feature) {
-          const totalTime = feature.graphic.attributes.Total_TravelTime;
-          if (totalTime) {
-            const mins = Math.floor(totalTime);
-            const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Travel time:</b><br/> ${mins} minutes and ${secs} seconds`;
-          }
-          return "Travel time data not available.";
-        }
-      };
-    } 
-    else if (info.type === "building") {
+      // 2. SKAPA KNAPP FÖR BYGGNAD 8052
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
           const bID = feature.graphic.attributes.Building_ID;
           let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
           
-          if (bID == 8052) { // <--- ÄNDRA DETTA NUMMER till samma som ovan
+          // Säkerhetskoll: kolla både som siffra och text
+          if (bID == 8052 || (bID && bID.toString() === "8052")) {
             content += `
-              <div style="text-align: center;">
+              <div style="text-align: center; margin-top: 10px;">
                 <a href="IFC.html" target="_blank" style="
                   display: inline-block;
                   padding: 10px 20px;
@@ -129,6 +117,7 @@ require([
                   text-decoration: none;
                   border-radius: 5px;
                   font-weight: bold;
+                  border: 1px solid #27ae60;
                 ">Go to 3D Model</a>
               </div>`;
           }
@@ -138,7 +127,7 @@ require([
     }
 
     const layer = new GeoJSONLayer({
-      url: "./data/" + info.file + "?v=" + new Date().getTime(),
+      url: "./data/" + info.file + "?v=" + new Date().getTime(), // Tvingar webbläsaren att hämta nyaste filen
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
@@ -152,7 +141,8 @@ require([
   });
 
   const view = new SceneView({
-    container: "viewDiv", map: map,
+    container: "viewDiv", 
+    map: map,
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
