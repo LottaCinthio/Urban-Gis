@@ -30,7 +30,7 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // --- RENDERER LOGIC ---
+    // --- RENDERERS ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
@@ -46,9 +46,9 @@ require([
       };
     } 
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Yellow (Hospital)
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Red
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blue
+      let routeColor = [255, 215, 0, 0.9]; // Yellow (Hospital) 
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Red 
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blue 
 
       renderer = {
         type: "simple",
@@ -97,7 +97,7 @@ require([
 
     if (info.type.includes("route")) {
       popupTemplate = {
-        title: "Transport Information",
+        title: "Transport Information Hospital",
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime;
           if (totalTime) {
@@ -113,10 +113,10 @@ require([
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
-          // Denna funktion kollar efter 'Building_ID' eller ArcGIS standard 'OBJECTID'
           const attrs = feature.graphic.attributes;
-          const id = attrs.Building_ID || attrs.OBJECTID || attrs.id || "Pending Assignment";
-          return `<b>Individual Building ID:</b> ${id}`;
+          // Om Building_ID saknas, använd OBJECTID eller grafikens interna ID 
+          const id = attrs.Building_ID || attrs.OBJECTID || feature.graphic.uid || "N/A";
+          return `<b>Building ID:</b> ${id}`;
         }
       };
     }
@@ -125,7 +125,7 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      outFields: ["*"], // Laddar alla fält för att hitta ID:t
+      outFields: ["*"], 
       popupTemplate: popupTemplate,
       elevationInfo: { 
         mode: "relative-to-ground", 
