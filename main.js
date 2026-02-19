@@ -30,7 +30,7 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // --- RENDERERS (Samma som tidigare) ---
+    // --- RENDERERS ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
@@ -97,11 +97,15 @@ require([
         }
       };
     } 
-    // Ny popup för byggnader
     else if (info.type === "building") {
       popupTemplate = {
         title: "Building Information",
-        content: "<b>Building ID:</b> {OBJECTID}" // ArcGIS ger ofta GeoJSON-objekt ett OBJECTID automatiskt
+        content: function(feature) {
+          // Kollar efter id-fält i GeoJSON
+          const attr = feature.graphic.attributes;
+          const bID = attr.Building_ID || attr.OBJECTID || attr.id || "No ID assigned";
+          return `<b>ID:</b> ${bID}`;
+        }
       };
     }
 
@@ -109,7 +113,7 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      outFields: ["*"], // Hämta alla fält för att vara säker på att ID:t finns med
+      outFields: ["*"],
       popupTemplate: popupTemplate,
       elevationInfo: { 
         mode: "relative-to-ground", 
