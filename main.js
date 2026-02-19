@@ -13,7 +13,7 @@ require([
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
-    // Nya lager för rutter och sjukhuslogik
+    // Nya lager för sjukhus, incidenter och rutter 
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" }
@@ -23,6 +23,8 @@ require([
 
   layersInfo.forEach(info => {
     let renderer;
+
+    // --- RENDERERS ---
 
     if (info.type === "health-walk") {
       renderer = {
@@ -44,7 +46,7 @@ require([
         ]
       };
     } 
-    // Renderer för gula rutter (linjer)
+    // Renderer för gula rutter 
     else if (info.type === "route") {
       renderer = {
         type: "simple",
@@ -53,14 +55,14 @@ require([
           symbolLayers: [{
             type: "line",
             size: 4,
-            material: { color: [255, 255, 0, 0.9] },
+            material: { color: [255, 255, 0, 0.9] }, // Gul färg
             cap: "round",
             join: "round"
           }]
         }
       };
     }
-    // Renderer för Sjukhus-ikonen (H)
+    // Renderer för Sjukhus-ikonen (Blå kvadrat med H) [cite: 3]
     else if (info.type === "hospital-icon") {
       renderer = {
         type: "simple",
@@ -73,7 +75,7 @@ require([
         }
       };
     }
-    // Renderer för Incident-ikonen (Hus)
+    // Renderer för Incident-ikonen (Blå kvadrat med hus) [cite: 3]
     else if (info.type === "incident-icon") {
       renderer = {
         type: "simple",
@@ -86,7 +88,6 @@ require([
         }
       };
     }
-    // Standard-ikoner för övriga punkter
     else if (info.type.includes("icon")) {
       let iconFile = "school.svg";
       if (info.type === "health-icon") iconFile = "health.svg";
@@ -115,27 +116,40 @@ require([
       };
     }
 
+    // --- SKAPA LAGER ---
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
+      // Popup logik för rutter som räknar om decimaler till minuter och sekunder 
       popupTemplate: info.type === "route" ? {
-        title: "Utryckningsväg",
-        content: "Beräknad restid: <b>{Total_TravelTime}</b> minuter."
+        title: "Transportinformation",
+        content: function(feature) {
+          const totalTime = feature.graphic.attributes.Total_TravelTime;
+          const mins = Math.floor(totalTime);
+          const secs = Math.round((totalTime - mins) * 60);
+          return `<b>Travel time from hospital:</b><br/> ${mins} minuter och ${secs} sekunder`;
+        }
       } : null,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        offset: info.type === "route" ? 2 : (info.type.includes("icon") ? 45 : (info.type.includes("walk") ? 1.5 : 0.5)) 
+        // Vi höjer rutter något (offset 5) så de är lättare att klicka på 
+        offset: info.type === "route" ? 5 : (info.type.includes("icon") ? 45 : (info.type.includes("walk") ? 1.5 : 0.5)) 
       }
     });
     map.add(layer);
   });
+
+  // --- VIEW INSTÄLLNINGAR ---
 
   const view = new SceneView({
     container: "viewDiv", map: map,
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 },
     screenSizePerspectiveEnabled: false 
   });
+
+  // --- MENY-LOGIK (Checkboxar) ---
 
   view.when(() => {
     layersInfo.forEach(info => {
