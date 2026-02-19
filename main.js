@@ -20,7 +20,11 @@ require([
     // Fire Station Data (Red Theme)
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
-    { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" }
+    { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
+    // Police Data (Blue Theme)
+    { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
+    { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
+    { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
   ];
 
   const map = new Map({ basemap: "gray-vector", ground: "world-elevation" });
@@ -42,16 +46,17 @@ require([
         ]
       };
     } 
-    else if (info.type === "route" || info.type === "fire-route") {
+    else if (info.type === "route" || info.type === "fire-route" || info.type === "police-route") {
+      let routeColor = [255, 215, 0, 0.9]; // Default Yellow (Hospital)
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Red
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blue
+
       renderer = {
         type: "simple",
         symbol: {
           type: "line-3d",
           symbolLayers: [{
-            type: "line",
-            size: 4,
-            material: { color: info.type === "route" ? [255, 215, 0, 0.9] : [217, 48, 37, 0.9] },
-            cap: "round", join: "round"
+            type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round"
           }]
         }
       };
@@ -63,6 +68,8 @@ require([
       else if (info.type === "incident-icon") { iconHref += "incident-house.svg"; size = 28; }
       else if (info.type === "fire-icon") { iconHref += "firestation-marker.svg"; size = 35; }
       else if (info.type === "fire-incident-icon") { iconHref += "fire-incident-house.svg"; size = 28; }
+      else if (info.type === "police-icon") { iconHref += "police-marker.svg"; size = 35; }
+      else if (info.type === "crime-icon") { iconHref += "crime-incident.svg"; size = 28; }
       else if (info.type === "health-icon") iconHref += "health.svg";
       else if (info.type === "school-icon") iconHref += "school.svg";
       else if (info.type === "bus-icon") { iconHref += "bus.svg"; size = 20; }
@@ -91,8 +98,8 @@ require([
       title: info.name,
       renderer: renderer,
       outFields: ["Total_TravelTime"],
-      popupTemplate: (info.type === "route" || info.type === "fire-route") ? {
-        title: "Transport Information Station",
+      popupTemplate: (info.type.includes("route")) ? {
+        title: "Transport Information",
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime;
           if (totalTime) {
@@ -105,7 +112,7 @@ require([
       } : null,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        offset: (info.type === "route" || info.type === "fire-route") ? 5 : (info.type.includes("icon") ? 45 : 0.5) 
+        offset: (info.type.includes("route")) ? 5 : (info.type.includes("icon") ? 45 : 0.5) 
       }
     });
     map.add(layer);
