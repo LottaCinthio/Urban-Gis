@@ -8,7 +8,6 @@
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
   <style>
-    /* Styling for the legend descriptions in the sidebar */
     .legend-icon {
       width: 22px;
       height: 22px;
@@ -48,6 +47,24 @@
     <h2>Scenario A: Baseline</h2>
     <hr>
     
+    <div class="layer-item highlight-box" style="border-left: 5px solid #4285F4;">
+      <input type="checkbox" id="toggleHospital" checked> <strong>Sjukhus & Incidenter</strong>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/hospital-marker.svg" class="legend-icon"> <span>Start: Sjukhus (H)</span>
+        </div>
+        <div class="legend-row">
+          <input type="checkbox" id="toggleIncidents" checked style="margin-right: 5px;">
+          <img src="./icons/incident-house.svg" class="legend-icon"> <span>Mål: Incidenter</span>
+        </div>
+        <div class="legend-row">
+          <input type="checkbox" id="toggleRoutes" checked style="margin-right: 5px;">
+          <span style="height: 4px; width: 20px; background: #ffd700; display: inline-block; margin-right: 10px;"></span>
+          <span>Visa Gula Rutter</span>
+        </div>
+      </div>
+    </div>
+
     <div class="layer-item highlight-box-blue">
       <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
       <div class="description">

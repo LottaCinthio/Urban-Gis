@@ -12,7 +12,11 @@ require([
     { name: "Parking", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
-    { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" }
+    { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
+    // Nya lager för rutter och sjukhuslogik
+    { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
+    { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
+    { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" }
   ];
 
   const map = new Map({ basemap: "gray-vector", ground: "world-elevation" });
@@ -40,6 +44,49 @@ require([
         ]
       };
     } 
+    // Renderer för gula rutter (linjer)
+    else if (info.type === "route") {
+      renderer = {
+        type: "simple",
+        symbol: {
+          type: "line-3d",
+          symbolLayers: [{
+            type: "line",
+            size: 4,
+            material: { color: [255, 255, 0, 0.9] },
+            cap: "round",
+            join: "round"
+          }]
+        }
+      };
+    }
+    // Renderer för Sjukhus-ikonen (H)
+    else if (info.type === "hospital-icon") {
+      renderer = {
+        type: "simple",
+        symbol: { 
+          type: "point-3d", 
+          symbolLayers: [{ 
+            type: "icon", resource: { href: "./icons/hospital-marker.svg" }, 
+            size: 35, outline: { color: "white", size: 2 }
+          }] 
+        }
+      };
+    }
+    // Renderer för Incident-ikonen (Hus)
+    else if (info.type === "incident-icon") {
+      renderer = {
+        type: "simple",
+        symbol: { 
+          type: "point-3d", 
+          symbolLayers: [{ 
+            type: "icon", resource: { href: "./icons/incident-house.svg" }, 
+            size: 28, outline: { color: "white", size: 1.5 }
+          }] 
+        }
+      };
+    }
+    // Standard-ikoner för övriga punkter
     else if (info.type.includes("icon")) {
       let iconFile = "school.svg";
       if (info.type === "health-icon") iconFile = "health.svg";
@@ -72,9 +119,13 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
+      popupTemplate: info.type === "route" ? {
+        title: "Utryckningsväg",
+        content: "Beräknad restid: <b>{Total_TravelTime}</b> minuter."
+      } : null,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        offset: info.type.includes("icon") ? 45 : (info.type.includes("walk") ? 1.5 : 0.5) 
+        offset: info.type === "route" ? 2 : (info.type.includes("icon") ? 45 : (info.type.includes("walk") ? 1.5 : 0.5)) 
       }
     });
     map.add(layer);
