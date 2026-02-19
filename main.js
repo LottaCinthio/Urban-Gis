@@ -13,15 +13,13 @@ require([
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
-    // Hospital Data (Yellow Theme)
+    // Emergency Services
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
-    // Fire Station Data (Red Theme)
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
-    // Police Data (Blue Theme)
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
@@ -32,11 +30,11 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
+    // --- RENDERERS (Samma som tidigare) ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
         [[46, 204, 113, 0.5], [241, 196, 15, 0.4], [230, 126, 34, 0.3]];
-      
       renderer = {
         type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
@@ -46,19 +44,13 @@ require([
         ]
       };
     } 
-    else if (info.type === "route" || info.type === "fire-route" || info.type === "police-route") {
-      let routeColor = [255, 215, 0, 0.9]; // Default Yellow (Hospital)
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Red
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blue
-
+    else if (info.type.includes("route")) {
+      let routeColor = [255, 215, 0, 0.9]; 
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
       renderer = {
         type: "simple",
-        symbol: {
-          type: "line-3d",
-          symbolLayers: [{
-            type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round"
-          }]
-        }
+        symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] }
       };
     }
     else if (info.type.includes("-icon")) {
@@ -74,13 +66,9 @@ require([
       else if (info.type === "school-icon") iconHref += "school.svg";
       else if (info.type === "bus-icon") { iconHref += "bus.svg"; size = 20; }
       else if (info.type === "play-icon") { iconHref += "playground.svg"; size = 20; }
-
       renderer = {
         type: "simple",
-        symbol: { 
-          type: "point-3d", 
-          symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] 
-        }
+        symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] }
       };
     }
     else if (info.type === "parking") {
@@ -93,12 +81,10 @@ require([
       };
     }
 
-    const layer = new GeoJSONLayer({
-      url: "./data/" + info.file + "?v=" + new Date().getTime(),
-      title: info.name,
-      renderer: renderer,
-      outFields: ["Total_TravelTime"],
-      popupTemplate: (info.type.includes("route")) ? {
+    // --- POPUP LOGIC ---
+    let popupTemplate = null;
+    if (info.type.includes("route")) {
+      popupTemplate = {
         title: "Transport Information",
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime;
@@ -109,10 +95,25 @@ require([
           }
           return "Travel time data not available.";
         }
-      } : null,
+      };
+    } 
+    // Ny popup för byggnader
+    else if (info.type === "building") {
+      popupTemplate = {
+        title: "Building Information",
+        content: "<b>Building ID:</b> {OBJECTID}" // ArcGIS ger ofta GeoJSON-objekt ett OBJECTID automatiskt
+      };
+    }
+
+    const layer = new GeoJSONLayer({
+      url: "./data/" + info.file + "?v=" + new Date().getTime(),
+      title: info.name,
+      renderer: renderer,
+      outFields: ["*"], // Hämta alla fält för att vara säker på att ID:t finns med
+      popupTemplate: popupTemplate,
       elevationInfo: { 
         mode: "relative-to-ground", 
-        offset: (info.type.includes("route")) ? 5 : (info.type.includes("icon") ? 45 : 0.5) 
+        offset: info.type.includes("route") ? 5 : (info.type.includes("icon") ? 45 : 0.5) 
       }
     });
     map.add(layer);
@@ -120,8 +121,7 @@ require([
 
   const view = new SceneView({
     container: "viewDiv", map: map,
-    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 },
-    screenSizePerspectiveEnabled: false 
+    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
   view.when(() => {
