@@ -85,7 +85,7 @@ require([
           symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }]
         },
         uniqueValueInfos: [{
-          value: 500, // <--- ÄNDRA DETTA NUMMER till din byggnads nya ID
+          value: 8052, // <--- ÄNDRA DETTA NUMMER till din byggnads nya ID
           symbol: {
             type: "polygon-3d",
             symbolLayers: [{ type: "extrude", size: 35, material: { color: "#2ecc71" } }]
