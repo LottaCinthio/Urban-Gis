@@ -105,13 +105,14 @@ require([
           const bID = feature.graphic.attributes.Building_ID;
           let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
           
-          // Vi kollar ID 8052
           if (bID == 8052 || (bID && bID.toString() === "8052")) {
-            // ÄNDRING: Vi använder en direkt referens till filnamnet
-            // Detta tvingar webbläsaren att leta i samma mapp som nuvarande URL
+            // Vi skapar den fullständiga adressen dynamiskt
+            const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+            const fullUrl = currentPath + "IFC.html";
+
             content += `
               <div style="text-align: center; margin-top: 10px;">
-                <a href="IFC.html" target="_blank" style="
+                <a href="${fullUrl}" target="_blank" style="
                   display: inline-block;
                   padding: 12px 24px;
                   background-color: #2ecc71;
@@ -121,7 +122,6 @@ require([
                   font-weight: bold;
                   border: 1px solid #27ae60;
                   cursor: pointer;
-                  text-align: center;
                 ">Go to 3D Model</a>
               </div>`;
           }
