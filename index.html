@@ -8,142 +8,61 @@
   <script src="https://js.arcgis.com/4.29/"></script>
   <script src="main.js"></script>
   <style>
-    .legend-icon {
-      width: 22px;
-      height: 22px;
-      vertical-align: middle;
-      margin-right: 10px;
-    }
-    .legend-row {
-      display: flex;
-      align-items: center;
-      padding: 4px 0;
-      font-size: 0.9em;
-      color: #333;
-    }
-    .box {
-      width: 15px;
-      height: 15px;
-      display: inline-block;
-      margin-right: 10px;
-      border-radius: 2px;
-      border: 1px solid rgba(0,0,0,0.1);
-    }
-    .description {
-      margin-left: 25px;
-      margin-bottom: 15px;
-    }
-    strong {
-      color: #2c3e50;
-    }
+    .legend-icon { width: 22px; height: 22px; vertical-align: middle; margin-right: 10px; }
+    .legend-row { display: flex; align-items: center; padding: 4px 0; font-size: 0.9em; color: #333; }
+    .box { width: 15px; height: 15px; display: inline-block; margin-right: 10px; border-radius: 2px; }
+    .description { margin-left: 25px; margin-bottom: 15px; }
   </style>
 </head>
 <body>
   <div id="viewDiv"></div>
-
   <button id="paneToggle" onclick="togglePane()">☰ Data Layers</button>
 
   <div id="sidebar" class="pane-open">
     <h2>Scenario A: Baseline</h2>
     <hr>
     
-    <div class="layer-item highlight-box" style="border-left: 5px solid #4285F4;">
-      <input type="checkbox" id="toggleHospital" checked> <strong>Sjukhus & Incidenter</strong>
+    <div class="layer-item highlight-box" style="border-left: 5px solid #D93025;">
+      <input type="checkbox" id="toggleFirestation" checked> <strong>Fire Services</strong>
       <div class="description">
         <div class="legend-row">
-          <img src="./icons/hospital-marker.svg" class="legend-icon"> <span>Start: Sjukhus (H)</span>
+          <img src="./icons/firestation-marker.svg" class="legend-icon"> <span>Fire Station</span>
+        </div>
+        <div class="legend-row">
+          <input type="checkbox" id="toggleFireIncidents" checked style="margin-right: 5px;">
+          <img src="./icons/fire-incident-house.svg" class="legend-icon"> <span>Fire Incidents</span>
+        </div>
+        <div class="legend-row">
+          <input type="checkbox" id="toggleFireRoutes" checked style="margin-right: 5px;">
+          <span style="height: 4px; width: 20px; background: #D93025; display: inline-block; margin-right: 10px;"></span>
+          <span>Fire Routes (Red)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer-item highlight-box" style="border-left: 5px solid #4285F4;">
+      <input type="checkbox" id="toggleHospital" checked> <strong>Hospital Access</strong>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/hospital-marker.svg" class="legend-icon"> <span>Hospital (H)</span>
         </div>
         <div class="legend-row">
           <input type="checkbox" id="toggleIncidents" checked style="margin-right: 5px;">
-          <img src="./icons/incident-house.svg" class="legend-icon"> <span>Mål: Incidenter</span>
+          <img src="./icons/incident-house.svg" class="legend-icon"> <span>Hospital Incidents</span>
         </div>
         <div class="legend-row">
           <input type="checkbox" id="toggleRoutes" checked style="margin-right: 5px;">
           <span style="height: 4px; width: 20px; background: #ffd700; display: inline-block; margin-right: 10px;"></span>
-          <span>Visa Gula Rutter</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="layer-item highlight-box-blue">
-      <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
-      <div class="description">
-        <div class="legend-row">
-          <img src="./icons/health.svg" class="legend-icon"> 
-          <span><strong>Map Symbol:</strong> Vårdcentral Entrance</span>
-        </div>
-        <p><strong>WALKING TIME:</strong></p>
-        <input type="checkbox" id="toggleHealthWalk" checked> <label>Show Health Zones</label>
-        <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min</div>
-        <div class="legend-row"><span class="box" style="background: rgba(155, 89, 182, 0.6);"></span> 10 min</div>
-        <div class="legend-row"><span class="box" style="background: rgba(44, 62, 80, 0.5);"></span> 15 min</div>
-      </div>
-    </div>
-
-    <div class="layer-item highlight-box">
-      <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
-      <div class="description">
-        <div class="legend-row">
-          <img src="./icons/school.svg" class="legend-icon"> 
-          <span><strong>Map Symbol:</strong> School Entrance</span>
-        </div>
-        <p><strong>WALKING TIME:</strong></p>
-        <input type="checkbox" id="toggleWalk" checked> <label>Show School Zones</label>
-        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min</div>
-        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min</div>
-        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min</div>
-      </div>
-    </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="toggleBus" checked> <strong>Bus Stops</strong>
-      <div class="description">
-        <div class="legend-row">
-          <img src="./icons/bus.svg" class="legend-icon"> 
-          <span><strong>Map Symbol:</strong> Bus Stop</span>
+          <span>Hospital Routes (Yellow)</span>
         </div>
       </div>
     </div>
 
     <div class="layer-item">
-      <input type="checkbox" id="togglePlay" checked> <strong>Playgrounds</strong>
-      <div class="description">
-        <div class="legend-row">
-          <img src="./icons/playground.svg" class="legend-icon"> 
-          <span><strong>Map Symbol:</strong> Playground Area</span>
-        </div>
+      <input type="checkbox" id="toggleHealthcare" checked> <strong>Other Services</strong>
       </div>
-    </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="toggleParking" checked> <strong>Parking Spots</strong>
-      <div class="description">
-        <div class="legend-row">
-          <span class="box" style="background: rgba(0, 197, 255, 0.6);"></span> 
-          <span><strong>Map Symbol:</strong> Parking Zone</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="layer-item">
-      <input type="checkbox" id="toggleBuildings" checked> <strong>Other Buildings</strong>
-      <div class="description">
-        <div class="legend-row">
-          <span class="box" style="background: white; border: 1px solid #ccc;"></span> 
-          <span><strong>Map Symbol:</strong> Residential/Other</span>
-        </div>
-        <div class="legend-row">
-          <span class="box" style="background: red;"></span> 
-          <span><strong>Map Symbol:</strong> High-priority Building</span>
-        </div>
-      </div>
-    </div>
   </div>
 
-  <script>
-    function togglePane() {
-      document.getElementById("sidebar").classList.toggle("pane-closed");
-    }
-  </script>
+  <script>function togglePane() { document.getElementById("sidebar").classList.toggle("pane-closed"); }</script>
 </body>
 </html>
