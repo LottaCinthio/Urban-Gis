@@ -30,11 +30,12 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // --- RENDERERS ---
+    // --- RENDERER LOGIC ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
         [[46, 204, 113, 0.5], [241, 196, 15, 0.4], [230, 126, 34, 0.3]];
+      
       renderer = {
         type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
@@ -45,12 +46,18 @@ require([
       };
     } 
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; 
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
+      let routeColor = [255, 215, 0, 0.9]; // Yellow (Hospital)
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Red
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blue
+
       renderer = {
         type: "simple",
-        symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] }
+        symbol: {
+          type: "line-3d",
+          symbolLayers: [{
+            type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round"
+          }]
+        }
       };
     }
     else if (info.type.includes("-icon")) {
@@ -66,9 +73,13 @@ require([
       else if (info.type === "school-icon") iconHref += "school.svg";
       else if (info.type === "bus-icon") { iconHref += "bus.svg"; size = 20; }
       else if (info.type === "play-icon") { iconHref += "playground.svg"; size = 20; }
+
       renderer = {
         type: "simple",
-        symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] }
+        symbol: { 
+          type: "point-3d", 
+          symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] 
+        }
       };
     }
     else if (info.type === "parking") {
@@ -81,8 +92,9 @@ require([
       };
     }
 
-    // --- POPUP LOGIC ---
+    // --- POPUP TEMPLATES ---
     let popupTemplate = null;
+
     if (info.type.includes("route")) {
       popupTemplate = {
         title: "Transport Information",
@@ -101,10 +113,10 @@ require([
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
-          // Kollar efter id-fält i GeoJSON
-          const attr = feature.graphic.attributes;
-          const bID = attr.Building_ID || attr.OBJECTID || attr.id || "No ID assigned";
-          return `<b>ID:</b> ${bID}`;
+          // Denna funktion kollar efter 'Building_ID' eller ArcGIS standard 'OBJECTID'
+          const attrs = feature.graphic.attributes;
+          const id = attrs.Building_ID || attrs.OBJECTID || attrs.id || "Pending Assignment";
+          return `<b>Individual Building ID:</b> ${id}`;
         }
       };
     }
@@ -113,7 +125,7 @@ require([
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      outFields: ["*"],
+      outFields: ["*"], // Laddar alla fält för att hitta ID:t
       popupTemplate: popupTemplate,
       elevationInfo: { 
         mode: "relative-to-ground", 
@@ -125,7 +137,8 @@ require([
 
   const view = new SceneView({
     container: "viewDiv", map: map,
-    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
+    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 },
+    screenSizePerspectiveEnabled: false 
   });
 
   view.when(() => {
