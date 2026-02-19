@@ -12,16 +12,16 @@ require([
     { name: "Parking", file: "Parkingspots.geojson", type: "parking", id: "toggleParking" },
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
-    { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
-    // Hospital Data (Yellow Theme)
+    // Här använder vi den nya filen du skapade med scriptet
+    { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
+    
+    // Emergency Services
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
-    // Fire Station Data (Red Theme)
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
-    // Police Data (Blue Theme)
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
@@ -32,12 +32,11 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // --- RENDERER LOGIC ---
+    // --- RENDERERS ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
         [[46, 204, 113, 0.5], [241, 196, 15, 0.4], [230, 126, 34, 0.3]];
-      
       renderer = {
         type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
@@ -48,68 +47,50 @@ require([
       };
     } 
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Hospital
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Fire
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Police
-
+      let routeColor = [255, 215, 0, 0.9]; 
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
       renderer = {
         type: "simple",
-        symbol: {
-          type: "line-3d",
-          symbolLayers: [{
-            type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round"
-          }]
-        }
+        symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] }
       };
     }
     else if (info.type.includes("-icon")) {
       let iconHref = "./icons/";
       let size = 30;
-      if (info.type === "hospital-icon") { iconHref += "hospital-marker.svg"; size = 35; }
-      else if (info.type === "incident-icon") { iconHref += "incident-house.svg"; size = 28; }
-      else if (info.type === "fire-icon") { iconHref += "firestation-marker.svg"; size = 35; }
-      else if (info.type === "fire-incident-icon") { iconHref += "fire-incident-house.svg"; size = 28; }
-      else if (info.type === "police-icon") { iconHref += "police-marker.svg"; size = 35; }
-      else if (info.type === "crime-icon") { iconHref += "crime-incident.svg"; size = 28; }
+      if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
+      else if (info.type === "incident-icon") iconHref += "incident-house.svg";
+      else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
+      else if (info.type === "fire-incident-icon") iconHref += "fire-incident-house.svg";
+      else if (info.type === "police-icon") iconHref += "police-marker.svg";
+      else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
       else if (info.type === "health-icon") iconHref += "health.svg";
       else if (info.type === "school-icon") iconHref += "school.svg";
       else if (info.type === "bus-icon") { iconHref += "bus.svg"; size = 20; }
       else if (info.type === "play-icon") { iconHref += "playground.svg"; size = 20; }
-
       renderer = {
         type: "simple",
-        symbol: { 
-          type: "point-3d", 
-          symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] 
-        }
+        symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] }
       };
     }
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } 
     else if (info.type === "building") {
-      // Special Renderer: GÖR BYGGNAD 1278510 GRÖN OCH HÖG
       renderer = {
         type: "unique-value",
-        field: "OBJECTID",
+        field: "Building_ID", // VIKTIGT: Använder det nya fältet
         defaultSymbol: {
           type: "polygon-3d",
           symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }]
         },
         uniqueValueInfos: [{
-          value: 1278510,
+          value: 500, // <--- ÄNDRA DETTA NUMMER till din byggnads nya ID
           symbol: {
             type: "polygon-3d",
             symbolLayers: [{ type: "extrude", size: 35, material: { color: "#2ecc71" } }]
           }
         }]
-      };
-    }
-    else {
-      renderer = {
-        type: "unique-value", field: "Join_Count",
-        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
-        uniqueValueInfos: [{ value: 1, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 22, material: { color: "red" } }] } }]
       };
     }
 
@@ -118,13 +99,13 @@ require([
 
     if (info.type.includes("route")) {
       popupTemplate = {
-        title: "Transport Information Station",
+        title: "Transport Information",
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime;
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Travel time from station:</b><br/> ${mins} minutes and ${secs} seconds`;
+            return `<b>Travel time:</b><br/> ${mins} minutes and ${secs} seconds`;
           }
           return "Travel time data not available.";
         }
@@ -134,13 +115,10 @@ require([
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
-          const attrs = feature.graphic.attributes;
-          const bID = attrs.OBJECTID || attrs.Building_ID || feature.graphic.uid;
-          
+          const bID = feature.graphic.attributes.Building_ID;
           let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
           
-          // Om ID matchar den specifika IFC-byggnaden, lägg till gröna knappen
-          if (bID == 1278510) {
+          if (bID == 500) { // <--- ÄNDRA DETTA NUMMER till samma som ovan
             content += `
               <div style="text-align: center;">
                 <a href="IFC.html" target="_blank" style="
@@ -175,8 +153,7 @@ require([
 
   const view = new SceneView({
     container: "viewDiv", map: map,
-    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 },
-    screenSizePerspectiveEnabled: false 
+    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
   view.when(() => {
