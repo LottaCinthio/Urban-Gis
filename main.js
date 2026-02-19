@@ -14,17 +14,13 @@ require([
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     
-    // Emergency Services: Hospital (Yellow Theme)
+    // Emergency Services
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
-    
-    // Emergency Services: Fire (Red Theme)
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
-    
-    // Emergency Services: Police (Blue Theme)
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
@@ -36,7 +32,7 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // --- RENDERER LOGIC ---
+    // --- RENDERERS ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
@@ -51,12 +47,35 @@ require([
       };
     } 
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Hospital (Yellow)
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Fire (Red)
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Police (Blue)
+      let routeColor = [255, 215, 0, 0.9]; 
+      let routeTitle = "Transport Information Hospital"; // Standard
+
+      if (info.type === "fire-route") {
+        routeColor = [217, 48, 37, 0.9];
+        routeTitle = "Transport Information Firestation";
+      }
+      if (info.type === "police-route") {
+        routeColor = [0, 0, 255, 0.9];
+        routeTitle = "Transport Information Police";
+      }
+
       renderer = {
         type: "simple",
         symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] }
+      };
+
+      // --- POPUP FÖR RUTTER MED SPECIFIK RUBRIK ---
+      popupTemplate = {
+        title: routeTitle,
+        content: function(feature) {
+          const totalTime = feature.graphic.attributes.Total_TravelTime || feature.graphic.attributes.Total_Time || feature.graphic.attributes.traveltime;
+          if (totalTime) {
+            const mins = Math.floor(totalTime);
+            const secs = Math.round((totalTime - mins) * 60);
+            return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`;
+          }
+          return "Travel time data not available.";
+        }
       };
     }
     else if (info.type.includes("-icon")) {
@@ -81,7 +100,6 @@ require([
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } 
     else if (info.type === "building") {
-      // 1. RENDERER: GÖR BYGGNAD 8052 GRÖN OCH HÖG
       renderer = {
         type: "unique-value",
         field: "Building_ID",
@@ -98,7 +116,6 @@ require([
         }]
       };
 
-     // 2. POPUP: SKAPA KNAPP FÖR BYGGNAD 8052
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
@@ -106,13 +123,13 @@ require([
           let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
           
           if (bID == 8052 || (bID && bID.toString() === "8052")) {
-            // Vi skapar den fullständiga adressen dynamiskt
-            const currentPath = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
-            const fullUrl = currentPath + "IFC.html";
+            const currentUrl = window.location.href.split('?')[0].split('#')[0];
+            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf("/") + 1);
+            const ifcUrl = baseUrl + "IFC.html";
 
             content += `
               <div style="text-align: center; margin-top: 10px;">
-                <a href="${fullUrl}" target="_blank" style="
+                <a href="${ifcUrl}" target="_blank" style="
                   display: inline-block;
                   padding: 12px 24px;
                   background-color: #2ecc71;
@@ -130,7 +147,6 @@ require([
       };
     }
 
-    // --- LAYER CREATION ---
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
@@ -151,7 +167,6 @@ require([
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
-  // --- UI TOGGLES ---
   view.when(() => {
     layersInfo.forEach(info => {
       const checkbox = document.getElementById(info.id);
