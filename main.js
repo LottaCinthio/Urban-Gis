@@ -13,11 +13,11 @@ require([
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings.geojson", type: "building", id: "toggleBuildings" },
-    // Hospital Data
+    // Hospital Data (Yellow Theme)
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
-    // Fire Station Data
+    // Fire Station Data (Red Theme)
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" }
@@ -28,15 +28,13 @@ require([
   layersInfo.forEach(info => {
     let renderer;
 
-    // --- RENDERER LOGIC ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
         [[46, 204, 113, 0.5], [241, 196, 15, 0.4], [230, 126, 34, 0.3]];
       
       renderer = {
-        type: "unique-value", 
-        field: "ToBreak",
+        type: "unique-value", field: "ToBreak",
         uniqueValueInfos: [
           { value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } },
           { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } },
@@ -52,7 +50,7 @@ require([
           symbolLayers: [{
             type: "line",
             size: 4,
-            material: { color: info.type === "route" ? [255, 255, 0, 0.9] : [217, 48, 37, 0.9] },
+            material: { color: info.type === "route" ? [255, 215, 0, 0.9] : [217, 48, 37, 0.9] },
             cap: "round", join: "round"
           }]
         }
