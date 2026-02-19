@@ -12,6 +12,7 @@
     .legend-row { display: flex; align-items: center; padding: 4px 0; font-size: 0.9em; color: #333; }
     .box { width: 15px; height: 15px; display: inline-block; margin-right: 10px; border-radius: 2px; }
     .description { margin-left: 25px; margin-bottom: 15px; }
+    strong { color: #2c3e50; }
   </style>
 </head>
 <body>
@@ -58,9 +59,64 @@
       </div>
     </div>
 
-    <div class="layer-item">
-      <input type="checkbox" id="toggleHealthcare" checked> <strong>Other Services</strong>
+    <div class="layer-item highlight-box-blue">
+      <input type="checkbox" id="toggleHealthcare" checked> <strong>Healthcare Access</strong>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/health.svg" class="legend-icon"> 
+          <span><strong>Map Symbol:</strong> Healthcare Entrance</span>
+        </div>
+        <p><strong>WALKING TIME:</strong></p>
+        <input type="checkbox" id="toggleHealthWalk" checked> <label>Show Health Zones</label>
+        <div class="legend-row"><span class="box" style="background: rgba(52, 152, 219, 0.7);"></span> 5 min</div>
+        <div class="legend-row"><span class="box" style="background: rgba(155, 89, 182, 0.6);"></span> 10 min</div>
+        <div class="legend-row"><span class="box" style="background: rgba(44, 62, 80, 0.5);"></span> 15 min</div>
       </div>
+    </div>
+
+    <div class="layer-item highlight-box">
+      <input type="checkbox" id="toggleSchools" checked> <strong>Primary Schools</strong>
+      <div class="description">
+        <div class="legend-row">
+          <img src="./icons/school.svg" class="legend-icon"> 
+          <span><strong>Map Symbol:</strong> School Entrance</span>
+        </div>
+        <p><strong>WALKING TIME:</strong></p>
+        <input type="checkbox" id="toggleWalk" checked> <label>Show School Zones</label>
+        <div class="legend-row"><span class="box" style="background: rgba(46, 204, 113, 0.7);"></span> 5 min</div>
+        <div class="legend-row"><span class="box" style="background: rgba(241, 196, 15, 0.6);"></span> 10 min</div>
+        <div class="legend-row"><span class="box" style="background: rgba(230, 126, 34, 0.5);"></span> 15 min</div>
+      </div>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBus" checked> <strong>Bus Stops</strong>
+      <div class="description">
+        <div class="legend-row"><img src="./icons/bus.svg" class="legend-icon"> <span>Map Symbol: Bus Stop</span></div>
+      </div>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="togglePlay" checked> <strong>Playgrounds</strong>
+      <div class="description">
+        <div class="legend-row"><img src="./icons/playground.svg" class="legend-icon"> <span>Map Symbol: Playground</span></div>
+      </div>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="toggleParking" checked> <strong>Parking Spots</strong>
+      <div class="description">
+        <div class="legend-row"><span class="box" style="background: rgba(0, 197, 255, 0.6);"></span> <span>Map Symbol: Parking Zone</span></div>
+      </div>
+    </div>
+
+    <div class="layer-item">
+      <input type="checkbox" id="toggleBuildings" checked> <strong>Buildings</strong>
+      <div class="description">
+        <div class="legend-row"><span class="box" style="background: white; border: 1px solid #ccc;"></span> <span>Residential/Other</span></div>
+        <div class="legend-row"><span class="box" style="background: red;"></span> <span>High-priority Building</span></div>
+      </div>
+    </div>
   </div>
 
   <script>function togglePane() { document.getElementById("sidebar").classList.toggle("pane-closed"); }</script>

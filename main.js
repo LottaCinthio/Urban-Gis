@@ -53,8 +53,7 @@ require([
             type: "line",
             size: 4,
             material: { color: info.type === "route" ? [255, 255, 0, 0.9] : [217, 48, 37, 0.9] },
-            cap: "round", 
-            join: "round"
+            cap: "round", join: "round"
           }]
         }
       };
@@ -62,13 +61,12 @@ require([
     else if (info.type.includes("-icon")) {
       let iconHref = "./icons/";
       let size = 30;
-      
       if (info.type === "hospital-icon") { iconHref += "hospital-marker.svg"; size = 35; }
       else if (info.type === "incident-icon") { iconHref += "incident-house.svg"; size = 28; }
       else if (info.type === "fire-icon") { iconHref += "firestation-marker.svg"; size = 35; }
       else if (info.type === "fire-incident-icon") { iconHref += "fire-incident-house.svg"; size = 28; }
-      else if (info.type === "health-icon") { iconHref += "health.svg"; }
-      else if (info.type === "school-icon") { iconHref += "school.svg"; }
+      else if (info.type === "health-icon") iconHref += "health.svg";
+      else if (info.type === "school-icon") iconHref += "school.svg";
       else if (info.type === "bus-icon") { iconHref += "bus.svg"; size = 20; }
       else if (info.type === "play-icon") { iconHref += "playground.svg"; size = 20; }
 
@@ -76,41 +74,27 @@ require([
         type: "simple",
         symbol: { 
           type: "point-3d", 
-          symbolLayers: [{ 
-            type: "icon", 
-            resource: { href: iconHref }, 
-            size: size, 
-            outline: { color: "white", size: 1.5 } 
-          }] 
+          symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] 
         }
       };
     }
     else if (info.type === "parking") {
-      renderer = { 
-        type: "simple", 
-        symbol: { 
-          type: "polygon-3d", 
-          symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] 
-        } 
-      };
-    } 
-    else {
+      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
+    } else {
       renderer = {
-        type: "unique-value", 
-        field: "Join_Count",
+        type: "unique-value", field: "Join_Count",
         defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
         uniqueValueInfos: [{ value: 1, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 22, material: { color: "red" } }] } }]
       };
     }
 
-    // --- CREATE LAYER ---
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       outFields: ["Total_TravelTime"],
       popupTemplate: (info.type === "route" || info.type === "fire-route") ? {
-        title: info.type === "route" ? "Transport Information Hospital" : "Transport Information Fire Station",
+        title: "Transport Information Station",
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime;
           if (totalTime) {
@@ -130,8 +114,7 @@ require([
   });
 
   const view = new SceneView({
-    container: "viewDiv", 
-    map: map,
+    container: "viewDiv", map: map,
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 },
     screenSizePerspectiveEnabled: false 
   });
