@@ -11,12 +11,8 @@
 <body>
   <div class="top-label">Urban Information Management TUIS23 T3377</div>
   <div class="bottom-label">Luna Wani & Lotta Cinthio</div>
-
   <div id="viewDiv"></div>
-  
-  <button id="paneToggle" onclick="togglePane()">
-    <span id="arrowIcon">☰</span>
-  </button>
+  <button id="paneToggle" onclick="togglePane()"><span id="arrowIcon">☰</span></button>
 
   <div id="sidebar" class="pane-open">
     <h2 style="margin-top:0; font-size: 1.4em;">Content</h2>
@@ -30,46 +26,31 @@
           <span><img src="./icons/hospital-marker.svg" class="mini-icon"> Hospital</span>
           <label class="switch"><input type="checkbox" id="toggleHospital" checked><span class="slider"></span></label>
         </div>
-        <div class="row-container sub-row">
-          <span><img src="./icons/incident-house.svg" class="mini-icon"> Incidents</span>
+        <div class="row-container">
+          <span class="indent-text"><img src="./icons/incident-house.svg" class="mini-icon"> Incidents</span>
           <label class="switch small"><input type="checkbox" id="toggleIncidents" checked><span class="slider"></span></label>
         </div>
-        <div class="row-container sub-row">
-          <span><span class="route-line hospital-line"></span> Hospital Routes</span>
-          <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
-        </div>
-      </div>
-      
-      <div class="layer-item" style="margin-top:10px;">
         <div class="row-container">
-          <span><img src="./icons/firestation-marker.svg" class="mini-icon"> Fire Station</span>
-          <label class="switch"><input type="checkbox" id="toggleFirestation" checked><span class="slider"></span></label>
-        </div>
-        <div class="row-container sub-row">
-          <span><img src="./icons/fire-incident-house.svg" class="mini-icon"> Incidents</span>
-          <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
-        </div>
-        <div class="row-container sub-row">
-          <span><span class="route-line fire-line"></span> Fire Routes</span>
-          <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
+          <span class="indent-text"><span class="route-line hospital-line"></span> Hospital Routes</span>
+          <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
         </div>
       </div>
 
       <div class="layer-item" style="margin-top:10px;">
         <div class="row-container">
-          <span><img src="./icons/police-marker.svg" class="mini-icon"> Police Station</span>
-          <label class="switch"><input type="checkbox" id="togglePolice" checked><span class="slider"></span></label>
+          <span><img src="./icons/firestation-marker.svg" class="mini-icon"> Fire Station</span>
+          <label class="switch"><input type="checkbox" id="toggleFirestation" checked><span class="slider"></span></label>
         </div>
-        <div class="row-container sub-row">
-          <span><img src="./icons/crime-incident.svg" class="mini-icon"> Crimes</span>
-          <label class="switch small"><input type="checkbox" id="toggleCrimes" checked><span class="slider"></span></label>
+        <div class="row-container">
+          <span class="indent-text"><img src="./icons/fire-incident-house.svg" class="mini-icon"> Incidents</span>
+          <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
         </div>
-        <div class="row-container sub-row">
-          <span><span class="route-line police-line"></span> Police Routes</span>
-          <label class="switch small"><input type="checkbox" id="togglePoliceRoutes"><span class="slider"></span></label>
+        <div class="row-container">
+          <span class="indent-text"><span class="route-line fire-line"></span> Fire Routes</span>
+          <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
         </div>
       </div>
-    </div>
+      </div>
 
     <div class="layer-group">
       <div class="group-header">Accessibility & Amenities</div>
@@ -77,28 +58,14 @@
         <span><img src="./icons/health.svg" class="mini-icon"> Health Center</span>
         <label class="switch small"><input type="checkbox" id="toggleHealthcare" checked><span class="slider"></span></label>
       </div>
-      <div class="row-container sub-row">
-        <span>Walking Zones (Health)</span>
+      <div class="row-container">
+        <span class="indent-text">Walking Zones (Health)</span>
         <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
       </div>
       <div class="legend-container">
         <div class="legend-item"><span class="zone-box h-5"></span> 5 min</div>
         <div class="legend-item"><span class="zone-box h-10"></span> 10 min</div>
         <div class="legend-item"><span class="zone-box h-15"></span> 15 min</div>
-      </div>
-
-      <div class="row-container">
-        <span><img src="./icons/school.svg" class="mini-icon"> Schools</span>
-        <label class="switch small"><input type="checkbox" id="toggleSchools" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container sub-row">
-        <span>Walking Zones (School)</span>
-        <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
-      </div>
-      <div class="legend-container">
-        <div class="legend-item"><span class="zone-box s-5"></span> 5 min</div>
-        <div class="legend-item"><span class="zone-box s-10"></span> 10 min</div>
-        <div class="legend-item"><span class="zone-box s-15"></span> 15 min</div>
       </div>
     </div>
 
@@ -109,10 +76,6 @@
         <label class="switch small"><input type="checkbox" id="toggleBus" checked><span class="slider"></span></label>
       </div>
       <div class="row-container">
-        <span><img src="./icons/playground.svg" class="mini-icon"> Playgrounds</span>
-        <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container">
         <span><span class="zone-box parking-box"></span> Parking</span>
         <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
       </div>
@@ -120,7 +83,7 @@
         <span>Buildings</span>
         <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
-      <div class="row-container sub-row no-toggle">
+      <div class="no-toggle">
         <span><span class="zone-box building-target-box"></span> Project Building (3D Model)</span>
       </div>
     </div>

@@ -1,6 +1,6 @@
 html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
 
-/* Labels med vit bakgrund */
+/* Labels */
 .top-label { 
   position: absolute; top: 15px; left: 15px; z-index: 100; 
   background: rgba(255, 255, 255, 0.9); padding: 8px 15px; border-radius: 4px;
@@ -11,7 +11,7 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
   background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 4px;
 }
 
-/* Sidebar - Fast bredd */
+/* Sidebar */
 #sidebar { 
   position: absolute; top: 0; right: 0; width: 300px; height: 100%; 
   background: white; padding: 20px; z-index: 110; transition: 0.3s; 
@@ -29,25 +29,29 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
 .row-container { 
   display: flex; 
   align-items: center; 
-  width: 100%; 
+  width: 100%; /* Alla rader tar hela bredden */
   margin-bottom: 8px; 
 }
 
-/* Detta tvingar toggles till högerkanten på en rak linje */
+/* Tvingar ALLA toggles till samma position längst till höger */
 .switch { 
   position: relative; 
   display: inline-block; 
   width: 34px; 
   height: 20px; 
   flex-shrink: 0; 
-  margin-left: auto; /* Detta är nyckeln för rak linje */
+  margin-left: auto; /* Detta gör att de hamnar på en rak linje */
 }
 
-.sub-row { padding-left: 20px; }
-.no-toggle { font-style: italic; color: #888; margin-top: -4px; }
+/* Indraget sker nu bara på TEXTEN, inte på hela raden */
+.indent-text {
+  padding-left: 20px;
+}
+
+.no-toggle { font-style: italic; color: #888; margin-top: -4px; padding-left: 20px; }
 
 /* Legend & Grafik */
-.legend-container { display: flex; gap: 10px; padding-left: 20px; margin-bottom: 12px; }
+.legend-container { display: flex; gap: 10px; padding-left: 25px; margin-bottom: 12px; }
 .legend-item { font-size: 0.75em; color: #666; display: flex; align-items: center; }
 .zone-box { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; flex-shrink: 0; }
 .h-5 { background: rgba(52, 152, 219, 0.6); }
@@ -65,14 +69,15 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
 .police-line { background: #0000ff; }
 
 /* Slider design */
+.switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
 .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #2ecc71; }
 input:checked + .slider:before { transform: translateX(14px); }
-.switch input { opacity: 0; width: 0; height: 0; }
 
-.switch.small { width: 34px; height: 17px; }
-.switch.small .slider:before { height: 11px; width: 11px; left: 3px; bottom: 3px; }
+/* Vi gör små switchar lika breda som stora för att behålla linjeringen */
+.switch.small { width: 34px; height: 18px; }
+.switch.small .slider:before { height: 12px; width: 12px; left: 3px; bottom: 3px; }
 
 .layer-group { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
 .group-header { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: bold; }
