@@ -39,3 +39,41 @@ input:checked + .switch.small .slider:before { transform: translateX(12px); }
 .row-sub { display: flex; align-items: center; gap: 10px; font-size: 0.85em; margin-bottom: 5px; }
 .mini-icon { width: 16px; height: 16px; vertical-align: middle; }
 .line-legend { display: inline-block; width: 20px; height: 3px; border-radius: 1px; }
+
+/* Ikoner och grafik i sidebar */
+.mini-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.route-line {
+  display: inline-block;
+  width: 20px;
+  height: 3px;
+  vertical-align: middle;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+.hospital-line { background: #ffd700; }
+.fire-line { background: #d93025; }
+.police-line { background: #0000ff; }
+
+.zone-box {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+.health-zone { background: rgba(52, 152, 219, 0.7); }
+.school-zone { background: rgba(46, 204, 113, 0.7); }
+
+.layer-item {
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+.layer-item:last-child { border-bottom: none; }
