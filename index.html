@@ -15,11 +15,11 @@
   <div id="viewDiv"></div>
   
   <button id="paneToggle" onclick="togglePane()">
-    <span id="arrowIcon">→</span> Data Layers
+    <span id="arrowIcon">☰</span>
   </button>
 
   <div id="sidebar" class="pane-open">
-    <h2 style="margin-top:0; font-size: 1.4em;">Scenario A: Baseline</h2>
+    <h2 style="margin-top:0; font-size: 1.4em;">Content</h2>
     <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
     
     <div class="layer-group">
@@ -109,6 +109,9 @@
         <span>Buildings</span>
         <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
+      <div class="row-container sub-row no-toggle">
+        <span><span class="zone-box building-target-box"></span> Project Building (3D Model)</span>
+      </div>
     </div>
   </div>
 
@@ -117,7 +120,7 @@
       const sidebar = document.getElementById("sidebar");
       const arrow = document.getElementById("arrowIcon");
       sidebar.classList.toggle("pane-closed");
-      arrow.style.transform = sidebar.classList.contains("pane-closed") ? "rotate(180deg)" : "rotate(0deg)";
+      arrow.innerHTML = sidebar.classList.contains("pane-closed") ? "☰" : "✕";
     }
   </script>
 </body>
