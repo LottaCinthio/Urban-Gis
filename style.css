@@ -1,16 +1,17 @@
 html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
 
+/* Labels med vit bakgrund */
 .top-label { 
   position: absolute; top: 15px; left: 15px; z-index: 100; 
   background: rgba(255, 255, 255, 0.9); padding: 8px 15px; border-radius: 4px;
   font-weight: bold; pointer-events: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-
 .bottom-label { 
   position: absolute; bottom: 15px; left: 15px; z-index: 100; 
   background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 4px;
 }
 
+/* Sidebar - Fast bredd */
 #sidebar { 
   position: absolute; top: 0; right: 0; width: 300px; height: 100%; 
   background: white; padding: 20px; z-index: 110; transition: 0.3s; 
@@ -24,19 +25,30 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
   border: 1px solid #ccc; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 20px;
 }
 
-/* Flexbox som tvingar alla toggles till en rak linje till höger */
+/* --- LINJERINGS-LOGIK --- */
 .row-container { 
   display: flex; 
   align-items: center; 
-  margin-bottom: 8px; 
   width: 100%; 
+  margin-bottom: 8px; 
 }
-.sub-row { padding-left: 20px; font-size: 0.9em; color: #666; }
-.no-toggle { font-style: italic; color: #888; }
 
+/* Detta tvingar toggles till högerkanten på en rak linje */
+.switch { 
+  position: relative; 
+  display: inline-block; 
+  width: 34px; 
+  height: 20px; 
+  flex-shrink: 0; 
+  margin-left: auto; /* Detta är nyckeln för rak linje */
+}
+
+.sub-row { padding-left: 20px; }
+.no-toggle { font-style: italic; color: #888; margin-top: -4px; }
+
+/* Legend & Grafik */
 .legend-container { display: flex; gap: 10px; padding-left: 20px; margin-bottom: 12px; }
 .legend-item { font-size: 0.75em; color: #666; display: flex; align-items: center; }
-
 .zone-box { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; flex-shrink: 0; }
 .h-5 { background: rgba(52, 152, 219, 0.6); }
 .h-10 { background: rgba(155, 89, 182, 0.5); }
@@ -46,27 +58,18 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
 .s-15 { background: rgba(230, 126, 34, 0.3); }
 .parking-box { background: rgba(0, 197, 255, 0.6); }
 .building-target-box { background: #2ecc71; border: 1px solid rgba(0,0,0,0.1); }
-
 .mini-icon { width: 18px; height: 18px; margin-right: 8px; vertical-align: middle; }
 .route-line { display: inline-block; width: 15px; height: 3px; vertical-align: middle; margin-right: 5px; }
 .hospital-line { background: #ffd700; }
 .fire-line { background: #d93025; }
 .police-line { background: #0000ff; }
 
-/* Switch design - margin-left: auto tvingar knappen till högerkanten */
-.switch { 
-  position: relative; 
-  display: inline-block; 
-  width: 34px; 
-  height: 20px; 
-  flex-shrink: 0; 
-  margin-left: auto; 
-}
-.switch input { opacity: 0; width: 0; height: 0; }
+/* Slider design */
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
 .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #2ecc71; }
 input:checked + .slider:before { transform: translateX(14px); }
+.switch input { opacity: 0; width: 0; height: 0; }
 
 .switch.small { width: 34px; height: 17px; }
 .switch.small .slider:before { height: 11px; width: 11px; left: 3px; bottom: 3px; }
