@@ -1,26 +1,37 @@
-html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
-
-/* Svarta texter */
-.top-label { position: absolute; top: 20px; left: 20px; z-index: 100; color: black; font-weight: bold; font-size: 16px; pointer-events: none; }
-.bottom-label { position: absolute; bottom: 20px; left: 20px; z-index: 100; color: black; font-size: 14px; pointer-events: none; }
-
-/* Sidebar */
-#sidebar { 
-  position: absolute; top: 0; right: 0; width: 260px; height: 100%; 
-  background: white; padding: 20px; box-shadow: -2px 0 10px rgba(0,0,0,0.1); 
-  z-index: 10; transition: 0.3s; overflow-y: auto;
+/* Sidomeny Layout */
+.row-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  width: 100%;
 }
-#sidebar.pane-closed { transform: translateX(300px); }
 
-#paneToggle { 
-  position: absolute; top: 20px; right: 20px; z-index: 20; 
-  padding: 8px 12px; background: #333; color: white; border: none; 
-  border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+.sub-row {
+  padding-left: 10px;
+  font-size: 0.9em;
+  color: #555;
 }
-#arrowIcon { display: inline-block; transition: 0.3s; }
 
-/* On/Off Switch */
-.switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+.mini-icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* Grafik för rutter och zoner */
+.route-line { display: inline-block; width: 15px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+.hospital-line { background: #ffd700; }
+.fire-line { background: #d93025; }
+.police-line { background: #0000ff; }
+
+.zone-box { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
+.health-zone { background: rgba(52, 152, 219, 0.7); }
+.school-zone { background: rgba(46, 204, 113, 0.7); }
+
+/* Switch design */
+.switch { position: relative; display: inline-block; width: 34px; height: 20px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
 .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
@@ -30,50 +41,3 @@ input:checked + .slider:before { transform: translateX(14px); }
 .switch.small { width: 28px; height: 16px; }
 .switch.small .slider:before { height: 10px; width: 10px; left: 3px; bottom: 3px; }
 input:checked + .switch.small .slider:before { transform: translateX(12px); }
-
-/* Innehåll i sidebar */
-.layer-group { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
-.group-header { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: bold; }
-.row-main { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.9em; }
-.sub-group { padding-left: 10px; border-left: 1px solid #ddd; margin-top: 5px; }
-.row-sub { display: flex; align-items: center; gap: 10px; font-size: 0.85em; margin-bottom: 5px; }
-.mini-icon { width: 16px; height: 16px; vertical-align: middle; }
-.line-legend { display: inline-block; width: 20px; height: 3px; border-radius: 1px; }
-
-/* Ikoner och grafik i sidebar */
-.mini-icon {
-  width: 18px;
-  height: 18px;
-  vertical-align: middle;
-  margin-right: 8px;
-}
-
-.route-line {
-  display: inline-block;
-  width: 20px;
-  height: 3px;
-  vertical-align: middle;
-  margin-right: 8px;
-  border-radius: 2px;
-}
-.hospital-line { background: #ffd700; }
-.fire-line { background: #d93025; }
-.police-line { background: #0000ff; }
-
-.zone-box {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  vertical-align: middle;
-  margin-right: 8px;
-  border-radius: 2px;
-}
-.health-zone { background: rgba(52, 152, 219, 0.7); }
-.school-zone { background: rgba(46, 204, 113, 0.7); }
-
-.layer-item {
-  margin-bottom: 15px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-}
-.layer-item:last-child { border-bottom: none; }

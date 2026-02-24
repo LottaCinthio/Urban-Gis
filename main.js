@@ -13,8 +13,6 @@ require([
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
-    
-    // Emergency Services
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
@@ -32,7 +30,7 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // --- RENDERERS ---
+    // --- RENDERER LOGIC ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
@@ -82,9 +80,9 @@ require([
       }};
     }
 
-    // --- FIX: Kontrollera checkboxens läge vid start ---
+    // --- CHECKBOX SYNC AT START ---
     const checkbox = document.getElementById(info.id);
-    const startVisibility = checkbox ? checkbox.checked : true;
+    const isVisible = checkbox ? checkbox.checked : true;
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
@@ -92,15 +90,14 @@ require([
       renderer: renderer,
       outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: startVisibility,
+      visible: isVisible,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : (info.type.includes("icon") ? 45 : 0.5) }
     });
     map.add(layer);
   });
 
   const view = new SceneView({
-    container: "viewDiv", 
-    map: map,
+    container: "viewDiv", map: map,
     camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
   });
 
