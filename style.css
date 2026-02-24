@@ -12,11 +12,11 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
 }
 
 #sidebar { 
-  position: absolute; top: 0; right: 0; width: 280px; height: 100%; 
+  position: absolute; top: 0; right: 0; width: 300px; height: 100%; 
   background: white; padding: 20px; z-index: 110; transition: 0.3s; 
   box-sizing: border-box; box-shadow: -2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;
 }
-#sidebar.pane-closed { transform: translateX(280px); }
+#sidebar.pane-closed { transform: translateX(300px); }
 
 #paneToggle { 
   position: absolute; top: 15px; right: 15px; z-index: 120; 
@@ -24,18 +24,17 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
   border: 1px solid #ccc; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 20px;
 }
 
-/* Flexbox som tvingar toggles till höger */
+/* Flexbox som tvingar alla toggles till en rak linje till höger */
 .row-container { 
   display: flex; 
-  justify-content: space-between; 
   align-items: center; 
   margin-bottom: 8px; 
   width: 100%; 
 }
-.sub-row { padding-left: 15px; font-size: 0.9em; color: #666; }
-.no-toggle { justify-content: flex-start; font-style: italic; color: #888; }
+.sub-row { padding-left: 20px; font-size: 0.9em; color: #666; }
+.no-toggle { font-style: italic; color: #888; }
 
-.legend-container { display: flex; gap: 8px; padding-left: 20px; margin-bottom: 12px; }
+.legend-container { display: flex; gap: 10px; padding-left: 20px; margin-bottom: 12px; }
 .legend-item { font-size: 0.75em; color: #666; display: flex; align-items: center; }
 
 .zone-box { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; flex-shrink: 0; }
@@ -48,23 +47,29 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
 .parking-box { background: rgba(0, 197, 255, 0.6); }
 .building-target-box { background: #2ecc71; border: 1px solid rgba(0,0,0,0.1); }
 
-.mini-icon { width: 18px; height: 18px; margin-right: 5px; vertical-align: middle; }
+.mini-icon { width: 18px; height: 18px; margin-right: 8px; vertical-align: middle; }
 .route-line { display: inline-block; width: 15px; height: 3px; vertical-align: middle; margin-right: 5px; }
 .hospital-line { background: #ffd700; }
 .fire-line { background: #d93025; }
 .police-line { background: #0000ff; }
 
-/* Switch design */
-.switch { position: relative; display: inline-block; width: 34px; height: 20px; flex-shrink: 0; }
+/* Switch design - margin-left: auto tvingar knappen till högerkanten */
+.switch { 
+  position: relative; 
+  display: inline-block; 
+  width: 34px; 
+  height: 20px; 
+  flex-shrink: 0; 
+  margin-left: auto; 
+}
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
 .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #2ecc71; }
 input:checked + .slider:before { transform: translateX(14px); }
 
-.switch.small { width: 28px; height: 16px; }
-.switch.small .slider:before { height: 10px; width: 10px; left: 3px; bottom: 3px; }
-input:checked + .switch.small .slider:before { transform: translateX(12px); }
+.switch.small { width: 34px; height: 17px; }
+.switch.small .slider:before { height: 11px; width: 11px; left: 3px; bottom: 3px; }
 
 .layer-group { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
 .group-header { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: bold; }
