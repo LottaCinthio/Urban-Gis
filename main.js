@@ -147,12 +147,23 @@ require([
       };
     }
 
+   // Kontrollera om lagret ska vara avstängt från början
+    // Vi stänger av rutter och de zoner som slutar på "Walk" eller heter "walk"
+    const isInitiallyVisible = !(info.type.includes("route") || info.type.includes("walk"));
+    
+    // Uppdatera även checkboxen i HTML så den matchar (om den finns)
+    const checkbox = document.getElementById(info.id);
+    if (checkbox) {
+      checkbox.checked = isInitiallyVisible;
+    }
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
       popupTemplate: popupTemplate,
+      visible: isInitiallyVisible, // Detta sätter startläget!
       elevationInfo: { 
         mode: "relative-to-ground", 
         offset: info.type.includes("route") ? 5 : (info.type.includes("icon") ? 45 : 0.5) 
