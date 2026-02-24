@@ -86,6 +86,7 @@ require([
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     }
 
+    // --- FIX: Kontrollera checkbox vid start ---
     const checkbox = document.getElementById(info.id);
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
@@ -93,7 +94,7 @@ require([
       renderer: renderer,
       outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: checkbox ? checkbox.checked : true,
+      visible: checkbox ? checkbox.checked : true, // Synkar med HTML
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
     map.add(layer);
