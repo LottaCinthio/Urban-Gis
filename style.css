@@ -1,83 +1,34 @@
-/* Grundinställningar */
-html, body, #viewDiv { 
-  padding: 0; 
-  margin: 0; 
-  height: 100%; 
-  width: 100%; 
-  font-family: sans-serif; 
-}
+html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
 
-/* Svarta texter i hörnen */
 .top-label { position: absolute; top: 20px; left: 20px; z-index: 100; color: black; font-weight: bold; font-size: 16px; pointer-events: none; }
 .bottom-label { position: absolute; bottom: 20px; left: 20px; z-index: 100; color: black; font-size: 14px; pointer-events: none; }
 
-/* Sidebar - Fast bredd på 280px */
 #sidebar { 
-  position: absolute; 
-  top: 0; 
-  right: 0; 
-  width: 280px; 
-  height: 100%; 
-  background: white; 
-  padding: 20px; 
-  box-shadow: -2px 0 10px rgba(0,0,0,0.1); 
-  z-index: 10; 
-  transition: 0.3s; 
-  overflow-y: auto;
-  box-sizing: border-box; /* Gör att padding inte ökar bredden */
+  position: absolute; top: 0; right: 0; width: 280px; height: 100%; 
+  background: white; padding: 20px; box-shadow: -2px 0 10px rgba(0,0,0,0.1); 
+  z-index: 10; transition: 0.3s; overflow-y: auto; box-sizing: border-box;
 }
-
-/* När panelen är stängd */
 #sidebar.pane-closed { transform: translateX(280px); }
 
-/* Öppna/Stäng-knapp */
 #paneToggle { 
-  position: absolute; 
-  top: 20px; 
-  right: 20px; 
-  z-index: 20; 
-  padding: 8px 12px; 
-  background: #333; 
-  color: white; 
-  border: none; 
-  border-radius: 4px; 
-  cursor: pointer; 
-  display: flex; 
-  align-items: center; 
-  gap: 5px;
+  position: absolute; top: 20px; right: 20px; z-index: 20; 
+  padding: 8px 12px; background: #333; color: white; border: none; 
+  border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;
 }
 
-/* Layout för raderna: Text till vänster, Toggle till höger */
-.row-main, .row-container {
+/* Flexbox som tvingar knappar till höger */
+.row-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
   width: 100%;
 }
+.sub-row { padding-left: 20px; font-size: 0.9em; color: #666; width: 100%; box-sizing: border-box; }
 
-/* Sub-rader (Zoner och Rutter) med indrag */
-.sub-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-left: 20px; /* Indrag för att visa hierarki */
-  margin-bottom: 8px;
-  font-size: 0.9em;
-  color: #555;
-  width: 100%;
-  box-sizing: border-box;
-}
+.mini-icon { width: 18px; height: 18px; vertical-align: middle; margin-right: 5px; }
 
-/* Ikoner */
-.mini-icon {
-  width: 18px;
-  height: 18px;
-  vertical-align: middle;
-  margin-right: 5px;
-}
-
-/* Grafik för rutter och zoner */
+/* Grafik för rutter, zoner och parkering */
 .route-line { display: inline-block; width: 15px; height: 3px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
 .hospital-line { background: #ffd700; }
 .fire-line { background: #d93025; }
@@ -86,8 +37,9 @@ html, body, #viewDiv {
 .zone-box { display: inline-block; width: 10px; height: 10px; vertical-align: middle; margin-right: 5px; border-radius: 2px; }
 .health-zone { background: rgba(52, 152, 219, 0.7); }
 .school-zone { background: rgba(46, 204, 113, 0.7); }
+.parking-box { background: rgba(0, 197, 255, 0.6); border: 1px solid rgba(0,0,0,0.1); }
 
-/* Switch / Toggle Design */
+/* Switch design */
 .switch { position: relative; display: inline-block; width: 34px; height: 20px; flex-shrink: 0; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
@@ -95,11 +47,9 @@ html, body, #viewDiv {
 input:checked + .slider { background-color: #2ecc71; }
 input:checked + .slider:before { transform: translateX(14px); }
 
-/* Mindre switch för sub-rader */
 .switch.small { width: 28px; height: 16px; }
 .switch.small .slider:before { height: 10px; width: 10px; left: 3px; bottom: 3px; }
 input:checked + .switch.small .slider:before { transform: translateX(12px); }
 
-/* Grupperingar i sidebar */
 .layer-group { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
 .group-header { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: bold; }
