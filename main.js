@@ -13,8 +13,6 @@ require([
     { name: "Bus Stops", file: "Busstops.geojson", type: "bus-icon", id: "toggleBus" },
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
-    
-    // Emergency Services
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
     { name: "Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
@@ -32,7 +30,6 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // --- RENDERERS ---
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? 
         [[52, 152, 219, 0.6], [155, 89, 182, 0.5], [44, 62, 80, 0.4]] : 
@@ -48,33 +45,15 @@ require([
     } 
     else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9]; 
-      let routeTitle = "Transport Information Hospital"; // Standard
-
-      if (info.type === "fire-route") {
-        routeColor = [217, 48, 37, 0.9];
-        routeTitle = "Transport Information Firestation";
-      }
-      if (info.type === "police-route") {
-        routeColor = [0, 0, 255, 0.9];
-        routeTitle = "Transport Information Police";
-      }
-
-      renderer = {
-        type: "simple",
-        symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] }
-      };
-
-      // --- POPUP FÖR RUTTER MED SPECIFIK RUBRIK ---
+      let routeTitle = "Transport Information Hospital";
+      if (info.type === "fire-route") { routeColor = [217, 48, 37, 0.9]; routeTitle = "Transport Information Firestation"; }
+      if (info.type === "police-route") { routeColor = [0, 0, 255, 0.9]; routeTitle = "Transport Information Police"; }
+      renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
       popupTemplate = {
         title: routeTitle,
         content: function(feature) {
           const totalTime = feature.graphic.attributes.Total_TravelTime || feature.graphic.attributes.Total_Time || feature.graphic.attributes.traveltime;
-          if (totalTime) {
-            const mins = Math.floor(totalTime);
-            const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`;
-          }
-          return "Travel time data not available.";
+          return totalTime ? `<b>Total travel time:</b><br/> ${Math.floor(totalTime)} minutes and ${Math.round((totalTime - Math.floor(totalTime)) * 60)} seconds` : "Data not available.";
         }
       };
     }
@@ -91,92 +70,46 @@ require([
       else if (info.type === "school-icon") iconHref += "school.svg";
       else if (info.type === "bus-icon") { iconHref += "bus.svg"; size = 20; }
       else if (info.type === "play-icon") { iconHref += "playground.svg"; size = 20; }
-      renderer = {
-        type: "simple",
-        symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] }
-      };
+      renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: size, outline: { color: "white", size: 1.5 } }] } };
     }
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     } 
     else if (info.type === "building") {
       renderer = {
-        type: "unique-value",
-        field: "Building_ID",
-        defaultSymbol: {
-          type: "polygon-3d",
-          symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }]
-        },
-        uniqueValueInfos: [{
-          value: 8052,
-          symbol: {
-            type: "polygon-3d",
-            symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }]
-          }
-        }]
+        type: "unique-value", field: "Building_ID",
+        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] },
+        uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }]
       };
-
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
           const bID = feature.graphic.attributes.Building_ID;
           let content = `<b>Building ID:</b> ${bID}<br/><br/>`;
-          
-          if (bID == 8052 || (bID && bID.toString() === "8052")) {
-            const currentUrl = window.location.href.split('?')[0].split('#')[0];
-            const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf("/") + 1);
-            const ifcUrl = baseUrl + "IFC.html";
-
-            content += `
-              <div style="text-align: center; margin-top: 10px;">
-                <a href="${ifcUrl}" target="_blank" style="
-                  display: inline-block;
-                  padding: 12px 24px;
-                  background-color: #2ecc71;
-                  color: white !important;
-                  text-decoration: none;
-                  border-radius: 6px;
-                  font-weight: bold;
-                  border: 1px solid #27ae60;
-                  cursor: pointer;
-                ">Go to 3D Model</a>
-              </div>`;
+          if (bID == 8052 || bID === "8052") {
+            content += `<div style="text-align: center;"><a href="IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">Open 3D Model</a></div>`;
           }
           return content;
         }
       };
     }
 
-   // Kontrollera om lagret ska vara avstängt från början
-    // Vi stänger av rutter och de zoner som slutar på "Walk" eller heter "walk"
     const isInitiallyVisible = !(info.type.includes("route") || info.type.includes("walk"));
-    
-    // Uppdatera även checkboxen i HTML så den matchar (om den finns)
     const checkbox = document.getElementById(info.id);
-    if (checkbox) {
-      checkbox.checked = isInitiallyVisible;
-    }
+    if (checkbox) checkbox.checked = isInitiallyVisible;
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
-      outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: isInitiallyVisible, // Detta sätter startläget!
-      elevationInfo: { 
-        mode: "relative-to-ground", 
-        offset: info.type.includes("route") ? 5 : (info.type.includes("icon") ? 45 : 0.5) 
-      }
+      visible: isInitiallyVisible,
+      elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : (info.type.includes("icon") ? 45 : 0.5) }
     });
     map.add(layer);
   });
 
-  const view = new SceneView({
-    container: "viewDiv", 
-    map: map,
-    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 }
-  });
+  const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
   view.when(() => {
     layersInfo.forEach(info => {

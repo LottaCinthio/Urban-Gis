@@ -1,79 +1,41 @@
-html, body, #viewDiv { 
-  padding: 0; margin: 0; height: 100%; width: 100%; 
-  font-family: 'Inter', -apple-system, sans-serif;
-  background-color: #f4f4f4;
-}
+html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-family: sans-serif; }
 
-/* Texter i hörnen */
-.top-left-header {
-  position: absolute; top: 20px; left: 20px; z-index: 20;
-  color: black; font-weight: 700; font-size: 18px;
-  text-transform: uppercase; letter-spacing: 1px;
-  pointer-events: none;
-}
-
-.bottom-left-footer {
-  position: absolute; bottom: 20px; left: 20px; z-index: 20;
-  color: black; font-weight: 500; font-size: 14px;
-  pointer-events: none;
-}
+/* Svarta texter */
+.top-label { position: absolute; top: 20px; left: 20px; z-index: 100; color: black; font-weight: bold; font-size: 16px; pointer-events: none; }
+.bottom-label { position: absolute; bottom: 20px; left: 20px; z-index: 100; color: black; font-size: 14px; pointer-events: none; }
 
 /* Sidebar */
 #sidebar { 
-  position: absolute; top: 0; right: 0; width: 300px; height: 100%; 
-  background: rgba(255, 255, 255, 0.95); 
-  box-shadow: -2px 0 15px rgba(0,0,0,0.1); 
-  transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-  padding: 25px; overflow-y: auto; z-index: 10; 
-  border-left: 1px solid #eee;
+  position: absolute; top: 0; right: 0; width: 260px; height: 100%; 
+  background: white; padding: 20px; box-shadow: -2px 0 10px rgba(0,0,0,0.1); 
+  z-index: 10; transition: 0.3s; overflow-y: auto;
 }
-#sidebar.pane-closed { transform: translateX(350px); }
+#sidebar.pane-closed { transform: translateX(300px); }
 
 #paneToggle { 
   position: absolute; top: 20px; right: 20px; z-index: 20; 
-  padding: 10px 15px; background: #222; color: white; 
-  border: none; border-radius: 8px; cursor: pointer; 
-  font-weight: 600; display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: #333; color: white; border: none; 
+  border-radius: 4px; cursor: pointer; display: flex; align-items: center; gap: 5px;
 }
-#toggleArrow { transition: 0.3s; display: inline-block; }
+#arrowIcon { display: inline-block; transition: 0.3s; }
 
-/* Gruppering och layout */
-.layer-group {
-  background: white; border-radius: 12px; padding: 15px;
-  margin-bottom: 20px; border: 1px solid #eaeaea;
-}
-h2 { font-size: 18px; margin-top: 0; color: #111; }
-h3 { font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 1px; margin-bottom: 15px; }
-
-.layer-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f9f9f9; }
-.layer-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.sub-layers { padding-left: 10px; border-left: 2px solid #f0f0f0; }
-
-.legend-row, .legend-row-simple { 
-  display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; 
-}
-.legend-row-simple { justify-content: space-between; padding: 5px 0; }
-
-/* Ikoner och symboler */
-.legend-icon { width: 18px; height: 18px; }
-.box { width: 12px; height: 12px; border-radius: 3px; }
-.line-legend { height: 3px; width: 20px; border-radius: 2px; }
-
-/* TOGGLE SWITCH DESIGN */
+/* On/Off Switch */
 .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #ccc; transition: .4s; border-radius: 20px;
-}
-.slider:before {
-  position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
-  background-color: white; transition: .4s; border-radius: 50%;
-}
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+.slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #2ecc71; }
 input:checked + .slider:before { transform: translateX(14px); }
 
-/* Mindre switch för sub-layers */
 .switch.small { width: 28px; height: 16px; }
 .switch.small .slider:before { height: 10px; width: 10px; left: 3px; bottom: 3px; }
 input:checked + .switch.small .slider:before { transform: translateX(12px); }
+
+/* Innehåll i sidebar */
+.layer-group { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
+.group-header { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: bold; }
+.row-main { display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 0.9em; }
+.sub-group { padding-left: 10px; border-left: 1px solid #ddd; margin-top: 5px; }
+.row-sub { display: flex; align-items: center; gap: 10px; font-size: 0.85em; margin-bottom: 5px; }
+.mini-icon { width: 16px; height: 16px; vertical-align: middle; }
+.line-legend { display: inline-block; width: 20px; height: 3px; border-radius: 1px; }

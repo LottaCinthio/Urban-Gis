@@ -9,8 +9,8 @@
   <script src="main.js"></script>
 </head>
 <body>
-  <div class="header-label-top">Urban Information Management TUIS23 T3377</div>
-  <div class="header-label-bottom">Luna Wani & Lotta Cinthio</div>
+  <div class="top-label">Urban Information Management TUIS23 T3377</div>
+  <div class="bottom-label">Luna Wani & Lotta Cinthio</div>
 
   <div id="viewDiv"></div>
   
@@ -19,92 +19,109 @@
   </button>
 
   <div id="sidebar" class="pane-open">
-    <h2 style="margin-top:0; color: #333;">Scenario A: Baseline</h2>
-    <hr style="border: 0; border-top: 1px solid #eee; margin-bottom: 20px;">
+    <h2 style="margin-top:0; font-size: 1.4em;">Scenario A: Baseline</h2>
+    <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
     
     <div class="layer-group">
-      <div class="group-title">Emergency Services</div>
+      <div class="group-header">Emergency Services</div>
       
       <div class="layer-item">
-        <div class="layer-main">
-          <span>Police Services</span>
+        <div class="row-main">
+          <span><img src="./icons/hospital-marker.svg" class="mini-icon"> Hospital</span>
+          <label class="switch"><input type="checkbox" id="toggleHospital" checked><span class="slider"></span></label>
+        </div>
+        <div class="sub-group">
+          <div class="row-sub">
+            <label class="switch small"><input type="checkbox" id="toggleIncidents" checked><span class="slider"></span></label>
+            <span>Incidents</span>
+          </div>
+          <div class="row-sub">
+            <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
+            <span class="line-legend" style="background:gold;"></span> <span>Routes</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-item">
+        <div class="row-main">
+          <span><img src="./icons/police-marker.svg" class="mini-icon"> Police Services</span>
           <label class="switch"><input type="checkbox" id="togglePolice" checked><span class="slider"></span></label>
         </div>
-        <div class="sub-info">
-          <div class="legend-row">
+        <div class="sub-group">
+          <div class="row-sub">
             <label class="switch small"><input type="checkbox" id="toggleCrimes" checked><span class="slider"></span></label>
             <span>Crime Scenes</span>
           </div>
-          <div class="legend-row">
+          <div class="row-sub">
             <label class="switch small"><input type="checkbox" id="togglePoliceRoutes"><span class="slider"></span></label>
-            <span class="line-blue"></span> <span>Routes</span>
+            <span class="line-legend" style="background:blue;"></span> <span>Routes</span>
           </div>
         </div>
       </div>
 
       <div class="layer-item">
-        <div class="layer-main">
-          <span>Fire Services</span>
+        <div class="row-main">
+          <span><img src="./icons/firestation-marker.svg" class="mini-icon"> Fire Services</span>
           <label class="switch"><input type="checkbox" id="toggleFirestation" checked><span class="slider"></span></label>
         </div>
-        <div class="sub-info">
-          <div class="legend-row">
+        <div class="sub-group">
+          <div class="row-sub">
             <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
             <span>Incidents</span>
           </div>
-          <div class="legend-row">
+          <div class="row-sub">
             <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
-            <span class="line-red"></span> <span>Routes</span>
+            <span class="line-legend" style="background:red;"></span> <span>Routes</span>
           </div>
         </div>
       </div>
     </div>
 
     <div class="layer-group">
-      <div class="group-title">Urban Analysis</div>
+      <div class="group-header">Urban Analysis</div>
       <div class="layer-item">
-        <div class="layer-main">
-          <span>Healthcare (Walking)</span>
+        <div class="row-main">
+          <span>Healthcare Access</span>
           <label class="switch"><input type="checkbox" id="toggleHealthcare" checked><span class="slider"></span></label>
         </div>
-        <div class="sub-info">
-          <div class="legend-row">
-            <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
-            <span>Show Zones</span>
-          </div>
+        <div class="row-sub" style="margin-top:5px;">
+          <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
+          <span>Walking Zones</span>
         </div>
       </div>
       <div class="layer-item">
-        <div class="layer-main">
+        <div class="row-main">
           <span>Primary Schools</span>
           <label class="switch"><input type="checkbox" id="toggleSchools" checked><span class="slider"></span></label>
         </div>
-        <div class="sub-info">
-          <div class="legend-row">
-            <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
-            <span>Show Zones</span>
-          </div>
+        <div class="row-sub" style="margin-top:5px;">
+          <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
+          <span>Walking Zones</span>
         </div>
       </div>
     </div>
 
     <div class="layer-group">
-      <div class="group-title">Infrastructure</div>
-      <div class="simple-row">
+      <div class="group-header">Infrastructure</div>
+      <div class="row-main" style="margin-bottom:10px;">
         <span>Bus Stops</span>
         <label class="switch small"><input type="checkbox" id="toggleBus" checked><span class="slider"></span></label>
       </div>
-      <div class="simple-row">
+      <div class="row-main" style="margin-bottom:10px;">
         <span>Playgrounds</span>
         <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
       </div>
-      <div class="simple-row">
+      <div class="row-main" style="margin-bottom:10px;">
+        <span>Parking</span>
+        <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
+      </div>
+      <div class="row-main">
         <span>Buildings</span>
         <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
-      <div class="legend-row" style="margin-top: 8px; font-size: 11px; color: #666;">
-        <span style="display:inline-block; width:12px; height:12px; background:#2ecc71; border-radius:2px; margin-right:5px;"></span>
-        3D model
+      <div class="row-sub" style="margin-top:8px; font-size:0.8em;">
+        <span style="width:12px; height:12px; background:#2ecc71; display:inline-block; border-radius:2px;"></span> 
+        <span>3D model (IFC Viewer)</span>
       </div>
     </div>
   </div>
@@ -114,11 +131,7 @@
       const sidebar = document.getElementById("sidebar");
       const arrow = document.getElementById("arrowIcon");
       sidebar.classList.toggle("pane-closed");
-      if(sidebar.classList.contains("pane-closed")) {
-        arrow.style.transform = "rotate(180deg)";
-      } else {
-        arrow.style.transform = "rotate(0deg)";
-      }
+      arrow.style.transform = sidebar.classList.contains("pane-closed") ? "rotate(180deg)" : "rotate(0deg)";
     }
   </script>
 </body>
