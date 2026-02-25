@@ -46,33 +46,47 @@ require([
           if (totalTime) { const mins = Math.floor(totalTime); const secs = Math.round((totalTime - mins) * 60); return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`; }
           return "Travel time data not available.";
       }};
-    } else if (info.type.includes("-icon")) {
-    let iconHref = "./icons/";
-    
-    if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
-    
-    // 1. Specifik ikon för sjukhus-incidenter
-    else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
-    
-    // 2. Specifik ikon för brand-incidenter
-    else if (info.type === "fire-incident-icon") iconHref += "fire-incident-house.svg";
-    
-    else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
-    else if (info.type === "police-icon") iconHref += "police-marker.svg";
-    else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
-    else if (info.type === "health-icon") iconHref += "health.svg";
-    else if (info.type === "school-icon") iconHref += "school.svg";
-    else if (info.type === "bus-icon") iconHref += "bus.svg";
-    else if (info.type === "play-icon") iconHref += "playground.svg";
+    } else if (info.type.includes("route")) {
+      let routeColor = [255, 215, 0, 0.9]; // Guld (Hospital)
+      let routeTitle = "Transport Information Hospital";
+      
+      if (info.type === "fire-route") { 
+        routeColor = [217, 48, 37, 0.9]; // Röd
+        routeTitle = "Transport Information Firestation"; 
+      } else if (info.type === "police-route") { 
+        routeColor = [0, 0, 255, 0.9]; // Blå
+        routeTitle = "Transport Information Police"; 
+      }
 
-    renderer = { 
+      renderer = { 
         type: "simple", 
         symbol: { 
-            type: "point-3d", 
-            symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: 30 }] 
+          type: "line-3d", 
+          symbolLayers: [{ 
+            type: "line", 
+            size: 4, 
+            material: { color: routeColor }, 
+            cap: "round", 
+            join: "round" 
+          }] 
         } 
-    };
-}
+      };
+
+      popupTemplate = { 
+        title: routeTitle, 
+        content: function(feature) {
+          const attr = feature.graphic.attributes;
+          // Försöker hitta restid i olika möjliga fältnamn
+          const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.traveltime || attr.TRAVELTIME || attr.Attr_Minutes;
+          if (totalTime) { 
+            const mins = Math.floor(totalTime); 
+            const secs = Math.round((totalTime - mins) * 60); 
+            return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`; 
+          }
+          return "Travel time data not available.";
+        }
+      };
+    }
     else if (info.type === "building") {
       renderer = { 
         type: "unique-value", 
