@@ -14,9 +14,11 @@ require([
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
-    { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "hospital-incident-icon", id: "toggleIncidents" },
+    // Här är fixen för sjukhus-incidenter
+    { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
+    // Här är fixen för brand-incidenter (ny typ: fire-incident-house)
     { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
@@ -38,13 +40,12 @@ require([
       let routeColor = [255,215,0,0.9];
       if (info.type === "fire-route") routeColor = [217,48,37,0.9];
       if (info.type === "police-route") routeColor = [0,0,255,0.9];
-      
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
     } 
     else if (info.type.includes("-icon") || info.type === "fire-incident-house") {
       let iconHref = "./icons/";
       if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
-      else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
+      else if (info.type === "incident-icon") iconHref += "incident-house.svg";
       else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
       else if (info.type === "fire-incident-house") iconHref += "fire-incident-house.svg";
       else if (info.type === "police-icon") iconHref += "police-marker.svg";
