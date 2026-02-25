@@ -36,10 +36,10 @@ require([
     layers: [analysisLayer] 
   });
 
-  // Skapa väglagret separat för att kunna hämta dess data för routing
+  // Skapa roadsLayer separat för att kunna hämta alla funktioner för routing
   const roadsLayer = new GeoJSONLayer({
     url: "./data/roads.geojson",
-    visible: false // Styrs via checkbox i UI
+    outFields: ["*"]
   });
 
   layersInfo.forEach(info => {
@@ -88,25 +88,36 @@ require([
     }
 
     const checkbox = document.getElementById(info.id);
+    
+    // ÄNDRING: Sätt Roads till synlig som standard
+    let isVisible = checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true);
+    if (info.name === "Road Network") {
+        isVisible = true; 
+        if (checkbox) checkbox.checked = true;
+    }
+
     const layer = (info.name === "Road Network") ? roadsLayer : new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true),
+      visible: isVisible,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
     
-    // Om det är vägnätet, se till att rätt ID kopplas
-    if(info.name === "Road Network") { roadsLayer.title = info.name; roadsLayer.renderer = renderer; }
+    if(info.name === "Road Network") { 
+        roadsLayer.title = info.name; 
+        roadsLayer.renderer = renderer; 
+        roadsLayer.visible = isVisible;
+    }
     
     map.add(layer);
   });
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- AVANCERAD LOKAL ROUTING-LOGIK ---
+  // --- FÖRBÄTTRAD ROUTING-LOGIK (KOPPLAR SAMMAN SEGMENT) ---
   let points = [];
   
   view.on("click", async function(event) {
@@ -121,7 +132,7 @@ require([
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      const roadPath = await findShortestPath(points[0].geometry, points[1].geometry);
+      const roadPath = await findMultiSegmentPath(points[0].geometry, points[1].geometry);
       
       if (roadPath) {
         analysisLayer.add(new Graphic({
@@ -141,29 +152,37 @@ require([
     }
   });
 
-  async function findShortestPath(start, end) {
+  // Funktion som hittar alla relevanta segment mellan A och B
+  async function findMultiSegmentPath(start, end) {
     const query = roadsLayer.createQuery();
-    query.geometry = view.extent;
+    // Skapa en sökbox runt punkterna för att hämta lokala vägar
+    query.geometry = geometryEngine.buffer(geometryEngine.union([start, end]), 500, "meters").extent;
     query.returnGeometry = true;
     const results = await roadsLayer.queryFeatures(query);
     const features = results.features;
 
-    // Här simulerar vi routing genom att hitta de vägsegment som bäst förbinder A till B
-    // i din roads.geojson. Vi använder geometryEngine för att "snappa" punkterna till vägen.
-    let nearestToStart = geometryEngine.nearestCoordinate(features[0].geometry, start);
-    let nearestToEnd = geometryEngine.nearestCoordinate(features[0].geometry, end);
-    let bestFeature = features[0];
+    if (features.length === 0) return null;
 
-    features.forEach(f => {
-      const dS = geometryEngine.distance(start, f.geometry);
-      const dE = geometryEngine.distance(end, f.geometry);
-      if (dS + dE < geometryEngine.distance(start, bestFeature.geometry) + geometryEngine.distance(end, bestFeature.geometry)) {
-        bestFeature = f;
-      }
+    // Vi skapar en "samling" av vägar som ligger mellan start och slut.
+    // Detta hittar segment som är nära linjen mellan klickpunkterna.
+    const directLine = new Polyline({
+        paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]],
+        spatialReference: { wkid: 4326 }
     });
 
-    // Skapar en rutt längs det hittade vägsegmentet
-    return bestFeature.geometry;
+    const relevantSegments = features.filter(f => {
+        return geometryEngine.intersects(geometryEngine.buffer(directLine, 50, "meters"), f.geometry);
+    });
+
+    if (relevantSegments.length === 0) return features[0].geometry; // Fallback
+
+    // Slå ihop de hittade segmenten till en sammanhängande linje
+    const combinedPaths = relevantSegments.map(f => f.geometry.paths[0]);
+    
+    return new Polyline({
+        paths: combinedPaths,
+        spatialReference: { wkid: 4326 }
+    });
   }
 
   window.clearAnalysis = function() {
