@@ -30,25 +30,48 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. ZONER
+    // 1. GÅNGZONER (Färgskalor för Health och School)
     if (info.type === "health-walk" || info.type === "walk") {
-      const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
-      renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
+      const colors = info.type === "health-walk" 
+        ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] 
+        : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
+      
+      renderer = { 
+        type: "unique-value", 
+        field: "ToBreak", 
+        uniqueValueInfos: [
+          { value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } },
+          { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } },
+          { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }
+        ] 
+      };
     } 
     
-    // 2. RUTTER MED TOTAL TRAVEL TIME I POPUP
+    // 2. RUTTER MED RESTID (TOTAL TRAVEL TIME)
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9];
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
+      let routeColor = [255, 215, 0, 0.9]; // Guld/Gul (Hospital)
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Röd
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blå
       
-      renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
-      
+      renderer = { 
+        type: "simple", 
+        symbol: { 
+          type: "line-3d", 
+          symbolLayers: [{ 
+            type: "line", 
+            size: 4, 
+            material: { color: routeColor }, 
+            cap: "round", 
+            join: "round" 
+          }] 
+        } 
+      };
+
       popupTemplate = {
         title: info.name,
         content: function(feature) {
           const attr = feature.graphic.attributes;
-          // Letar i alla möjliga kolumner efter restid
+          // Letar genom alla möjliga tidskolumner i GeoJSON-filerna
           const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.Attr_Minutes || attr.traveltime || attr.TRAVELTIME;
           if (totalTime) {
             const mins = Math.floor(totalTime);
@@ -60,7 +83,7 @@ require([
       };
     } 
 
-    // 3. IKONER (Här har jag fixat så att även school och health syns)
+    // 3. IKONER (Hanterar ALLA punkt-ikoner inkl. skola och hälsa)
     else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
       let iconFile = "";
       if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
@@ -87,31 +110,64 @@ require([
       };
     }
 
-    // 4. BYGGNADER & PARKERING (Synkad färg)
+    // 4. BYGGNADER & PARKERING
     else if (info.type === "building") {
-      renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
+      renderer = { 
+        type: "unique-value", 
+        field: "Building_ID", 
+        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, 
+        uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] 
+      };
+
+      popupTemplate = {
+        title: "Building Information",
+        content: function(feature) {
+          const bID = feature.graphic.attributes.Building_ID;
+          if (bID == 8052) {
+            return `<div style="text-align: center;"><b>Building ID:</b> ${bID}<br/><br/><a href="IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Go to 3D Model</a></div>`;
+          }
+          return `<b>Building ID:</b> ${bID}`;
+        }
+      };
     }
     else if (info.type === "parking") {
-      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
+      renderer = { 
+        type: "simple", 
+        symbol: { 
+          type: "polygon-3d", 
+          symbolLayers: [{ 
+            type: "fill", 
+            material: { color: [0, 197, 255, 0.6] } // Ljusblå (synkad med panelen)
+          }] 
+        } 
+      };
     }
 
+    // LOGIK FÖR ATT SLÄCKA RUTTER/ZONER VID START
     const checkbox = document.getElementById(info.id);
-    const isOff = info.type.includes("route") || info.type.includes("walk");
-    if (checkbox) checkbox.checked = !isOff;
+    const isOffByDefault = info.type.includes("route") || info.type.includes("walk");
+    
+    if (checkbox) checkbox.checked = !isOffByDefault;
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
+      outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: !isOff,
+      visible: !isOffByDefault,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
     map.add(layer);
   });
 
-  const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
+  const view = new SceneView({ 
+    container: "viewDiv", 
+    map: map, 
+    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } 
+  });
 
+  // Koppla checkboxar till lager-synlighet
   view.when(() => {
     layersInfo.forEach(info => {
       const checkbox = document.getElementById(info.id);
