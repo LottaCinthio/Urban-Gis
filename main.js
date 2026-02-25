@@ -30,13 +30,13 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. GÅNGZONER (Färgskalor)
+    // 1. ZONER
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     
-    // 2. RUTTER MED FIXAD RESTID-LOGIK
+    // 2. RUTTER MED TOTAL TRAVEL TIME I POPUP
     else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
       if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
@@ -48,7 +48,7 @@ require([
         title: info.name,
         content: function(feature) {
           const attr = feature.graphic.attributes;
-          // Letar efter alla vanliga fältnamn för tid
+          // Letar i alla möjliga kolumner efter restid
           const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.Attr_Minutes || attr.traveltime || attr.TRAVELTIME;
           if (totalTime) {
             const mins = Math.floor(totalTime);
@@ -60,39 +60,51 @@ require([
       };
     } 
 
-    // 3. IKONER
-    else if (info.type.includes("-icon") || info.type === "fire-incident-house") {
-      let iconHref = "./icons/";
-      if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
-      else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
-      else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
-      else if (info.type === "fire-incident-house") iconHref += "fire-incident-house.svg";
-      else if (info.type === "police-icon") iconHref += "police-marker.svg";
-      else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
-      else if (info.type === "health-icon") iconHref += "health.svg";
-      else if (info.type === "school-icon") iconHref += "school.svg";
-      else if (info.type === "bus-icon") iconHref += "bus.svg";
-      else if (info.type === "play-icon") iconHref += "playground.svg";
+    // 3. IKONER (Här har jag fixat så att även school och health syns)
+    else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
+      let iconFile = "";
+      if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
+      else if (info.type === "hospital-incident-icon") iconFile = "incident-house.svg";
+      else if (info.type === "fire-icon") iconFile = "firestation-marker.svg";
+      else if (info.type === "fire-incident-house") iconFile = "fire-incident-house.svg";
+      else if (info.type === "police-icon") iconFile = "police-marker.svg";
+      else if (info.type === "crime-icon") iconFile = "crime-incident.svg";
+      else if (info.type === "health-icon") iconFile = "health.svg";
+      else if (info.type === "school-icon") iconFile = "school.svg";
+      else if (info.type === "bus-icon") iconFile = "bus.svg";
+      else if (info.type === "play-icon") iconFile = "playground.svg";
       
-      renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: 30 }] } };
+      renderer = { 
+        type: "simple", 
+        symbol: { 
+          type: "point-3d", 
+          symbolLayers: [{ 
+            type: "icon", 
+            resource: { href: "./icons/" + iconFile }, 
+            size: 30 
+          }] 
+        } 
+      };
     }
 
-    // 4. BYGGNADER
+    // 4. BYGGNADER & PARKERING (Synkad färg)
     else if (info.type === "building") {
       renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
     }
+    else if (info.type === "parking") {
+      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
+    }
 
-    // Bestäm startläge (Rutter och Zoner ska vara avstängda)
-    const isOffByDefault = info.type.includes("route") || info.type.includes("walk");
     const checkbox = document.getElementById(info.id);
-    if (checkbox) checkbox.checked = !isOffByDefault;
+    const isOff = info.type.includes("route") || info.type.includes("walk");
+    if (checkbox) checkbox.checked = !isOff;
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       popupTemplate: popupTemplate,
-      visible: !isOffByDefault,
+      visible: !isOff,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
     map.add(layer);

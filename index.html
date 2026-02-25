@@ -23,7 +23,7 @@
     <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
     
     <div class="layer-group">
-      <div class="group-header">Emergency Services & Safety (2020-2023)</div>
+      <div class="group-header">Emergency Services & Safety</div>
       
       <div class="layer-item">
         <div class="row-container">
@@ -109,27 +109,23 @@
 
     <div class="layer-group">
       <div class="group-header">Infrastructure</div>
-      
       <div class="row-container">
         <span><img src="./icons/bus.svg" class="mini-icon"> Bus Stops</span>
         <label class="switch small"><input type="checkbox" id="toggleBus" checked><span class="slider"></span></label>
       </div>
-      
       <div class="row-container">
         <span><img src="./icons/playground.svg" class="mini-icon"> Playgrounds</span>
         <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
       </div>
-      
       <div class="row-container">
         <span><span class="zone-box parking-box"></span> Parking</span>
         <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
       </div>
-
       <div class="row-container" style="margin-top:10px;">
         <span>Buildings</span>
         <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
-      <div class="no-toggle" style="margin-left: 5px; margin-top: 5px;">
+      <div class="no-toggle">
         <span><span class="zone-box" style="background: #2ecc71;"></span> 3D model (Project Building)</span>
       </div>
     </div>
@@ -138,9 +134,7 @@
   <script>
     function togglePane() {
       const sidebar = document.getElementById("sidebar");
-      const arrow = document.getElementById("arrowIcon");
       sidebar.classList.toggle("pane-closed");
-      arrow.innerHTML = sidebar.classList.contains("pane-closed") ? "☰" : "✕";
     }
   </script>
 </body>
