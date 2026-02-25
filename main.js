@@ -36,8 +36,8 @@ require([
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     
-    // 2. RUTTER (Emergency Response Routes)
-   else if (info.type.includes("route")) {
+    // 2. RUTTER MED SPECIFIKA SERVICE-TEXTER
+    else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
       let serviceText = "Emergency Route";
 
@@ -62,12 +62,12 @@ require([
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Service:</b> ${info.name}<br/><b>Status:</b> Priority Access<br/><b>Total Travel Time:</b> ${mins} min ${secs} sec`;
+            return `<b>Service:</b> ${serviceText}<br/><b>Total Travel Time:</b> ${mins} min ${secs} sek`;
           }
-          return "Travel time data unavailable.";
+          return `<b>Service:</b> ${serviceText}<br/>Travel time data unavailable.`;
         }
       };
-    } 
+    }
 
     // 3. IKONER & INCIDENTER (Temporal & Categorical Data)
     else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
