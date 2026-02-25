@@ -14,11 +14,10 @@ require([
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
-    // Uppdaterade typer här under:
     { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "hospital-incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
-    { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
+    { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
@@ -36,19 +35,18 @@ require([
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     else if (info.type.includes("route")) {
-      let routeColor = [255,215,0,0.9]; // Guld (Hospital)
-      if (info.type === "fire-route") routeColor = [217,48,37,0.9]; // Röd
-      if (info.type === "police-route") routeColor = [0,0,255,0.9]; // Blå
+      let routeColor = [255,215,0,0.9];
+      if (info.type === "fire-route") routeColor = [217,48,37,0.9];
+      if (info.type === "police-route") routeColor = [0,0,255,0.9];
       
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
-      popupTemplate = { title: info.name, content: "Emergency response route analysis." };
     } 
-    else if (info.type.includes("-icon")) {
+    else if (info.type.includes("-icon") || info.type === "fire-incident-house") {
       let iconHref = "./icons/";
       if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
       else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
-      else if (info.type === "fire-incident-icon") iconHref += "fire-incident-house.svg"; // Din nya brand-ikon
       else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
+      else if (info.type === "fire-incident-house") iconHref += "fire-incident-house.svg";
       else if (info.type === "police-icon") iconHref += "police-marker.svg";
       else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
       else if (info.type === "health-icon") iconHref += "health.svg";
@@ -71,7 +69,6 @@ require([
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
-      popupTemplate: popupTemplate,
       visible: checkbox ? checkbox.checked : true,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
