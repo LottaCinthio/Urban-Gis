@@ -30,13 +30,13 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. GÅNGZONER
+    // 1. GÅNGZONER (Släckta vid start)
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     
-    // 2. RUTTER MED RESTID (POPUP)
+    // 2. RUTTER (Emergency Response Routes)
     else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
       if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
@@ -44,21 +44,21 @@ require([
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
       
       popupTemplate = {
-        title: info.name,
+        title: "Emergency Response Route",
         content: function(feature) {
           const attr = feature.graphic.attributes;
-          const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.Attr_Minutes || attr.traveltime || attr.TRAVELTIME;
+          const totalTime = attr.Total_TravelTime || attr.Total_Minutes || attr.traveltime;
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Total restid:</b> ${mins} min ${secs} sek`;
+            return `<b>Service:</b> ${info.name}<br/><b>Status:</b> Priority Access<br/><b>Total Travel Time:</b> ${mins} min ${secs} sec`;
           }
-          return "Restidsdata saknas.";
+          return "Travel time data unavailable.";
         }
       };
     } 
 
-    // 3. IKONER
+    // 3. IKONER & INCIDENTER (Temporal & Categorical Data)
     else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
       let iconFile = "";
       if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
@@ -73,9 +73,17 @@ require([
       else if (info.type === "play-icon") iconFile = "playground.svg";
       
       renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
+
+      // Specifik popup för incidenter/brott
+      if (info.name.includes("Incidents") || info.name.includes("Crimes")) {
+        popupTemplate = {
+          title: info.name + " Details",
+          content: "<b>Type:</b> {Category} <br/><b>Date:</b> {Date} <br/><b>Morphology impact:</b> Residential cluster"
+        };
+      }
     }
 
-    // 4. BYGGNADER & 3D-KNAPP (STABIL LÖSNING)
+    // 4. BYGGNADER & PARKERING
     else if (info.type === "building") {
       renderer = { 
         type: "unique-value", 
@@ -83,7 +91,6 @@ require([
         defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, 
         uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] 
       };
-
      popupTemplate = { title: "Building Information", content: function(feature) {
         const bID = feature.graphic.attributes.Building_ID;
         if (bID == 8052 || (bID && bID.toString() === "8052")) {
@@ -92,11 +99,12 @@ require([
           return `<div style="text-align: center;"><b>Building ID:</b> ${bID}<br/><br/><a href="${baseUrl}IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Go to 3D Model</a></div>`;
         }
           return `<b>Building ID:</b> ${bID}`;
+
         }
+
       };
+
     }
-    
-    // 5. PARKERING (SYNCAD FÄRG)
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     }

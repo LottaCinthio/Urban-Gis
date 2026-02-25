@@ -20,10 +20,16 @@
 
   <div id="sidebar" class="pane-open">
     <h2 style="margin-top:0; font-size: 1.4em;">Content</h2>
+    
+    <div class="layer-group" style="background: #fffbe6; border: 1px solid #ffe58f;">
+      <div class="group-header" style="color: #856404;">Strategic Spatial Analysis</div>
+      <p style="font-size: 0.8em; margin: 5px 0;">Routes represent <b>Emergency Response Paths</b> simulated from stations to high-risk clusters. Patterns indicate correlation between housing morphology and response vulnerability.</p>
+    </div>
+
     <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
     
     <div class="layer-group">
-      <div class="group-header">Emergency Services & Safety</div>
+      <div class="group-header">Emergency Services (Temporal 2020-2023)</div>
       
       <div class="layer-item">
         <div class="row-container">
@@ -35,7 +41,7 @@
           <label class="switch small"><input type="checkbox" id="toggleIncidents" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text"><span class="route-line hospital-line"></span> Hospital Routes</span>
+          <span class="indent-text"><span class="route-line hospital-line"></span> Response Routes</span>
           <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
         </div>
       </div>
@@ -50,7 +56,7 @@
           <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text"><span class="route-line fire-line"></span> Fire Routes</span>
+          <span class="indent-text"><span class="route-line fire-line"></span> Brigade Access Routes</span>
           <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
         </div>
       </div>
@@ -61,73 +67,40 @@
           <label class="switch"><input type="checkbox" id="togglePolice" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text"><img src="./icons/crime-incident.svg" class="mini-icon"> Crimes</span>
+          <span class="indent-text"><img src="./icons/crime-incident.svg" class="mini-icon"> Crime Records</span>
           <label class="switch small"><input type="checkbox" id="toggleCrimes" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text"><span class="route-line police-line"></span> Police Routes</span>
+          <span class="indent-text"><span class="route-line police-line"></span> Patrol Response Routes</span>
           <label class="switch small"><input type="checkbox" id="togglePoliceRoutes"><span class="slider"></span></label>
         </div>
       </div>
     </div>
 
     <div class="layer-group">
-      <div class="group-header">Accessibility & Amenities</div>
-      
+      <div class="group-header">Urban Accessibility</div>
       <div class="layer-item">
         <div class="row-container">
-          <span><img src="./icons/health.svg" class="mini-icon"> Health Center</span>
+          <span><img src="./icons/health.svg" class="mini-icon"> Healthcare</span>
           <label class="switch small"><input type="checkbox" id="toggleHealthcare" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text">Walking Zones (Health)</span>
+          <span class="indent-text">Walking Time Analysis</span>
           <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
-        </div>
-        <div class="legend-container">
-          <div class="legend-item"><span class="zone-box h-5"></span> 5 min</div>
-          <div class="legend-item"><span class="zone-box h-10"></span> 10 min</div>
-          <div class="legend-item"><span class="zone-box h-15"></span> 15 min</div>
-        </div>
-      </div>
-
-      <div class="layer-item" style="margin-top:10px;">
-        <div class="row-container">
-          <span><img src="./icons/school.svg" class="mini-icon"> Schools</span>
-          <label class="switch small"><input type="checkbox" id="toggleSchools" checked><span class="slider"></span></label>
-        </div>
-        <div class="row-container">
-          <span class="indent-text">Walking Zones (School)</span>
-          <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
-        </div>
-        <div class="legend-container">
-          <div class="legend-item"><span class="zone-box s-5"></span> 5 min</div>
-          <div class="legend-item"><span class="zone-box s-10"></span> 10 min</div>
-          <div class="legend-item"><span class="zone-box s-15"></span> 15 min</div>
         </div>
       </div>
     </div>
 
-    <div class="layer-group">
-      <div class="group-header">Infrastructure</div>
+    <div class="layer-group" style="background: #e6f7ff; border: 1px solid #91d5ff;">
+      <div class="group-header" style="color: #0050b3;">BIM ↔ GIS Integration</div>
       <div class="row-container">
-        <span><img src="./icons/bus.svg" class="mini-icon"> Bus Stops</span>
-        <label class="switch small"><input type="checkbox" id="toggleBus" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container">
-        <span><img src="./icons/playground.svg" class="mini-icon"> Playgrounds</span>
-        <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container">
-        <span><span class="zone-box parking-box"></span> Parking</span>
-        <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container" style="margin-top:10px;">
-        <span>Buildings</span>
+        <span>Project Building</span>
         <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
-      <div class="no-toggle">
-        <span><span class="zone-box" style="background: #2ecc71;"></span> 3D model (Project Building)</span>
-      </div>
+      <p style="font-size: 0.75em; color: #444; margin-top: 5px;">
+        Building 8052 acts as a <b>Digital Twin scenario</b>. Spatial safety data (Crime/Fire) informs the risk layers within the BIM framework.
+      </p>
+      <div style="margin-top:5px;"><span class="zone-box" style="background: #2ecc71;"></span> Green Priority BIM Model</div>
     </div>
   </div>
 
