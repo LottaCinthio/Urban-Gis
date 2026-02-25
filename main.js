@@ -84,22 +84,13 @@ require([
         uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] 
       };
 
-      popupTemplate = {
-        title: "Building Information",
-        content: function(feature) {
-          const bID = feature.graphic.attributes.Building_ID;
-          if (bID == 8052) {
-            // Vi använder en standard <a> tagg men stylar den som en knapp. 
-            // Detta är det mest stabila sättet i ArcGIS popuper.
-            return `
-              <div style="text-align: center;">
-                <b>Building ID:</b> ${bID}<br><br>
-                <a href="IFC.html" target="_blank" 
-                   style="display: inline-block; background-color: #2ecc71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">
-                  Go to 3D Model
-                </a>
-              </div>`;
-          }
+     popupTemplate = { title: "Building Information", content: function(feature) {
+        const bID = feature.graphic.attributes.Building_ID;
+        if (bID == 8052 || (bID && bID.toString() === "8052")) {
+          const currentUrl = window.location.href.split('?')[0].split('#')[0];
+          const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf("/") + 1);
+          return `<div style="text-align: center;"><b>Building ID:</b> ${bID}<br/><br/><a href="${baseUrl}IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Go to 3D Model</a></div>`;
+        }
           return `<b>Building ID:</b> ${bID}`;
         }
       };
