@@ -36,6 +36,9 @@ require([
     layers: [analysisLayer] 
   });
 
+  // Skapa en referens för väglagret för att kunna räkna på det
+  let roadsGeoJSON;
+
   layersInfo.forEach(info => {
     let renderer;
     let popupTemplate = null;
@@ -82,15 +85,25 @@ require([
     }
 
     const checkbox = document.getElementById(info.id);
+    
+    // MODIFIERING: Tänd Roads som standard
+    let isVisible = checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true);
+    if (info.type === "road-network") {
+      isVisible = true;
+      if (checkbox) checkbox.checked = true;
+    }
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true),
+      visible: isVisible,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
+
+    if (info.type === "road-network") roadsGeoJSON = layer;
     map.add(layer);
   });
 
@@ -98,7 +111,7 @@ require([
 
   // --- INTERAKTIV VÄG-MÄTNING (A till B) ---
   let points = [];
-  view.on("click", function(event) {
+  view.on("click", async function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
     if (points.length >= 2) { clearAnalysis(); }
 
@@ -110,19 +123,48 @@ require([
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      const polyline = new Polyline({
+      // START PÅ NY TILLAGD LOGIK FÖR KORSNINGAR/SVÄNGAR
+      const query = roadsGeoJSON.createQuery();
+      query.geometry = geometryEngine.union([points[0].geometry, points[1].geometry]).extent.expand(2);
+      query.returnGeometry = true;
+      
+      const results = await roadsGeoJSON.queryFeatures(query);
+      const roadFeatures = results.features;
+      
+      // Hitta alla segment som ligger mellan punkt A och B genom en buffert-analys
+      const connectionLine = new Polyline({
         paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
         spatialReference: { wkid: 4326 }
       });
       
-      analysisLayer.add(new Graphic({ 
-        geometry: polyline, 
-        symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" } 
-      }));
+      const buffer = geometryEngine.geodesicBuffer(connectionLine, 100, "meters");
+      const filteredRoads = roadFeatures.filter(f => geometryEngine.intersects(buffer, f.geometry));
+      
+      let finalPath;
+      let realDistance = 0;
 
-      // BERÄKNING: Faktisk väg-distans med networkFactor (1.3x fågelvägen)
-      const birdDistance = geometryEngine.geodesicLength(polyline, "kilometers");
-      const realDistance = birdDistance * 1.3; 
+      if (filteredRoads.length > 0) {
+        // Sammanfoga vägsegmenten som hittats i korridoren mellan A och B
+        const roadGeometries = filteredRoads.map(f => f.geometry);
+        const mergedRoads = geometryEngine.union(roadGeometries);
+        
+        // Rita den faktiska vägen
+        analysisLayer.add(new Graphic({
+          geometry: mergedRoads,
+          symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" }
+        }));
+        
+        realDistance = geometryEngine.geodesicLength(mergedRoads, "kilometers");
+      } else {
+        // Fallback om inga vägar hittas i närheten
+        analysisLayer.add(new Graphic({
+          geometry: connectionLine,
+          symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" }
+        }));
+        realDistance = geometryEngine.geodesicLength(connectionLine, "kilometers") * 1.3;
+      }
+      // SLUT PÅ TILLAGD LOGIK
+
       const mode = document.getElementById("transportMode").value;
       let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
       const travelTime = (realDistance / speed) * 60;
