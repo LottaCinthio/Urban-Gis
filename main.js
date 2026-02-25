@@ -29,8 +29,16 @@ require([
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
   ];
 
-  const analysisLayer = new GraphicsLayer({ elevationInfo: { mode: "relative-to-ground", offset: 2 } });
-  const map = new Map({ basemap: "gray-vector", ground: "world-elevation", layers: [analysisLayer] });
+  // VIKTIGT: Sätt elevationInfo så att mätningen alltid syns ovanpå marken
+  const analysisLayer = new GraphicsLayer({ 
+    elevationInfo: { mode: "relative-to-ground", offset: 5 } 
+  });
+  
+  const map = new Map({ 
+    basemap: "gray-vector", 
+    ground: "world-elevation", 
+    layers: [analysisLayer] 
+  });
 
   let roadsLayerRef;
 
@@ -112,15 +120,15 @@ require([
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- KORRIGERAD MÄTNINGSLOGIK ---
+  // --- KORRIGERAD MÄTNINGSLOGIK FÖR EXAKT PLACERING ---
   let points = [];
   
-  view.on("click", async function(event) {
+  view.on("click", function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
     
-    // Säkerställ att klicket hamnar på marken
-    const response = await view.hitTest(event);
-    const mapPoint = event.mapPoint;
+    // Tvinga SceneView att hitta den geografiska punkten på marken
+    const mapPoint = view.toMap(event);
+    if (!mapPoint) return;
 
     if (points.length >= 2) { clearAnalysis(); }
 
@@ -133,49 +141,58 @@ require([
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      // 1. Hämta vägsegment i närheten
-      const query = roadsLayerRef.createQuery();
-      query.geometry = geometryEngine.buffer(geometryEngine.union([points[0].geometry, points[1].geometry]), 500, "meters").extent;
-      query.returnGeometry = true;
-      const { features } = await roadsLayerRef.queryFeatures(query);
-
-      // 2. Skapa rutt-geometri
-      const directLine = new Polyline({
-        paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
-        spatialReference: { wkid: 4326 }
-      });
-
-      const bufferZone = geometryEngine.geodesicBuffer(directLine, 50, "meters");
-      const roadPathFeatures = features.filter(f => geometryEngine.intersects(bufferZone, f.geometry));
-      
-      let finalDist = 0;
-
-      if (roadPathFeatures.length > 0) {
-        const finalGeometry = geometryEngine.union(roadPathFeatures.map(f => f.geometry));
-        finalDist = geometryEngine.geodesicLength(finalGeometry, "kilometers");
-        
-        analysisLayer.add(new Graphic({
-          geometry: finalGeometry,
-          symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
-        }));
-      } else {
-        // Fallback om inga vägar hittas precis vid klicket
-        finalDist = geometryEngine.geodesicLength(directLine, "kilometers") * 1.3;
-        analysisLayer.add(new Graphic({ 
-          geometry: directLine, 
-          symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" } 
-        }));
-      }
-
-      // 3. Uppdatera panelen
-      const mode = document.getElementById("transportMode").value;
-      let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
-      
-      document.getElementById("res-dist").innerText = finalDist.toFixed(2) + " km";
-      document.getElementById("res-time").innerText = ((finalDist / speed) * 60).toFixed(1) + " min";
-      document.getElementById("res-speed").innerText = speed + " km/h";
+      calculateABRoute(points[0].geometry, points[1].geometry);
     }
   });
+
+  async function calculateABRoute(start, end) {
+    // 1. Hitta vägsegment i närheten av klickpunkterna
+    const query = roadsLayerRef.createQuery();
+    query.geometry = geometryEngine.buffer(geometryEngine.union([start, end]), 500, "meters").extent;
+    query.returnGeometry = true;
+    
+    const { features } = await roadsLayerRef.queryFeatures(query);
+
+    // 2. Skapa en korridor för att filtrera vägar mellan A och B
+    const corridor = geometryEngine.geodesicBuffer(new Polyline({
+      paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]],
+      spatialReference: { wkid: 4326 }
+    }), 60, "meters");
+
+    const segments = features.filter(f => geometryEngine.intersects(corridor, f.geometry));
+    
+    let finalDist = 0;
+
+    if (segments.length > 0) {
+      // Slå ihop segmenten för att rita ut dem
+      const combinedRoute = geometryEngine.union(segments.map(s => s.geometry));
+      finalDist = geometryEngine.geodesicLength(combinedRoute, "kilometers");
+      
+      analysisLayer.add(new Graphic({
+        geometry: combinedRoute,
+        symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
+      }));
+    } else {
+      // Fallback: Om inga vägar hittas i närheten, rita rak linje men varna i panelen
+      const fallback = new Polyline({
+        paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]],
+        spatialReference: { wkid: 4326 }
+      });
+      finalDist = geometryEngine.geodesicLength(fallback, "kilometers") * 1.3;
+      analysisLayer.add(new Graphic({
+        geometry: fallback,
+        symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" }
+      }));
+    }
+
+    // 3. Räkna ut tid och hastighet
+    const mode = document.getElementById("transportMode").value;
+    let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
+    
+    document.getElementById("res-dist").innerText = finalDist.toFixed(2) + " km";
+    document.getElementById("res-time").innerText = ((finalDist / speed) * 60).toFixed(1) + " min";
+    document.getElementById("res-speed").innerText = speed + " km/h";
+  }
 
   window.clearAnalysis = function() {
     points = []; analysisLayer.removeAll();
