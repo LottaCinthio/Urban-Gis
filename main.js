@@ -14,10 +14,10 @@ require([
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
-    { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-house", id: "toggleIncidents" },
+    { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "hospital-incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
-    { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident", id: "toggleIncidents" },
+    { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-icon", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
@@ -46,30 +46,32 @@ require([
           if (totalTime) { const mins = Math.floor(totalTime); const secs = Math.round((totalTime - mins) * 60); return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`; }
           return "Travel time data not available.";
       }};
-    } else if (info.type.includes("-icon") || info.type === "fire-incident-house") {
-  let iconHref = "./icons/";
-  if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
-  else if (info.type === "incident-icon") iconHref += "incident-house.svg";
-  else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
-  else if (info.type === "fire-incident-house") iconHref += "fire-incident-house.svg"; // Denna rad fixar din nya ikon!
-  else if (info.type === "police-icon") iconHref += "police-marker.svg";
-  else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
-  else if (info.type === "health-icon") iconHref += "health.svg";
-  else if (info.type === "school-icon") iconHref += "school.svg";
-  else if (info.type === "bus-icon") iconHref += "bus.svg";
-  else if (info.type === "play-icon") iconHref += "playground.svg";
-  
-  renderer = { 
-    type: "simple", 
-    symbol: { 
-      type: "point-3d", 
-      symbolLayers: [{ 
-        type: "icon", 
-        resource: { href: iconHref }, 
-        size: 30 
-      }] 
-    } 
-  };
+    } else if (info.type.includes("-icon")) {
+    let iconHref = "./icons/";
+    
+    if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
+    
+    // 1. Specifik ikon för sjukhus-incidenter
+    else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
+    
+    // 2. Specifik ikon för brand-incidenter
+    else if (info.type === "fire-incident-icon") iconHref += "fire-incident-house.svg";
+    
+    else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
+    else if (info.type === "police-icon") iconHref += "police-marker.svg";
+    else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
+    else if (info.type === "health-icon") iconHref += "health.svg";
+    else if (info.type === "school-icon") iconHref += "school.svg";
+    else if (info.type === "bus-icon") iconHref += "bus.svg";
+    else if (info.type === "play-icon") iconHref += "playground.svg";
+
+    renderer = { 
+        type: "simple", 
+        symbol: { 
+            type: "point-3d", 
+            symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: 30 }] 
+        } 
+    };
 }
     else if (info.type === "building") {
       renderer = { 
