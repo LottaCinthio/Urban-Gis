@@ -29,20 +29,16 @@ require([
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
   ];
 
-  const analysisLayer = new GraphicsLayer();
-  const map = new Map({ 
-    basemap: "gray-vector", 
-    ground: "world-elevation", 
-    layers: [analysisLayer] 
-  });
+  const analysisLayer = new GraphicsLayer({ elevationInfo: { mode: "relative-to-ground", offset: 3 } });
+  const map = new Map({ basemap: "gray-vector", ground: "world-elevation", layers: [analysisLayer] });
 
-  // Skapa en referens för väglagret för att kunna räkna på det
-  let roadsGeoJSON;
+  let roadsLayerRef; // Referens för mätverktyget
 
   layersInfo.forEach(info => {
     let renderer;
     let popupTemplate = null;
 
+    // --- RENDERING-LOGIK (ÅTERSTÄLLD TILL LÅST VERSION) ---
     if (info.type === "road-network") {
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 1.2, material: { color: [130, 130, 130, 0.4] } }] } };
     }
@@ -56,7 +52,6 @@ require([
       if (info.type === "route") serviceText = "Emergency route from incident to Hospital";
       else if (info.type === "fire-route") { routeColor = [217, 48, 37, 0.9]; serviceText = "Emergency route from Fire Station to fire incident"; }
       else if (info.type === "police-route") { routeColor = [0, 0, 255, 0.9]; serviceText = "Emergency route from Police Station to crime scene"; }
-      
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
       popupTemplate = { title: "Emergency Response Route", content: (f) => {
           const a = f.graphic.attributes;
@@ -64,8 +59,19 @@ require([
           return `<b>Service:</b> ${serviceText}<br/><b>Status:</b> Priority Access<br/><b>Total Travel Time:</b> ${t ? Math.floor(t)+" min "+Math.round((t-Math.floor(t))*60)+" sek" : "Saknas"}`;
       }};
     } 
-    else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
-      let iconFile = info.type === "hospital-icon" ? "hospital-marker.svg" : info.type === "fire-icon" ? "firestation-marker.svg" : info.type === "police-icon" ? "police-marker.svg" : info.type === "health-icon" ? "health.svg" : info.type === "school-icon" ? "school.svg" : info.type === "bus-icon" ? "bus.svg" : info.type === "play-icon" ? "playground.svg" : "incident-house.svg";
+    else if (info.type.endsWith("-icon") || info.type === "fire-incident-house" || info.type === "hospital-incident-icon" || info.type === "crime-icon") {
+      let iconFile = "";
+      if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
+      else if (info.type === "hospital-incident-icon") iconFile = "incident-house.svg";
+      else if (info.type === "fire-icon") iconFile = "firestation-marker.svg";
+      else if (info.type === "fire-incident-house") iconFile = "fire-incident-house.svg";
+      else if (info.type === "police-icon") iconFile = "police-marker.svg";
+      else if (info.type === "crime-icon") iconFile = "crime-incident.svg";
+      else if (info.type === "health-icon") iconFile = "health.svg";
+      else if (info.type === "school-icon") iconFile = "school.svg";
+      else if (info.type === "bus-icon") iconFile = "bus.svg";
+      else if (info.type === "play-icon") iconFile = "playground.svg";
+      
       renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
     }
     else if (info.type === "building") {
@@ -73,8 +79,7 @@ require([
       popupTemplate = { title: "Building Information", content: function(feature) {
         const bID = feature.graphic.attributes.Building_ID;
         if (bID == 8052 || (bID && bID.toString() === "8052")) {
-          const currentUrl = window.location.href.split('?')[0].split('#')[0];
-          const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf("/") + 1);
+          const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf("/") + 1);
           return `<div style="text-align: center;"><b>Building ID:</b> ${bID}<br/><br/><a href="${baseUrl}IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Go to 3D Model</a></div>`;
         }
         return `<b>Building ID:</b> ${bID}`;
@@ -85,12 +90,11 @@ require([
     }
 
     const checkbox = document.getElementById(info.id);
-    
-    // MODIFIERING: Tänd Roads som standard
     let isVisible = checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true);
-    if (info.type === "road-network") {
-      isVisible = true;
-      if (checkbox) checkbox.checked = true;
+    
+    if (info.name === "Road Network") { 
+      isVisible = true; 
+      if (checkbox) checkbox.checked = true; 
     }
 
     const layer = new GeoJSONLayer({
@@ -103,13 +107,13 @@ require([
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
 
-    if (info.type === "road-network") roadsGeoJSON = layer;
+    if (info.name === "Road Network") roadsLayerRef = layer;
     map.add(layer);
   });
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- INTERAKTIV VÄG-MÄTNING (A till B) ---
+  // --- INTERAKTIV MÄTNING LÄNGS VÄGNÄTET (FIXAD) ---
   let points = [];
   view.on("click", async function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
@@ -123,54 +127,43 @@ require([
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      // START PÅ NY TILLAGD LOGIK FÖR KORSNINGAR/SVÄNGAR
-      const query = roadsGeoJSON.createQuery();
-      query.geometry = geometryEngine.union([points[0].geometry, points[1].geometry]).extent.expand(2);
+      // 1. Hämta alla vägsegment i området
+      const query = roadsLayerRef.createQuery();
+      query.geometry = geometryEngine.buffer(geometryEngine.union([points[0].geometry, points[1].geometry]), 500, "meters").extent;
       query.returnGeometry = true;
-      
-      const results = await roadsGeoJSON.queryFeatures(query);
-      const roadFeatures = results.features;
-      
-      // Hitta alla segment som ligger mellan punkt A och B genom en buffert-analys
-      const connectionLine = new Polyline({
+      const { features } = await roadsLayerRef.queryFeatures(query);
+
+      // 2. Skapa den visuella rutten genom att hitta segment som nuddar varandra mellan klickpunkterna
+      const bufferZone = geometryEngine.geodesicBuffer(new Polyline({
         paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
         spatialReference: { wkid: 4326 }
-      });
-      
-      const buffer = geometryEngine.geodesicBuffer(connectionLine, 100, "meters");
-      const filteredRoads = roadFeatures.filter(f => geometryEngine.intersects(buffer, f.geometry));
-      
-      let finalPath;
-      let realDistance = 0;
+      }), 40, "meters");
 
-      if (filteredRoads.length > 0) {
-        // Sammanfoga vägsegmenten som hittats i korridoren mellan A och B
-        const roadGeometries = filteredRoads.map(f => f.geometry);
-        const mergedRoads = geometryEngine.union(roadGeometries);
+      const roadPathFeatures = features.filter(f => geometryEngine.intersects(bufferZone, f.geometry));
+      
+      let finalGeometry;
+      let finalDist = 0;
+
+      if (roadPathFeatures.length > 0) {
+        finalGeometry = geometryEngine.union(roadPathFeatures.map(f => f.geometry));
+        finalDist = geometryEngine.geodesicLength(finalGeometry, "kilometers");
         
-        // Rita den faktiska vägen
         analysisLayer.add(new Graphic({
-          geometry: mergedRoads,
-          symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" }
+          geometry: finalGeometry,
+          symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
         }));
-        
-        realDistance = geometryEngine.geodesicLength(mergedRoads, "kilometers");
       } else {
-        // Fallback om inga vägar hittas i närheten
-        analysisLayer.add(new Graphic({
-          geometry: connectionLine,
-          symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" }
-        }));
-        realDistance = geometryEngine.geodesicLength(connectionLine, "kilometers") * 1.3;
+        // Fallback om data saknas precis under klicket
+        const fallbackLine = new Polyline({ paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]], spatialReference: { wkid: 4326 } });
+        finalDist = geometryEngine.geodesicLength(fallbackLine, "kilometers") * 1.3;
+        analysisLayer.add(new Graphic({ geometry: fallbackLine, symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" } }));
       }
-      // SLUT PÅ TILLAGD LOGIK
 
       const mode = document.getElementById("transportMode").value;
       let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
-      const travelTime = (realDistance / speed) * 60;
-
-      document.getElementById("res-dist").innerText = realDistance.toFixed(2) + " km";
-      document.getElementById("res-time").innerText = travelTime.toFixed(1) + " min";
+      
+      document.getElementById("res-dist").innerText = finalDist.toFixed(2) + " km";
+      document.getElementById("res-time").innerText = ((finalDist / speed) * 60).toFixed(1) + " min";
       document.getElementById("res-speed").innerText = speed + " km/h";
     }
   });
