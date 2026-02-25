@@ -29,16 +29,15 @@ require([
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
   ];
 
-  const analysisLayer = new GraphicsLayer({ elevationInfo: { mode: "relative-to-ground", offset: 3 } });
+  const analysisLayer = new GraphicsLayer({ elevationInfo: { mode: "relative-to-ground", offset: 2 } });
   const map = new Map({ basemap: "gray-vector", ground: "world-elevation", layers: [analysisLayer] });
 
-  let roadsLayerRef; // Referens för mätverktyget
+  let roadsLayerRef;
 
   layersInfo.forEach(info => {
     let renderer;
     let popupTemplate = null;
 
-    // --- RENDERING-LOGIK (ÅTERSTÄLLD TILL LÅST VERSION) ---
     if (info.type === "road-network") {
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 1.2, material: { color: [130, 130, 130, 0.4] } }] } };
     }
@@ -113,39 +112,46 @@ require([
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- INTERAKTIV MÄTNING LÄNGS VÄGNÄTET (FIXAD) ---
+  // --- KORRIGERAD MÄTNINGSLOGIK ---
   let points = [];
+  
   view.on("click", async function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
+    
+    // Säkerställ att klicket hamnar på marken
+    const response = await view.hitTest(event);
+    const mapPoint = event.mapPoint;
+
     if (points.length >= 2) { clearAnalysis(); }
 
     const marker = new Graphic({
-      geometry: event.mapPoint,
+      geometry: mapPoint,
       symbol: { type: "simple-marker", style: "circle", color: points.length === 0 ? [76, 175, 80] : [244, 67, 54], size: "12px", outline: { color: "white", width: 2 } }
     });
+
     points.push(marker);
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      // 1. Hämta alla vägsegment i området
+      // 1. Hämta vägsegment i närheten
       const query = roadsLayerRef.createQuery();
       query.geometry = geometryEngine.buffer(geometryEngine.union([points[0].geometry, points[1].geometry]), 500, "meters").extent;
       query.returnGeometry = true;
       const { features } = await roadsLayerRef.queryFeatures(query);
 
-      // 2. Skapa den visuella rutten genom att hitta segment som nuddar varandra mellan klickpunkterna
-      const bufferZone = geometryEngine.geodesicBuffer(new Polyline({
+      // 2. Skapa rutt-geometri
+      const directLine = new Polyline({
         paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
         spatialReference: { wkid: 4326 }
-      }), 40, "meters");
+      });
 
+      const bufferZone = geometryEngine.geodesicBuffer(directLine, 50, "meters");
       const roadPathFeatures = features.filter(f => geometryEngine.intersects(bufferZone, f.geometry));
       
-      let finalGeometry;
       let finalDist = 0;
 
       if (roadPathFeatures.length > 0) {
-        finalGeometry = geometryEngine.union(roadPathFeatures.map(f => f.geometry));
+        const finalGeometry = geometryEngine.union(roadPathFeatures.map(f => f.geometry));
         finalDist = geometryEngine.geodesicLength(finalGeometry, "kilometers");
         
         analysisLayer.add(new Graphic({
@@ -153,12 +159,15 @@ require([
           symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
         }));
       } else {
-        // Fallback om data saknas precis under klicket
-        const fallbackLine = new Polyline({ paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]], spatialReference: { wkid: 4326 } });
-        finalDist = geometryEngine.geodesicLength(fallbackLine, "kilometers") * 1.3;
-        analysisLayer.add(new Graphic({ geometry: fallbackLine, symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" } }));
+        // Fallback om inga vägar hittas precis vid klicket
+        finalDist = geometryEngine.geodesicLength(directLine, "kilometers") * 1.3;
+        analysisLayer.add(new Graphic({ 
+          geometry: directLine, 
+          symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" } 
+        }));
       }
 
+      // 3. Uppdatera panelen
       const mode = document.getElementById("transportMode").value;
       let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
       
