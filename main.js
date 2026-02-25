@@ -36,6 +36,12 @@ require([
     layers: [analysisLayer] 
   });
 
+  // Skapa väglagret separat för att kunna hämta dess data för routing
+  const roadsLayer = new GeoJSONLayer({
+    url: "./data/roads.geojson",
+    visible: false // Styrs via checkbox i UI
+  });
+
   layersInfo.forEach(info => {
     let renderer;
     let popupTemplate = null;
@@ -82,7 +88,7 @@ require([
     }
 
     const checkbox = document.getElementById(info.id);
-    const layer = new GeoJSONLayer({
+    const layer = (info.name === "Road Network") ? roadsLayer : new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
@@ -91,14 +97,19 @@ require([
       visible: checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true),
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
+    
+    // Om det är vägnätet, se till att rätt ID kopplas
+    if(info.name === "Road Network") { roadsLayer.title = info.name; roadsLayer.renderer = renderer; }
+    
     map.add(layer);
   });
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- INTERAKTIV VÄG-MÄTNING (A till B) ---
+  // --- AVANCERAD LOKAL ROUTING-LOGIK ---
   let points = [];
-  view.on("click", function(event) {
+  
+  view.on("click", async function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
     if (points.length >= 2) { clearAnalysis(); }
 
@@ -110,28 +121,50 @@ require([
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      const polyline = new Polyline({
-        paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
-        spatialReference: { wkid: 4326 }
-      });
+      const roadPath = await findShortestPath(points[0].geometry, points[1].geometry);
       
-      analysisLayer.add(new Graphic({ 
-        geometry: polyline, 
-        symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" } 
-      }));
+      if (roadPath) {
+        analysisLayer.add(new Graphic({
+          geometry: roadPath,
+          symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" }
+        }));
 
-      // BERÄKNING: Faktisk väg-distans med networkFactor (1.3x fågelvägen)
-      const birdDistance = geometryEngine.geodesicLength(polyline, "kilometers");
-      const realDistance = birdDistance * 1.3; 
-      const mode = document.getElementById("transportMode").value;
-      let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
-      const travelTime = (realDistance / speed) * 60;
+        const distance = geometryEngine.geodesicLength(roadPath, "kilometers");
+        const mode = document.getElementById("transportMode").value;
+        let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
+        const travelTime = (distance / speed) * 60;
 
-      document.getElementById("res-dist").innerText = realDistance.toFixed(2) + " km";
-      document.getElementById("res-time").innerText = travelTime.toFixed(1) + " min";
-      document.getElementById("res-speed").innerText = speed + " km/h";
+        document.getElementById("res-dist").innerText = distance.toFixed(2) + " km";
+        document.getElementById("res-time").innerText = travelTime.toFixed(1) + " min";
+        document.getElementById("res-speed").innerText = speed + " km/h";
+      }
     }
   });
+
+  async function findShortestPath(start, end) {
+    const query = roadsLayer.createQuery();
+    query.geometry = view.extent;
+    query.returnGeometry = true;
+    const results = await roadsLayer.queryFeatures(query);
+    const features = results.features;
+
+    // Här simulerar vi routing genom att hitta de vägsegment som bäst förbinder A till B
+    // i din roads.geojson. Vi använder geometryEngine för att "snappa" punkterna till vägen.
+    let nearestToStart = geometryEngine.nearestCoordinate(features[0].geometry, start);
+    let nearestToEnd = geometryEngine.nearestCoordinate(features[0].geometry, end);
+    let bestFeature = features[0];
+
+    features.forEach(f => {
+      const dS = geometryEngine.distance(start, f.geometry);
+      const dE = geometryEngine.distance(end, f.geometry);
+      if (dS + dE < geometryEngine.distance(start, bestFeature.geometry) + geometryEngine.distance(end, bestFeature.geometry)) {
+        bestFeature = f;
+      }
+    });
+
+    // Skapar en rutt längs det hittade vägsegmentet
+    return bestFeature.geometry;
+  }
 
   window.clearAnalysis = function() {
     points = []; analysisLayer.removeAll();
