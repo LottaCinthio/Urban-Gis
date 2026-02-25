@@ -62,7 +62,7 @@ require([
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Service:</b> ${serviceText}<br/><b>Total Travel Time:</b> ${mins} min ${secs} sek`;
+            return `<b>Service:</b> ${serviceText}<br/><b>Status:</b> Priority Access<br/><b>Total Travel Time:</b> ${mins} min ${secs} sek`;
           }
           return `<b>Service:</b> ${serviceText}<br/>Travel time data unavailable.`;
         }
