@@ -26,7 +26,6 @@
     
     <div class="layer-group">
       <div class="group-header">Emergency Services & Safety</div>
-      
       <div class="layer-item">
         <div class="row-container">
           <span><img src="./icons/hospital-marker.svg" class="mini-icon"> Hospital</span>
@@ -41,7 +40,6 @@
           <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
         </div>
       </div>
-
       <div class="layer-item" style="margin-top:10px;">
         <div class="row-container">
           <span><img src="./icons/firestation-marker.svg" class="mini-icon"> Fire Station</span>
@@ -56,7 +54,6 @@
           <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
         </div>
       </div>
-
       <div class="layer-item" style="margin-top:10px;">
         <div class="row-container">
           <span><img src="./icons/police-marker.svg" class="mini-icon"> Police Station</span>
@@ -75,7 +72,6 @@
 
     <div class="layer-group">
       <div class="group-header">Accessibility & Amenities</div>
-      
       <div class="layer-item">
         <div class="row-container">
           <span><img src="./icons/health.svg" class="mini-icon"> Health Center</span>
@@ -91,7 +87,6 @@
           <div class="legend-item"><span class="zone-box h-15"></span> 15 min</div>
         </div>
       </div>
-
       <div class="layer-item" style="margin-top:10px;">
         <div class="row-container">
           <span><img src="./icons/school.svg" class="mini-icon"> Schools</span>
@@ -137,8 +132,11 @@
     </div>
 
     <div class="layer-group" style="background: #f0f7ff; border: 1px solid #bae7ff; margin-top: 20px;">
-      <div class="group-header" style="color: #0050b3;">Interactive Analysis (A to B)</div>
-      <p style="font-size: 0.7em; color: #666; margin-bottom: 8px;">Click map to set Start (Green) & End (Red).</p>
+      <div class="group-header" style="color: #0050b3; display: flex; justify-content: space-between; align-items: center;">
+        Interactive Analysis
+        <label class="switch small"><input type="checkbox" id="enableABTool"><span class="slider"></span></label>
+      </div>
+      <p id="ab-instruction" style="font-size: 0.7em; color: #666; margin-bottom: 8px; opacity: 0.5;">Turn on the switch to start measuring.</p>
       <div class="row-container">
         <span style="font-size: 0.85em;">Mode:</span>
         <select id="transportMode" style="font-size: 0.8em; border: 1px solid #ccc;">

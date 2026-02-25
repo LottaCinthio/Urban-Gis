@@ -29,14 +29,8 @@ require([
     { name: "Police Routes", file: "police_route.geojson", type: "police-route", id: "togglePoliceRoutes" }
   ];
 
-  // Lager för A-till-B mätning
   const analysisGraphicsLayer = new GraphicsLayer();
-  
-  const map = new Map({ 
-    basemap: "gray-vector", 
-    ground: "world-elevation",
-    layers: [analysisGraphicsLayer] 
-  });
+  const map = new Map({ basemap: "gray-vector", ground: "world-elevation", layers: [analysisGraphicsLayer] });
 
   layersInfo.forEach(info => {
     let renderer;
@@ -123,11 +117,27 @@ require([
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- NY LOGIK: A-TILL-B ROUTE ANALYSIS ---
+  // --- NY LOGIK: A-TILL-B ROUTE ANALYSIS MED TOGGLE ---
   const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
   let stops = [];
 
+  // Lyssnar på när verktyget slås på/av
+  document.getElementById("enableABTool").addEventListener("change", (e) => {
+    const instruction = document.getElementById("ab-instruction");
+    if (!e.target.checked) {
+      clearAnalysis(); // Rensar kartan om man stänger av
+      instruction.style.opacity = "0.5";
+      instruction.innerText = "Turn on the switch to start measuring.";
+    } else {
+      instruction.style.opacity = "1";
+      instruction.innerText = "Click map to set Start (Green) & End (Red).";
+    }
+  });
+
   view.on("click", function(event) {
+    // KÖR BARA OM TOOL-SWITCHEN ÄR PÅ
+    if (!document.getElementById("enableABTool").checked) return;
+
     if (stops.length >= 2) { clearAnalysis(); }
 
     const stop = new Graphic({
@@ -156,11 +166,9 @@ require([
 
       const distKm = result.attributes.Total_Kilometers;
       const timeMin = result.attributes.Total_TravelTime;
-      const speedKmh = (distKm / (timeMin / 60)).toFixed(1);
-
       document.getElementById("res-dist").innerText = distKm.toFixed(2) + " km";
       document.getElementById("res-time").innerText = timeMin.toFixed(1) + " min";
-      document.getElementById("res-speed").innerText = speedKmh + " km/h";
+      document.getElementById("res-speed").innerText = (distKm / (timeMin / 60)).toFixed(1) + " km/h";
     });
   }
 
@@ -184,6 +192,3 @@ require([
     });
   });
 });
-
-
-
