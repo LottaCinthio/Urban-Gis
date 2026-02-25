@@ -35,7 +35,7 @@
           <label class="switch small"><input type="checkbox" id="toggleIncidents" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text">Hospital Routes</span>
+          <span class="indent-text"><span class="route-line hospital-line"></span> Hospital Routes</span>
           <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
         </div>
       </div>
@@ -50,7 +50,7 @@
           <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text">Fire Routes</span>
+          <span class="indent-text"><span class="route-line fire-line"></span> Fire Routes</span>
           <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
         </div>
       </div>
@@ -68,23 +68,25 @@
     </div>
 
     <div class="layer-group">
-      <div class="group-header">Accessibility & Amenities</div>
+      <div class="group-header">Accessibility (Walking Time)</div>
       <div class="row-container">
-        <span><img src="./icons/health.svg" class="mini-icon"> Health Center</span>
-        <label class="switch small"><input type="checkbox" id="toggleHealthcare" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container">
-        <span class="indent-text">Walking Zones (Health)</span>
+        <span><img src="./icons/health.svg" class="mini-icon"> Health Center Zones</span>
         <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
+      </div>
+      <div class="legend-container">
+        <div class="legend-item"><span class="zone-box h-5"></span> 5 min</div>
+        <div class="legend-item"><span class="zone-box h-10"></span> 10 min</div>
+        <div class="legend-item"><span class="zone-box h-15"></span> 15 min</div>
       </div>
 
       <div class="row-container" style="margin-top:10px;">
-        <span><img src="./icons/school.svg" class="mini-icon"> Schools</span>
-        <label class="switch small"><input type="checkbox" id="toggleSchools" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container">
-        <span class="indent-text">Walking Zones (School)</span>
+        <span><img src="./icons/school.svg" class="mini-icon"> School Zones</span>
         <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
+      </div>
+      <div class="legend-container">
+        <div class="legend-item"><span class="zone-box s-5"></span> 5 min</div>
+        <div class="legend-item"><span class="zone-box s-10"></span> 10 min</div>
+        <div class="legend-item"><span class="zone-box s-15"></span> 15 min</div>
       </div>
     </div>
 
@@ -99,7 +101,7 @@
         <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
       </div>
       <div class="row-container">
-        <span><span class="zone-box parking-box"></span> Parking Areas</span>
+        <span><span class="zone-box parking-box"></span> Parking</span>
         <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
       </div>
       <div class="row-container">

@@ -61,7 +61,7 @@ require([
       renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: 30 }] } };
     }
 
-    // 4. BYGGNADER & PARKERING
+    // 4. BYGGNADER
     else if (info.type === "building") {
       renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
     }
@@ -69,19 +69,19 @@ require([
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     }
 
-    // Bestäm om lagret ska vara tänt eller släckt vid start
-    const isOffByDefault = info.type.includes("route") || info.type.includes("walk") || info.type.includes("-walk");
+    // Logik för att släcka Walking Zones och Routes vid start
+    const shouldBeOff = info.type.includes("route") || info.type.includes("walk");
     const checkbox = document.getElementById(info.id);
     
-    // Synka checkboxen i HTML så den inte är ikryssad för zoner/rutter
-    if (checkbox) checkbox.checked = !isOffByDefault;
+    // Tvinga checkboxen att vara avstängd i HTML om det är en analys-lager
+    if (checkbox) checkbox.checked = !shouldBeOff;
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
-      visible: !isOffByDefault,
+      visible: !shouldBeOff, // Lagret startar som dolt om det är route eller walk
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
     map.add(layer);
