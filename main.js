@@ -37,10 +37,21 @@ require([
     } 
     
     // 2. RUTTER (Emergency Response Routes)
-    else if (info.type.includes("route")) {
+   else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
+      let serviceText = "Emergency Route";
+
+      if (info.type === "route") { // Hospital Routes
+        routeColor = [255, 215, 0, 0.9];
+        serviceText = "Emergency route from incident to Hospital";
+      } else if (info.type === "fire-route") {
+        routeColor = [217, 48, 37, 0.9];
+        serviceText = "Emergency route from Fire Station to fire incident";
+      } else if (info.type === "police-route") {
+        routeColor = [0, 0, 255, 0.9];
+        serviceText = "Emergency route from Police Station to crime scene";
+      }
+
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
       
       popupTemplate = {
