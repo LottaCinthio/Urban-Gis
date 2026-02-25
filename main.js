@@ -30,60 +30,35 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. GÅNGZONER (Färgskalor för Health och School)
+    // 1. ZONER
     if (info.type === "health-walk" || info.type === "walk") {
-      const colors = info.type === "health-walk" 
-        ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] 
-        : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
-      
-      renderer = { 
-        type: "unique-value", 
-        field: "ToBreak", 
-        uniqueValueInfos: [
-          { value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } },
-          { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } },
-          { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }
-        ] 
-      };
+      const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
+      renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     
-    // 2. RUTTER MED RESTID (TOTAL TRAVEL TIME)
+    // 2. RUTTER MED RESTID
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Guld/Gul (Hospital)
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9]; // Röd
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9]; // Blå
+      let routeColor = [255, 215, 0, 0.9];
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
+      renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
       
-      renderer = { 
-        type: "simple", 
-        symbol: { 
-          type: "line-3d", 
-          symbolLayers: [{ 
-            type: "line", 
-            size: 4, 
-            material: { color: routeColor }, 
-            cap: "round", 
-            join: "round" 
-          }] 
-        } 
-      };
-
       popupTemplate = {
         title: info.name,
         content: function(feature) {
           const attr = feature.graphic.attributes;
-          // Letar genom alla möjliga tidskolumner i GeoJSON-filerna
           const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.Attr_Minutes || attr.traveltime || attr.TRAVELTIME;
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
             return `<b>Rutt:</b> ${info.name}<br/><b>Total restid:</b> ${mins} min ${secs} sek`;
           }
-          return "Restidsdata saknas i filen.";
+          return "Restidsdata saknas.";
         }
       };
     } 
 
-    // 3. IKONER (Hanterar ALLA punkt-ikoner inkl. skola och hälsa)
+    // 3. IKONER
     else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
       let iconFile = "";
       if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
@@ -97,66 +72,42 @@ require([
       else if (info.type === "bus-icon") iconFile = "bus.svg";
       else if (info.type === "play-icon") iconFile = "playground.svg";
       
-      renderer = { 
-        type: "simple", 
-        symbol: { 
-          type: "point-3d", 
-          symbolLayers: [{ 
-            type: "icon", 
-            resource: { href: "./icons/" + iconFile }, 
-            size: 30 
-          }] 
-        } 
-      };
+      renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
     }
 
-   // 4. BYGGNADER MED SPECIFIK POPUP FÖR 3D-MODEL (Byggnad 8052)
+    // 4. BYGGNADER & PARKERING (HÄR ÄR FIXEN FÖR KNAPPEN)
     else if (info.type === "building") {
       renderer = { 
         type: "unique-value", 
         field: "Building_ID", 
-        defaultSymbol: { 
-          type: "polygon-3d", 
-          symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] 
-        }, 
-        uniqueValueInfos: [{ 
-          value: 8052, 
-          symbol: { 
-            type: "polygon-3d", 
-            symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] 
-          } 
-        }] 
+        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, 
+        uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] 
       };
 
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
           const bID = feature.graphic.attributes.Building_ID;
-          
           if (bID == 8052) {
-            // Vi använder en relativ sökväg som tvingar webbläsaren att leta i samma mapp
-            const targetUrl = "./IFC.html"; 
-            
             return `
-              <div style="text-align: center; font-family: sans-serif;">
-                <p><b>Building ID:</b> ${bID}</p>
-                <p style="font-size: 0.85em; color: #666;">BIM Model Integration Active</p>
-                <br>
-                <a href="${targetUrl}" target="_blank" 
-                   style="display: inline-block; padding: 12px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                   Go to 3D Model
-                </a>
+              <div style="text-align: center; padding: 10px;">
+                <b>Building ID:</b> ${bID}<br><br>
+                <button onclick="window.open('IFC.html', '_blank')" 
+                        style="background-color: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                  Go to 3D Model
+                </button>
               </div>`;
           }
           return `<b>Building ID:</b> ${bID}`;
         }
       };
     }
+    else if (info.type === "parking") {
+      renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
+    }
 
-    // LOGIK FÖR ATT SLÄCKA RUTTER/ZONER VID START
     const checkbox = document.getElementById(info.id);
     const isOffByDefault = info.type.includes("route") || info.type.includes("walk");
-    
     if (checkbox) checkbox.checked = !isOffByDefault;
 
     const layer = new GeoJSONLayer({
@@ -171,13 +122,8 @@ require([
     map.add(layer);
   });
 
-  const view = new SceneView({ 
-    container: "viewDiv", 
-    map: map, 
-    camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } 
-  });
+  const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // Koppla checkboxar till lager-synlighet
   view.when(() => {
     layersInfo.forEach(info => {
       const checkbox = document.getElementById(info.id);
