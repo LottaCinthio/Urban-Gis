@@ -14,6 +14,7 @@ require([
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
+    // Uppdaterade typer här under:
     { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "hospital-incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
@@ -30,40 +31,33 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. ZONER (GÅNGAVSTÅND)
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
-    
-    // 2. RUTTER (LINJER)
     else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Guld som standard
-      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
-      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
-
+      let routeColor = [255,215,0,0.9]; // Guld (Hospital)
+      if (info.type === "fire-route") routeColor = [217,48,37,0.9]; // Röd
+      if (info.type === "police-route") routeColor = [0,0,255,0.9]; // Blå
+      
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
-      popupTemplate = { title: info.name, content: "Travel time data from emergency services." };
+      popupTemplate = { title: info.name, content: "Emergency response route analysis." };
     } 
-
-    // 3. IKONER (PUNKTER)
     else if (info.type.includes("-icon")) {
-      let iconFile = "incident-house.svg"; // Fallback
-      if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
-      else if (info.type === "hospital-incident-icon") iconFile = "incident-house.svg";
-      else if (info.type === "fire-incident-icon") iconFile = "fire-incident-house.svg";
-      else if (info.type === "fire-icon") iconFile = "firestation-marker.svg";
-      else if (info.type === "police-icon") iconFile = "police-marker.svg";
-      else if (info.type === "crime-icon") iconFile = "crime-incident.svg";
-      else if (info.type === "health-icon") iconFile = "health.svg";
-      else if (info.type === "school-icon") iconFile = "school.svg";
-      else if (info.type === "bus-icon") iconFile = "bus.svg";
-      else if (info.type === "play-icon") iconFile = "playground.svg";
-
-      renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
+      let iconHref = "./icons/";
+      if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
+      else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
+      else if (info.type === "fire-incident-icon") iconHref += "fire-incident-house.svg"; // Din nya brand-ikon
+      else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
+      else if (info.type === "police-icon") iconHref += "police-marker.svg";
+      else if (info.type === "crime-icon") iconHref += "crime-incident.svg";
+      else if (info.type === "health-icon") iconHref += "health.svg";
+      else if (info.type === "school-icon") iconHref += "school.svg";
+      else if (info.type === "bus-icon") iconHref += "bus.svg";
+      else if (info.type === "play-icon") iconHref += "playground.svg";
+      
+      renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: iconHref }, size: 30 }] } };
     }
-
-    // 4. BYGGNADER & PARKERING
     else if (info.type === "building") {
       renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
     }
@@ -73,9 +67,10 @@ require([
 
     const checkbox = document.getElementById(info.id);
     const layer = new GeoJSONLayer({
-      url: "./data/" + info.file,
+      url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
+      outFields: ["*"],
       popupTemplate: popupTemplate,
       visible: checkbox ? checkbox.checked : true,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
