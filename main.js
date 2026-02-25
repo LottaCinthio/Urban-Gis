@@ -30,13 +30,13 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. ZONER
+    // 1. GÅNGZONER
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     
-    // 2. RUTTER MED RESTID
+    // 2. RUTTER MED RESTID (POPUP)
     else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
       if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
@@ -51,7 +51,7 @@ require([
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Rutt:</b> ${info.name}<br/><b>Total restid:</b> ${mins} min ${secs} sek`;
+            return `<b>Total restid:</b> ${mins} min ${secs} sek`;
           }
           return "Restidsdata saknas.";
         }
@@ -75,7 +75,7 @@ require([
       renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
     }
 
-    // 4. BYGGNADER & PARKERING (HÄR ÄR FIXEN FÖR KNAPPEN)
+    // 4. BYGGNADER & 3D-KNAPP (STABIL LÖSNING)
     else if (info.type === "building") {
       renderer = { 
         type: "unique-value", 
@@ -89,19 +89,23 @@ require([
         content: function(feature) {
           const bID = feature.graphic.attributes.Building_ID;
           if (bID == 8052) {
+            // Vi använder en standard <a> tagg men stylar den som en knapp. 
+            // Detta är det mest stabila sättet i ArcGIS popuper.
             return `
-              <div style="text-align: center; padding: 10px;">
+              <div style="text-align: center;">
                 <b>Building ID:</b> ${bID}<br><br>
-                <button onclick="window.open('IFC.html', '_blank')" 
-                        style="background-color: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                <a href="IFC.html" target="_blank" 
+                   style="display: inline-block; background-color: #2ecc71; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">
                   Go to 3D Model
-                </button>
+                </a>
               </div>`;
           }
           return `<b>Building ID:</b> ${bID}`;
         }
       };
     }
+    
+    // 5. PARKERING (SYNCAD FÄRG)
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     }
