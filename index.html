@@ -31,11 +31,11 @@
           <label class="switch"><input type="checkbox" id="toggleHospital" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span><img src="./icons/incident-house.svg" class="mini-icon"> Hospital Incidents</span>
+          <span class="indent-text"><img src="./icons/incident-house.svg" class="mini-icon"> Hospital Incidents</span>
           <label class="switch small"><input type="checkbox" id="toggleIncidents" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span>Hospital Routes</span>
+          <span class="indent-text">Hospital Routes</span>
           <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
         </div>
       </div>
@@ -46,11 +46,11 @@
           <label class="switch"><input type="checkbox" id="toggleFirestation" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span><img src="./icons/fire-incident-house.svg" class="mini-icon"> Fire Incidents</span>
+          <span class="indent-text"><img src="./icons/fire-incident-house.svg" class="mini-icon"> Fire Incidents</span>
           <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span>Fire Routes</span>
+          <span class="indent-text">Fire Routes</span>
           <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
         </div>
       </div>
@@ -61,12 +61,53 @@
           <label class="switch"><input type="checkbox" id="togglePolice" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span><img src="./icons/crime-incident.svg" class="mini-icon"> Crimes</span>
+          <span class="indent-text"><img src="./icons/crime-incident.svg" class="mini-icon"> Crimes</span>
           <label class="switch small"><input type="checkbox" id="toggleCrimes" checked><span class="slider"></span></label>
         </div>
       </div>
     </div>
+
+    <div class="layer-group">
+      <div class="group-header">Accessibility & Amenities</div>
+      <div class="row-container">
+        <span><img src="./icons/health.svg" class="mini-icon"> Health Center</span>
+        <label class="switch small"><input type="checkbox" id="toggleHealthcare" checked><span class="slider"></span></label>
+      </div>
+      <div class="row-container">
+        <span class="indent-text">Walking Zones (Health)</span>
+        <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
+      </div>
+
+      <div class="row-container" style="margin-top:10px;">
+        <span><img src="./icons/school.svg" class="mini-icon"> Schools</span>
+        <label class="switch small"><input type="checkbox" id="toggleSchools" checked><span class="slider"></span></label>
+      </div>
+      <div class="row-container">
+        <span class="indent-text">Walking Zones (School)</span>
+        <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
+      </div>
     </div>
+
+    <div class="layer-group">
+      <div class="group-header">Infrastructure</div>
+      <div class="row-container">
+        <span><img src="./icons/bus.svg" class="mini-icon"> Bus Stops</span>
+        <label class="switch small"><input type="checkbox" id="toggleBus" checked><span class="slider"></span></label>
+      </div>
+      <div class="row-container">
+        <span><img src="./icons/playground.svg" class="mini-icon"> Playgrounds</span>
+        <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
+      </div>
+      <div class="row-container">
+        <span><span class="zone-box parking-box"></span> Parking Areas</span>
+        <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
+      </div>
+      <div class="row-container">
+        <span>Buildings</span>
+        <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
+      </div>
+    </div>
+  </div>
 
   <script>
     function togglePane() {
