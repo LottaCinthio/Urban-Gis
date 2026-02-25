@@ -110,36 +110,45 @@ require([
       };
     }
 
-    // 4. BYGGNADER & PARKERING
+    // 4. BYGGNADER MED SPECIFIK POPUP FÖR 3D-MODEL (Byggnad 8052)
     else if (info.type === "building") {
       renderer = { 
         type: "unique-value", 
         field: "Building_ID", 
-        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, 
-        uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] 
+        defaultSymbol: { 
+          type: "polygon-3d", 
+          symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] 
+        }, 
+        uniqueValueInfos: [{ 
+          value: 8052, 
+          symbol: { 
+            type: "polygon-3d", 
+            symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] 
+          } 
+        }] 
       };
 
       popupTemplate = {
         title: "Building Information",
         content: function(feature) {
           const bID = feature.graphic.attributes.Building_ID;
+          
+          // Om byggnaden är 8052 (den gröna), visa knappen till din IFC-viewer
           if (bID == 8052) {
-            return `<div style="text-align: center;"><b>Building ID:</b> ${bID}<br/><br/><a href="IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Go to 3D Model</a></div>`;
+            return `
+              <div style="text-align: center; font-family: sans-serif;">
+                <p><b>Building ID:</b> ${bID}</p>
+                <p style="font-size: 0.9em; color: #666;">Detailed BIM model available.</p>
+                <br>
+                <a href="IFC.html" target="_blank" 
+                   style="display: inline-block; padding: 12px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                   Go to 3D Model
+                </a>
+              </div>`;
           }
+          // För alla andra byggnader, visa bara ID
           return `<b>Building ID:</b> ${bID}`;
         }
-      };
-    }
-    else if (info.type === "parking") {
-      renderer = { 
-        type: "simple", 
-        symbol: { 
-          type: "polygon-3d", 
-          symbolLayers: [{ 
-            type: "fill", 
-            material: { color: [0, 197, 255, 0.6] } // Ljusblå (synkad med panelen)
-          }] 
-        } 
       };
     }
 
