@@ -64,13 +64,17 @@
           <span class="indent-text"><img src="./icons/crime-incident.svg" class="mini-icon"> Crimes</span>
           <label class="switch small"><input type="checkbox" id="toggleCrimes" checked><span class="slider"></span></label>
         </div>
+        <div class="row-container">
+          <span class="indent-text"><span class="route-line police-line"></span> Police Routes</span>
+          <label class="switch small"><input type="checkbox" id="togglePoliceRoutes"><span class="slider"></span></label>
+        </div>
       </div>
     </div>
 
     <div class="layer-group">
-      <div class="group-header">Accessibility (Walking Time)</div>
+      <div class="group-header">Accessibility & Amenities</div>
       <div class="row-container">
-        <span><img src="./icons/health.svg" class="mini-icon"> Health Center Zones</span>
+        <span><img src="./icons/health.svg" class="mini-icon"> Healthcare Walking Zones</span>
         <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
       </div>
       <div class="legend-container">
@@ -80,7 +84,7 @@
       </div>
 
       <div class="row-container" style="margin-top:10px;">
-        <span><img src="./icons/school.svg" class="mini-icon"> School Zones</span>
+        <span><img src="./icons/school.svg" class="mini-icon"> School Walking Zones</span>
         <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
       </div>
       <div class="legend-container">
@@ -93,20 +97,15 @@
     <div class="layer-group">
       <div class="group-header">Infrastructure</div>
       <div class="row-container">
-        <span><img src="./icons/bus.svg" class="mini-icon"> Bus Stops</span>
-        <label class="switch small"><input type="checkbox" id="toggleBus" checked><span class="slider"></span></label>
+        <span>Buildings</span>
+        <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
-      <div class="row-container">
-        <span><img src="./icons/playground.svg" class="mini-icon"> Playgrounds</span>
-        <label class="switch small"><input type="checkbox" id="togglePlay" checked><span class="slider"></span></label>
+      <div class="no-toggle">
+        <span><span class="zone-box building-target-box"></span> 3D model (Project Building)</span>
       </div>
       <div class="row-container">
         <span><span class="zone-box parking-box"></span> Parking</span>
         <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
-      </div>
-      <div class="row-container">
-        <span>Buildings</span>
-        <label class="switch small"><input type="checkbox" id="toggleBuildings" checked><span class="slider"></span></label>
       </div>
     </div>
   </div>
