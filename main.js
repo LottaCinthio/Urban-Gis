@@ -30,79 +30,42 @@ require([
     let renderer;
     let popupTemplate = null;
 
+    // 1. ZONER (GÅNGAVSTÅND)
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
+    
+    // 2. RUTTER (LINJER)
     else if (info.type.includes("route")) {
-      let routeColor = [255,215,0,0.9];
-      let routeTitle = "Transport Information Hospital";
-      if (info.type === "fire-route") { routeColor = [217,48,37,0.9]; routeTitle = "Transport Information Firestation"; }
-      if (info.type === "police-route") { routeColor = [0,0,255,0.9]; routeTitle = "Transport Information Police"; }
+      let routeColor = [255, 215, 0, 0.9]; // Guld som standard
+      if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
+      if (info.type === "police-route") routeColor = [0, 0, 255, 0.9];
+
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 4, material: { color: routeColor }, cap: "round", join: "round" }] } };
-      popupTemplate = { title: routeTitle, content: function(feature) {
-          const attr = feature.graphic.attributes;
-          const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.traveltime || attr.TRAVELTIME;
-          if (totalTime) { const mins = Math.floor(totalTime); const secs = Math.round((totalTime - mins) * 60); return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`; }
-          return "Travel time data not available.";
-      }};
-    } else if (info.type.includes("route")) {
-      let routeColor = [255, 215, 0, 0.9]; // Guld (Hospital)
-      let routeTitle = "Transport Information Hospital";
-      
-      if (info.type === "fire-route") { 
-        routeColor = [217, 48, 37, 0.9]; // Röd
-        routeTitle = "Transport Information Firestation"; 
-      } else if (info.type === "police-route") { 
-        routeColor = [0, 0, 255, 0.9]; // Blå
-        routeTitle = "Transport Information Police"; 
-      }
+      popupTemplate = { title: info.name, content: "Travel time data from emergency services." };
+    } 
 
-      renderer = { 
-        type: "simple", 
-        symbol: { 
-          type: "line-3d", 
-          symbolLayers: [{ 
-            type: "line", 
-            size: 4, 
-            material: { color: routeColor }, 
-            cap: "round", 
-            join: "round" 
-          }] 
-        } 
-      };
+    // 3. IKONER (PUNKTER)
+    else if (info.type.includes("-icon")) {
+      let iconFile = "incident-house.svg"; // Fallback
+      if (info.type === "hospital-icon") iconFile = "hospital-marker.svg";
+      else if (info.type === "hospital-incident-icon") iconFile = "incident-house.svg";
+      else if (info.type === "fire-incident-icon") iconFile = "fire-incident-house.svg";
+      else if (info.type === "fire-icon") iconFile = "firestation-marker.svg";
+      else if (info.type === "police-icon") iconFile = "police-marker.svg";
+      else if (info.type === "crime-icon") iconFile = "crime-incident.svg";
+      else if (info.type === "health-icon") iconFile = "health.svg";
+      else if (info.type === "school-icon") iconFile = "school.svg";
+      else if (info.type === "bus-icon") iconFile = "bus.svg";
+      else if (info.type === "play-icon") iconFile = "playground.svg";
 
-      popupTemplate = { 
-        title: routeTitle, 
-        content: function(feature) {
-          const attr = feature.graphic.attributes;
-          // Försöker hitta restid i olika möjliga fältnamn
-          const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.traveltime || attr.TRAVELTIME || attr.Attr_Minutes;
-          if (totalTime) { 
-            const mins = Math.floor(totalTime); 
-            const secs = Math.round((totalTime - mins) * 60); 
-            return `<b>Total travel time:</b><br/> ${mins} minutes and ${secs} seconds`; 
-          }
-          return "Travel time data not available.";
-        }
-      };
+      renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
     }
+
+    // 4. BYGGNADER & PARKERING
     else if (info.type === "building") {
-      renderer = { 
-        type: "unique-value", 
-        field: "Building_ID", 
-        defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, 
-        uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] 
-      };
-      popupTemplate = { title: "Building Information", content: function(feature) {
-        const bID = feature.graphic.attributes.Building_ID;
-        if (bID == 8052 || (bID && bID.toString() === "8052")) {
-          const currentUrl = window.location.href.split('?')[0].split('#')[0];
-          const baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf("/") + 1);
-          return `<div style="text-align: center;"><b>Building ID:</b> ${bID}<br/><br/><a href="${baseUrl}IFC.html" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; cursor: pointer;">Go to 3D Model</a></div>`;
-        }
-        return `<b>Building ID:</b> ${bID}`;
-      }};
+      renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
     }
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
@@ -110,10 +73,9 @@ require([
 
     const checkbox = document.getElementById(info.id);
     const layer = new GeoJSONLayer({
-      url: "./data/" + info.file + "?v=" + new Date().getTime(),
+      url: "./data/" + info.file,
       title: info.name,
       renderer: renderer,
-      outFields: ["*"],
       popupTemplate: popupTemplate,
       visible: checkbox ? checkbox.checked : true,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
