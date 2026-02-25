@@ -36,12 +36,6 @@ require([
     layers: [analysisLayer] 
   });
 
-  // Skapa roadsLayer separat för att kunna hämta alla funktioner för routing
-  const roadsLayer = new GeoJSONLayer({
-    url: "./data/roads.geojson",
-    outFields: ["*"]
-  });
-
   layersInfo.forEach(info => {
     let renderer;
     let popupTemplate = null;
@@ -88,39 +82,23 @@ require([
     }
 
     const checkbox = document.getElementById(info.id);
-    
-    // ÄNDRING: Sätt Roads till synlig som standard
-    let isVisible = checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true);
-    if (info.name === "Road Network") {
-        isVisible = true; 
-        if (checkbox) checkbox.checked = true;
-    }
-
-    const layer = (info.name === "Road Network") ? roadsLayer : new GeoJSONLayer({
+    const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       outFields: ["*"],
       popupTemplate: popupTemplate,
-      visible: isVisible,
+      visible: checkbox ? checkbox.checked : (info.type.includes("route") || info.type.includes("walk") ? false : true),
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
-    
-    if(info.name === "Road Network") { 
-        roadsLayer.title = info.name; 
-        roadsLayer.renderer = renderer; 
-        roadsLayer.visible = isVisible;
-    }
-    
     map.add(layer);
   });
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- FÖRBÄTTRAD ROUTING-LOGIK (KOPPLAR SAMMAN SEGMENT) ---
+  // --- INTERAKTIV VÄG-MÄTNING (A till B) ---
   let points = [];
-  
-  view.on("click", async function(event) {
+  view.on("click", function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
     if (points.length >= 2) { clearAnalysis(); }
 
@@ -132,58 +110,28 @@ require([
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      const roadPath = await findMultiSegmentPath(points[0].geometry, points[1].geometry);
+      const polyline = new Polyline({
+        paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
+        spatialReference: { wkid: 4326 }
+      });
       
-      if (roadPath) {
-        analysisLayer.add(new Graphic({
-          geometry: roadPath,
-          symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" }
-        }));
+      analysisLayer.add(new Graphic({ 
+        geometry: polyline, 
+        symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" } 
+      }));
 
-        const distance = geometryEngine.geodesicLength(roadPath, "kilometers");
-        const mode = document.getElementById("transportMode").value;
-        let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
-        const travelTime = (distance / speed) * 60;
+      // BERÄKNING: Faktisk väg-distans med networkFactor (1.3x fågelvägen)
+      const birdDistance = geometryEngine.geodesicLength(polyline, "kilometers");
+      const realDistance = birdDistance * 1.3; 
+      const mode = document.getElementById("transportMode").value;
+      let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
+      const travelTime = (realDistance / speed) * 60;
 
-        document.getElementById("res-dist").innerText = distance.toFixed(2) + " km";
-        document.getElementById("res-time").innerText = travelTime.toFixed(1) + " min";
-        document.getElementById("res-speed").innerText = speed + " km/h";
-      }
+      document.getElementById("res-dist").innerText = realDistance.toFixed(2) + " km";
+      document.getElementById("res-time").innerText = travelTime.toFixed(1) + " min";
+      document.getElementById("res-speed").innerText = speed + " km/h";
     }
   });
-
-  // Funktion som hittar alla relevanta segment mellan A och B
-  async function findMultiSegmentPath(start, end) {
-    const query = roadsLayer.createQuery();
-    // Skapa en sökbox runt punkterna för att hämta lokala vägar
-    query.geometry = geometryEngine.buffer(geometryEngine.union([start, end]), 500, "meters").extent;
-    query.returnGeometry = true;
-    const results = await roadsLayer.queryFeatures(query);
-    const features = results.features;
-
-    if (features.length === 0) return null;
-
-    // Vi skapar en "samling" av vägar som ligger mellan start och slut.
-    // Detta hittar segment som är nära linjen mellan klickpunkterna.
-    const directLine = new Polyline({
-        paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]],
-        spatialReference: { wkid: 4326 }
-    });
-
-    const relevantSegments = features.filter(f => {
-        return geometryEngine.intersects(geometryEngine.buffer(directLine, 50, "meters"), f.geometry);
-    });
-
-    if (relevantSegments.length === 0) return features[0].geometry; // Fallback
-
-    // Slå ihop de hittade segmenten till en sammanhängande linje
-    const combinedPaths = relevantSegments.map(f => f.geometry.paths[0]);
-    
-    return new Polyline({
-        paths: combinedPaths,
-        spatialReference: { wkid: 4326 }
-    });
-  }
 
   window.clearAnalysis = function() {
     points = []; analysisLayer.removeAll();
