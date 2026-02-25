@@ -1,96 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Öxnehaga 3D Urban Dashboard</title>
-  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://js.arcgis.com/4.29/"></script>
-  <script src="main.js"></script>
-</head>
-<body>
-  <div class="top-label">Urban Information Management TUIS23 T3377</div>
-  <div class="bottom-label">Luna Wani & Lotta Cinthio</div>
-
-  <div id="viewDiv"></div>
-  
-  <button id="paneToggle" onclick="togglePane()">
-    <span id="arrowIcon">☰</span>
-  </button>
-
-  <div id="sidebar" class="pane-open">
-    <h2 style="margin-top:0; font-size: 1.4em;">Content</h2>
-    <hr style="border:0; border-top:1px solid #eee; margin: 15px 0;">
-    
-    <div class="layer-group">
-      <div class="group-header">Emergency Services & Safety (2020-2023)</div>
+<div class="layer-group">
+      <div class="group-header">Accessibility & Amenities</div>
       
       <div class="layer-item">
         <div class="row-container">
-          <span><img src="./icons/hospital-marker.svg" class="mini-icon"> Hospital</span>
-          <label class="switch"><input type="checkbox" id="toggleHospital" checked><span class="slider"></span></label>
+          <span><img src="./icons/health.svg" class="mini-icon"> Health Center</span>
+          <label class="switch small"><input type="checkbox" id="toggleHealthcare" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text"><img src="./icons/incident-house.svg" class="mini-icon"> Hospital Incidents</span>
-          <label class="switch small"><input type="checkbox" id="toggleIncidents" checked><span class="slider"></span></label>
+          <span class="indent-text">Walking Zones (Health)</span>
+          <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
         </div>
-        <div class="row-container">
-          <span class="indent-text"><span class="route-line hospital-line"></span> Hospital Routes</span>
-          <label class="switch small"><input type="checkbox" id="toggleRoutes"><span class="slider"></span></label>
+        <div class="legend-container">
+          <div class="legend-item"><span class="zone-box h-5"></span> 5 min</div>
+          <div class="legend-item"><span class="zone-box h-10"></span> 10 min</div>
+          <div class="legend-item"><span class="zone-box h-15"></span> 15 min</div>
         </div>
       </div>
 
       <div class="layer-item" style="margin-top:10px;">
         <div class="row-container">
-          <span><img src="./icons/firestation-marker.svg" class="mini-icon"> Fire Station</span>
-          <label class="switch"><input type="checkbox" id="toggleFirestation" checked><span class="slider"></span></label>
+          <span><img src="./icons/school.svg" class="mini-icon"> Schools</span>
+          <label class="switch small"><input type="checkbox" id="toggleSchools" checked><span class="slider"></span></label>
         </div>
         <div class="row-container">
-          <span class="indent-text"><img src="./icons/fire-incident-house.svg" class="mini-icon"> Fire Incidents</span>
-          <label class="switch small"><input type="checkbox" id="toggleFireIncidents" checked><span class="slider"></span></label>
+          <span class="indent-text">Walking Zones (School)</span>
+          <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
         </div>
-        <div class="row-container">
-          <span class="indent-text"><span class="route-line fire-line"></span> Fire Routes</span>
-          <label class="switch small"><input type="checkbox" id="toggleFireRoutes"><span class="slider"></span></label>
+        <div class="legend-container">
+          <div class="legend-item"><span class="zone-box s-5"></span> 5 min</div>
+          <div class="legend-item"><span class="zone-box s-10"></span> 10 min</div>
+          <div class="legend-item"><span class="zone-box s-15"></span> 15 min</div>
         </div>
-      </div>
-
-      <div class="layer-item" style="margin-top:10px;">
-        <div class="row-container">
-          <span><img src="./icons/police-marker.svg" class="mini-icon"> Police Station</span>
-          <label class="switch"><input type="checkbox" id="togglePolice" checked><span class="slider"></span></label>
-        </div>
-        <div class="row-container">
-          <span class="indent-text"><img src="./icons/crime-incident.svg" class="mini-icon"> Crimes</span>
-          <label class="switch small"><input type="checkbox" id="toggleCrimes" checked><span class="slider"></span></label>
-        </div>
-        <div class="row-container">
-          <span class="indent-text"><span class="route-line police-line"></span> Police Routes</span>
-          <label class="switch small"><input type="checkbox" id="togglePoliceRoutes"><span class="slider"></span></label>
-        </div>
-      </div>
-    </div>
-
-    <div class="layer-group">
-      <div class="group-header">Accessibility & Amenities</div>
-      <div class="row-container">
-        <span><img src="./icons/health.svg" class="mini-icon"> Healthcare Walking Zones</span>
-        <label class="switch small"><input type="checkbox" id="toggleHealthWalk"><span class="slider"></span></label>
-      </div>
-      <div class="legend-container">
-        <div class="legend-item"><span class="zone-box h-5"></span> 5 min</div>
-        <div class="legend-item"><span class="zone-box h-10"></span> 10 min</div>
-        <div class="legend-item"><span class="zone-box h-15"></span> 15 min</div>
-      </div>
-
-      <div class="row-container" style="margin-top:10px;">
-        <span><img src="./icons/school.svg" class="mini-icon"> School Walking Zones</span>
-        <label class="switch small"><input type="checkbox" id="toggleWalk"><span class="slider"></span></label>
-      </div>
-      <div class="legend-container">
-        <div class="legend-item"><span class="zone-box s-5"></span> 5 min</div>
-        <div class="legend-item"><span class="zone-box s-10"></span> 10 min</div>
-        <div class="legend-item"><span class="zone-box s-15"></span> 15 min</div>
       </div>
     </div>
 
@@ -103,18 +43,4 @@
       <div class="no-toggle">
         <span><span class="zone-box building-target-box"></span> 3D model (Project Building)</span>
       </div>
-      <div class="row-container">
-        <span><span class="zone-box parking-box"></span> Parking</span>
-        <label class="switch small"><input type="checkbox" id="toggleParking" checked><span class="slider"></span></label>
       </div>
-    </div>
-  </div>
-
-  <script>
-    function togglePane() {
-      const sidebar = document.getElementById("sidebar");
-      sidebar.classList.toggle("pane-closed");
-    }
-  </script>
-</body>
-</html>

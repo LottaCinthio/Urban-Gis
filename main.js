@@ -14,7 +14,7 @@ require([
     { name: "Playgrounds", file: "Playgrounds.geojson", type: "play-icon", id: "togglePlay" },
     { name: "Buildings", file: "buildings_with_id.geojson", type: "building", id: "toggleBuildings" },
     { name: "Hospital", file: "Hospital.geojson", type: "hospital-icon", id: "toggleHospital" },
-    { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "incident-icon", id: "toggleIncidents" },
+    { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "hospital-incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
     { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
@@ -30,13 +30,13 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // 1. GÅNGZONER
+    // 1. GÅNGZONER (Färgskalor)
     if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
     
-    // 2. RUTTER MED RESTID (POPUP)
+    // 2. RUTTER MED FIXAD RESTID-LOGIK
     else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
       if (info.type === "fire-route") routeColor = [217, 48, 37, 0.9];
@@ -48,13 +48,14 @@ require([
         title: info.name,
         content: function(feature) {
           const attr = feature.graphic.attributes;
-          const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.Attr_Minutes || attr.traveltime;
+          // Letar efter alla vanliga fältnamn för tid
+          const totalTime = attr.Total_TravelTime || attr.Total_Time || attr.Attr_Minutes || attr.traveltime || attr.TRAVELTIME;
           if (totalTime) {
             const mins = Math.floor(totalTime);
             const secs = Math.round((totalTime - mins) * 60);
-            return `<b>Route Type:</b> ${info.name}<br/><b>Travel Time:</b> ${mins} min ${secs} sec`;
+            return `<b>Rutt:</b> ${info.name}<br/><b>Total restid:</b> ${mins} min ${secs} sek`;
           }
-          return "Travel time data not available.";
+          return "Restidsdata saknas i filen.";
         }
       };
     } 
@@ -63,7 +64,7 @@ require([
     else if (info.type.includes("-icon") || info.type === "fire-incident-house") {
       let iconHref = "./icons/";
       if (info.type === "hospital-icon") iconHref += "hospital-marker.svg";
-      else if (info.type === "incident-icon") iconHref += "incident-house.svg";
+      else if (info.type === "hospital-incident-icon") iconHref += "incident-house.svg";
       else if (info.type === "fire-icon") iconHref += "firestation-marker.svg";
       else if (info.type === "fire-incident-house") iconHref += "fire-incident-house.svg";
       else if (info.type === "police-icon") iconHref += "police-marker.svg";
@@ -81,16 +82,17 @@ require([
       renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
     }
 
-    const isOff = info.type.includes("route") || info.type.includes("walk");
+    // Bestäm startläge (Rutter och Zoner ska vara avstängda)
+    const isOffByDefault = info.type.includes("route") || info.type.includes("walk");
     const checkbox = document.getElementById(info.id);
-    if (checkbox) checkbox.checked = !isOff;
+    if (checkbox) checkbox.checked = !isOffByDefault;
 
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
       renderer: renderer,
       popupTemplate: popupTemplate,
-      visible: !isOff,
+      visible: !isOffByDefault,
       elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
     });
     map.add(layer);
