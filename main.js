@@ -4,8 +4,9 @@ require([
   "esri/layers/GeoJSONLayer",
   "esri/Graphic",
   "esri/layers/GraphicsLayer",
-  "esri/geometry/geometryEngine"
-], function (Map, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine) {
+  "esri/geometry/geometryEngine",
+  "esri/geometry/Polyline"
+], function (Map, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline) {
 
   const layersInfo = [
     { name: "Road Network", file: "roads.geojson", type: "road-network", id: "toggleRoads" },
@@ -39,16 +40,13 @@ require([
     let renderer;
     let popupTemplate = null;
 
-    // Stil för vägnätet
     if (info.type === "road-network") {
       renderer = { type: "simple", symbol: { type: "line-3d", symbolLayers: [{ type: "line", size: 1.2, material: { color: [130, 130, 130, 0.4] } }] } };
     }
-    // Gångzoner
     else if (info.type === "health-walk" || info.type === "walk") {
       const colors = info.type === "health-walk" ? [[52,152,219,0.6],[155,89,182,0.5],[44,62,80,0.4]] : [[46,204,113,0.5],[241,196,15,0.4],[230,126,34,0.3]];
       renderer = { type: "unique-value", field: "ToBreak", uniqueValueInfos: [{ value: 5, symbol: { type: "simple-fill", color: colors[0], outline: { width: 0 } } }, { value: 10, symbol: { type: "simple-fill", color: colors[1], outline: { width: 0 } } }, { value: 15, symbol: { type: "simple-fill", color: colors[2], outline: { width: 0 } } }] };
     } 
-    // Blåljusrutter med specifika texter
     else if (info.type.includes("route")) {
       let routeColor = [255, 215, 0, 0.9];
       let serviceText = "Emergency Route";
@@ -63,15 +61,13 @@ require([
           return `<b>Service:</b> ${serviceText}<br/><b>Status:</b> Priority Access<br/><b>Total Travel Time:</b> ${t ? Math.floor(t)+" min "+Math.round((t-Math.floor(t))*60)+" sek" : "Saknas"}`;
       }};
     } 
-    // Ikoner
     else if (info.type.endsWith("-icon") || info.type === "fire-incident-house") {
       let iconFile = info.type === "hospital-icon" ? "hospital-marker.svg" : info.type === "fire-icon" ? "firestation-marker.svg" : info.type === "police-icon" ? "police-marker.svg" : info.type === "health-icon" ? "health.svg" : info.type === "school-icon" ? "school.svg" : info.type === "bus-icon" ? "bus.svg" : info.type === "play-icon" ? "playground.svg" : "incident-house.svg";
       renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
     }
-    // Byggnader med BIM-knapp
     else if (info.type === "building") {
       renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
-     popupTemplate = { title: "Building Information", content: function(feature) {
+      popupTemplate = { title: "Building Information", content: function(feature) {
         const bID = feature.graphic.attributes.Building_ID;
         if (bID == 8052 || (bID && bID.toString() === "8052")) {
           const currentUrl = window.location.href.split('?')[0].split('#')[0];
@@ -81,7 +77,6 @@ require([
         return `<b>Building ID:</b> ${bID}`;
       }};
     }
-    // Parkering
     else if (info.type === "parking") {
       renderer = { type: "simple", symbol: { type: "polygon-3d", symbolLayers: [{ type: "fill", material: { color: [0, 197, 255, 0.6] } }] } };
     }
@@ -101,7 +96,7 @@ require([
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
 
-  // --- LOKAL MÄTNINGSLOGIK (A till B) ---
+  // --- INTERAKTIV VÄG-MÄTNING (A till B) ---
   let points = [];
   view.on("click", function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
@@ -109,21 +104,31 @@ require([
 
     const marker = new Graphic({
       geometry: event.mapPoint,
-      symbol: { type: "simple-marker", style: "cross", color: points.length === 0 ? [76, 175, 80] : [244, 67, 54], size: "14px", outline: { color: "white", width: 2 } }
+      symbol: { type: "simple-marker", style: "circle", color: points.length === 0 ? [76, 175, 80] : [244, 67, 54], size: "12px", outline: { color: "white", width: 2 } }
     });
     points.push(marker);
     analysisLayer.add(marker);
 
     if (points.length === 2) {
-      const polyline = { type: "polyline", paths: [[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]] };
-      analysisLayer.add(new Graphic({ geometry: polyline, symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" } }));
+      const polyline = new Polyline({
+        paths: [[[points[0].geometry.longitude, points[0].geometry.latitude], [points[1].geometry.longitude, points[1].geometry.latitude]]],
+        spatialReference: { wkid: 4326 }
+      });
+      
+      analysisLayer.add(new Graphic({ 
+        geometry: polyline, 
+        symbol: { type: "simple-line", color: [0, 122, 255, 0.8], width: 4, style: "solid" } 
+      }));
 
-      const distance = geometryEngine.geodesicLength(polyline, "kilometers");
+      // BERÄKNING: Faktisk väg-distans med networkFactor (1.3x fågelvägen)
+      const birdDistance = geometryEngine.geodesicLength(polyline, "kilometers");
+      const realDistance = birdDistance * 1.3; 
       const mode = document.getElementById("transportMode").value;
-      let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 30 : 5;
+      let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
+      const travelTime = (realDistance / speed) * 60;
 
-      document.getElementById("res-dist").innerText = distance.toFixed(2) + " km";
-      document.getElementById("res-time").innerText = ((distance / speed) * 60).toFixed(1) + " min";
+      document.getElementById("res-dist").innerText = realDistance.toFixed(2) + " km";
+      document.getElementById("res-time").innerText = travelTime.toFixed(1) + " min";
       document.getElementById("res-speed").innerText = speed + " km/h";
     }
   });
