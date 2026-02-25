@@ -110,7 +110,7 @@ require([
       };
     }
 
-    // 4. BYGGNADER MED SPECIFIK POPUP FÖR 3D-MODEL (Byggnad 8052)
+   // 4. BYGGNADER MED SPECIFIK POPUP FÖR 3D-MODEL (Byggnad 8052)
     else if (info.type === "building") {
       renderer = { 
         type: "unique-value", 
@@ -133,20 +133,21 @@ require([
         content: function(feature) {
           const bID = feature.graphic.attributes.Building_ID;
           
-          // Om byggnaden är 8052 (den gröna), visa knappen till din IFC-viewer
           if (bID == 8052) {
+            // Vi använder en relativ sökväg som tvingar webbläsaren att leta i samma mapp
+            const targetUrl = "./IFC.html"; 
+            
             return `
               <div style="text-align: center; font-family: sans-serif;">
                 <p><b>Building ID:</b> ${bID}</p>
-                <p style="font-size: 0.9em; color: #666;">Detailed BIM model available.</p>
+                <p style="font-size: 0.85em; color: #666;">BIM Model Integration Active</p>
                 <br>
-                <a href="IFC.html" target="_blank" 
+                <a href="${targetUrl}" target="_blank" 
                    style="display: inline-block; padding: 12px 20px; background-color: #2ecc71; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                    Go to 3D Model
                 </a>
               </div>`;
           }
-          // För alla andra byggnader, visa bara ID
           return `<b>Building ID:</b> ${bID}`;
         }
       };
