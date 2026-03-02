@@ -513,6 +513,15 @@ require([
   }
 
   view.when(() => {
+    const basemapSelect = document.getElementById("basemapSelect");
+    if (basemapSelect) {
+      basemapSelect.value = map.basemap && map.basemap.id ? map.basemap.id : "gray-vector";
+      basemapSelect.addEventListener("change", (e) => {
+        const selected = e.target.value === "satellite" ? "satellite" : "gray-vector";
+        map.basemap = selected;
+      });
+    }
+
     if (roadsLayerRef) {
       buildRoadGraph().then((g) => { roadGraph = g; }).catch(() => {});
     }
