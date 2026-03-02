@@ -45,12 +45,12 @@ require([
   const alwaysOnToggleIds = ["toggleHospital", "toggleFirestation", "togglePolice", "toggleSchools", "toggleHealthcare"];
 
   function iconSizeForScale(scale) {
-    const minScale = 2500;
-    const maxScale = 1200000;
-    const minSize = 10;
-    const maxSize = 30;
+    const minScale = 3000;
+    const maxScale = 2500000;
+    const minSize = 3;
+    const maxSize = 14;
     const s = Math.max(minScale, Math.min(maxScale, scale || maxScale));
-    const t = (maxScale - s) / (maxScale - minScale);
+    const t = Math.pow((maxScale - s) / (maxScale - minScale), 1.1);
     return minSize + (maxSize - minSize) * t;
   }
 
