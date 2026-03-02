@@ -283,53 +283,60 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const CUBE_HEIGHT_M = 8;
             const MAX_RADIUS_M = 300;
             const MIN_SIZE = 1;
+            const OVERLAY_ID = "surrounding-buildings-overlay";
+            let overlayState = null;
 
-            function findSceneInObject(root) {
-                const queue = [{ value: root, depth: 0 }];
-                const seen = new Set();
-                let inspected = 0;
-                while (queue.length && inspected < 3000) {
-                    const item = queue.shift();
-                    const obj = item.value;
-                    const depth = item.depth;
-                    if (!obj || typeof obj !== "object" || seen.has(obj)) continue;
-                    seen.add(obj);
-                    inspected += 1;
+            function createOverlay(v) {
+                const container = document.getElementById("viewer-container");
+                if (!container) throw new Error("Kunde inte hitta viewer-container");
+                const old = document.getElementById(OVERLAY_ID);
+                if (old) old.remove();
 
-                    if (
-                        Array.isArray(obj.children) &&
-                        typeof obj.add === "function" &&
-                        (obj.isScene === true || obj.type === "Scene")
-                    ) {
-                        return obj;
-                    }
+                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                renderer.setClearColor(0x000000, 0);
+                renderer.domElement.id = OVERLAY_ID;
+                renderer.domElement.style.position = "absolute";
+                renderer.domElement.style.left = "0";
+                renderer.domElement.style.top = "0";
+                renderer.domElement.style.width = "100%";
+                renderer.domElement.style.height = "100%";
+                renderer.domElement.style.pointerEvents = "none";
+                renderer.domElement.style.zIndex = "2";
+                container.appendChild(renderer.domElement);
 
-                    if (depth >= 4) continue;
-                    const keys = Object.keys(obj);
-                    for (let i = 0; i < keys.length; i++) {
-                        const k = keys[i];
-                        let val;
-                        try {
-                            val = obj[k];
-                        } catch (_) {
-                            continue;
-                        }
-                        if (!val || typeof val !== "object") continue;
-                        queue.push({ value: val, depth: depth + 1 });
-                    }
-                }
-                return null;
+                const scene = new THREE.Scene();
+                const camera = new THREE.Camera();
+                camera.matrixAutoUpdate = false;
+
+                const syncSize = () => {
+                    const w = Math.max(1, v.canvas ? v.canvas.clientWidth : container.clientWidth);
+                    const h = Math.max(1, v.canvas ? v.canvas.clientHeight : container.clientHeight);
+                    renderer.setSize(w, h, false);
+                };
+                syncSize();
+
+                return { renderer, scene, camera, syncSize };
             }
 
-            function getScene(v) {
-                if (!v) return null;
-                const direct = v._scene || v.scene || (v.context && v.context.getScene ? v.context.getScene() : null);
-                if (direct) return direct;
-                if (v._handles && v._handles[0]) {
-                    const handleScene = findSceneInObject(v._handles[0]);
-                    if (handleScene) return handleScene;
-                }
-                return findSceneInObject(v);
+            function syncCameraFromViewer(v, camera) {
+                if (!v || !v.pMatrix || !v.mvMatrix) return false;
+                camera.projectionMatrix.fromArray(v.pMatrix);
+                camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+                camera.matrixWorldInverse.fromArray(v.mvMatrix);
+                camera.matrixWorld.copy(camera.matrixWorldInverse).invert();
+                return true;
+            }
+
+            function startOverlayRenderLoop(v, overlay) {
+                if (overlayState && overlayState.raf) cancelAnimationFrame(overlayState.raf);
+                const tick = () => {
+                    overlay.syncSize();
+                    if (syncCameraFromViewer(v, overlay.camera)) {
+                        overlay.renderer.render(overlay.scene, overlay.camera);
+                    }
+                    overlayState.raf = requestAnimationFrame(tick);
+                };
+                overlayState = { ...overlay, raf: requestAnimationFrame(tick) };
             }
 
             function getIfcBounds(v) {
@@ -505,11 +512,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             async function initMap(v) {
                 try {
                     console.error("[MAP_DEBUG] initMap called");
-                    const scene = getScene(v);
                     if (typeof THREE === "undefined") throw new Error("Three.js saknas");
-                    if (!scene) throw new Error("Kunde inte hitta Three.js scene i viewer");
+                    const overlay = createOverlay(v);
                     const context = await initContext(v);
-                    addBuildingCubes(scene, context);
+                    addBuildingCubes(overlay.scene, context);
+                    startOverlayRenderLoop(v, overlay);
+                    console.error("[MAP_DEBUG] overlay ready");
                 } catch (err) {
                     console.error("Karta-fel:", err.message);
                 }
