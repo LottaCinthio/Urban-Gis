@@ -6,7 +6,7 @@ require([
   "esri/layers/GraphicsLayer",
   "esri/geometry/geometryEngine",
   "esri/geometry/Polyline"
-], function (Map, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline) {
+], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline) {
 
   const layersInfo = [
     { name: "Road Network", file: "roads.geojson", type: "road-network", id: "toggleRoads" },
@@ -34,7 +34,7 @@ require([
     elevationInfo: { mode: "relative-to-ground", offset: 0.3 } 
   });
   
-  const map = new Map({ 
+  const map = new EsriMap({ 
     basemap: "gray-vector", 
     ground: "world-elevation", 
     layers: [analysisLayer] 
