@@ -280,10 +280,39 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const BUILDINGS_FILE = "./data/buildings.geojson";
             const BUILDINGS_WITH_ID_FILE = "./data/buildings_with_id.geojson";
             const DEG_TO_M = 111320;
-            const CUBE_HEIGHT = 8;
+            const CUBE_HEIGHT_M = 8;
+            const MAX_RADIUS_M = 300;
+            const MIN_SIZE = 1;
 
             function getScene(v) {
                 return v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
+            }
+
+            function getIfcBounds(v) {
+                const handles = (v && v._handles) || [];
+                if (!handles.length) return null;
+                let minX = Infinity, minY = Infinity, minZ = Infinity;
+                let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+                handles.forEach((h) => {
+                    if (!h || !h._region || !h._region.bbox) return;
+                    const b = h._region.bbox;
+                    minX = Math.min(minX, b[0]);
+                    minY = Math.min(minY, b[1]);
+                    minZ = Math.min(minZ, b[2]);
+                    maxX = Math.max(maxX, b[0] + 2 * b[3]);
+                    maxY = Math.max(maxY, b[1] + 2 * b[4]);
+                    maxZ = Math.max(maxZ, b[2] + 2 * b[5]);
+                });
+                if (!isFinite(minX) || !isFinite(maxX)) return null;
+                return {
+                    minX, minY, minZ, maxX, maxY, maxZ,
+                    width: maxX - minX,
+                    height: maxY - minY,
+                    depth: maxZ - minZ,
+                    centerX: (minX + maxX) / 2,
+                    centerY: (minY + maxY) / 2,
+                    centerZ: (minZ + maxZ) / 2
+                };
             }
 
             function toLocalMeters(lon, lat, originLon, originLat) {
@@ -318,7 +347,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     if (p.z < minZ) minZ = p.z;
                     if (p.z > maxZ) maxZ = p.z;
                 });
-                return { minX, maxX, minZ, maxZ };
+                return { minX, maxX, minZ, maxZ, width: maxX - minX, depth: maxZ - minZ };
             }
 
             function findNearestFeatureIndex(features, targetCenter, originLon, originLat) {
@@ -339,7 +368,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 return nearest;
             }
 
-            async function initContext() {
+            function clamp(value, min, max) {
+                return Math.max(min, Math.min(max, value));
+            }
+
+            async function initContext(v) {
                 const [allBuildingsRes, buildingsWithIdRes] = await Promise.all([
                     fetch(BUILDINGS_FILE),
                     fetch(BUILDINGS_WITH_ID_FILE)
@@ -363,42 +396,74 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 const anchorCenter = centroid(anchorVerts);
                 const skipIndex = findNearestFeatureIndex(allBuildings.features || [], anchorCenter, originLon, originLat);
 
-                return { allBuildings, originLon, originLat, skipIndex };
+                const ifcBounds = getIfcBounds(v);
+                if (!ifcBounds) throw new Error("Kunde inte läsa IFC-modellens bounding box");
+
+                const anchorInAll = skipIndex >= 0 ? (allBuildings.features || [])[skipIndex] : null;
+                const anchorAllVerts = getFootprintVertices(anchorInAll || anchor, originLon, originLat);
+                const anchorAllBbox = bbox(anchorAllVerts);
+                const sx = anchorAllBbox.width > 0 ? (ifcBounds.width / anchorAllBbox.width) : 1;
+                const sz = anchorAllBbox.depth > 0 ? (ifcBounds.depth / anchorAllBbox.depth) : 1;
+                const scale = clamp((sx + sz) / 2, 0.2, 5000);
+
+                return {
+                    allBuildings,
+                    originLon,
+                    originLat,
+                    skipIndex,
+                    scale,
+                    ifcBounds
+                };
             }
 
             function addBuildingCubes(scene, context) {
-                const material = new THREE.MeshPhongMaterial({
+                const material = new THREE.MeshBasicMaterial({
                     color: 0xffffff,
                     transparent: true,
-                    opacity: 0.85
+                    opacity: 0.92
                 });
 
-                (context.allBuildings.features || []).forEach((feature, index) => {
+                const features = context.allBuildings.features || [];
+                const maxRadiusScaled = MAX_RADIUS_M * context.scale;
+                let drawn = 0;
+
+                features.forEach((feature, index) => {
                     if (index === context.skipIndex) return;
                     const verts = getFootprintVertices(feature, context.originLon, context.originLat);
                     if (!verts.length) return;
+                    const c = centroid(verts);
+                    const dist = Math.sqrt(c.x * c.x + c.z * c.z);
+                    if (dist > MAX_RADIUS_M) return;
+
                     const b = bbox(verts);
-                    const width = Math.max(1, b.maxX - b.minX);
-                    const depth = Math.max(1, b.maxZ - b.minZ);
-                    const centerX = (b.minX + b.maxX) / 2;
-                    const centerZ = (b.minZ + b.maxZ) / 2;
+                    const width = Math.max(MIN_SIZE, b.width * context.scale);
+                    const depth = Math.max(MIN_SIZE, b.depth * context.scale);
+                    const centerX = c.x * context.scale;
+                    const centerZ = c.z * context.scale;
+                    const cubeHeight = Math.max(MIN_SIZE, CUBE_HEIGHT_M * context.scale * 0.3);
 
                     const cube = new THREE.Mesh(
-                        new THREE.BoxGeometry(width, CUBE_HEIGHT, depth),
+                        new THREE.BoxGeometry(width, cubeHeight, depth),
                         material
                     );
-                    cube.position.set(centerX, CUBE_HEIGHT / 2, centerZ);
+                    cube.position.set(
+                        context.ifcBounds.centerX + centerX,
+                        context.ifcBounds.minY + cubeHeight / 2,
+                        context.ifcBounds.centerZ + centerZ
+                    );
                     scene.add(cube);
+                    drawn += 1;
                 });
+
+                console.log("Omgivande byggnader ritade:", drawn, "Skala:", context.scale, "Radius(m):", MAX_RADIUS_M, "Radius(skalad):", maxRadiusScaled);
             }
 
             async function initMap(v) {
                 try {
                     const scene = getScene(v);
                     if (!scene || typeof THREE === "undefined") return;
-                    const context = await initContext();
+                    const context = await initContext(v);
                     addBuildingCubes(scene, context);
-                    console.log("Omgivande byggnader (vita kuber) inlagda.");
                 } catch (err) {
                     console.error("Karta-fel:", err.message);
                 }
