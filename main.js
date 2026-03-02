@@ -72,15 +72,17 @@ require([
     });
   }
 
-  function setupAccordionPanel(toggleId, contentId) {
+  function setupAccordionPanel(toggleId, contentId, onToggleChange) {
     const toggle = document.getElementById(toggleId);
     const content = document.getElementById(contentId);
     if (!toggle || !content) return;
 
     toggle.checked = false;
     content.classList.remove("open");
+    if (onToggleChange) onToggleChange(false);
     toggle.addEventListener("change", () => {
       content.classList.toggle("open", toggle.checked);
+      if (onToggleChange) onToggleChange(toggle.checked);
       if (!toggle.checked) {
         alwaysOnToggleIds.forEach((id) => {
           const cb = document.getElementById(id);
@@ -183,14 +185,36 @@ require([
     document.addEventListener("DOMContentLoaded", () => {
       setupAccordionPanel("toggleEmergencyPanel", "emergencyPanelContent");
       setupAccordionPanel("toggleAccessibilityPanel", "accessibilityPanelContent");
+      setupAccordionPanel("enableABTool", "analysisPanelContent", (isOpen) => {
+        if (!isOpen && typeof window.clearAnalysis === "function") window.clearAnalysis();
+      });
     });
   } else {
     setupAccordionPanel("toggleEmergencyPanel", "emergencyPanelContent");
     setupAccordionPanel("toggleAccessibilityPanel", "accessibilityPanelContent");
+    setupAccordionPanel("enableABTool", "analysisPanelContent", (isOpen) => {
+      if (!isOpen && typeof window.clearAnalysis === "function") window.clearAnalysis();
+    });
   }
 
   // --- KORRIGERAD MÄTNINGSLOGIK FÖR EXAKT PLACERING ---
   let points = [];
+  let routeGraphicRef = null;
+  let lastRouteDistanceKm = null;
+
+  function speedForMode(mode) {
+    return mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
+  }
+
+  function updateAnalysisSummary(distanceKm) {
+    const modeEl = document.getElementById("transportMode");
+    if (!modeEl || distanceKm == null) return;
+    const mode = modeEl.value;
+    const speed = speedForMode(mode);
+    document.getElementById("res-dist").innerText = distanceKm.toFixed(2) + " km";
+    document.getElementById("res-time").innerText = ((distanceKm / speed) * 60).toFixed(1) + " min";
+    document.getElementById("res-speed").innerText = speed + " km/h";
+  }
   
   view.on("click", function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
@@ -236,11 +260,11 @@ require([
       // Slå ihop segmenten för att rita ut dem
       const combinedRoute = geometryEngine.union(segments.map(s => s.geometry));
       finalDist = geometryEngine.geodesicLength(combinedRoute, "kilometers");
-      
-      analysisLayer.add(new Graphic({
+      routeGraphicRef = new Graphic({
         geometry: combinedRoute,
         symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
-      }));
+      });
+      analysisLayer.add(routeGraphicRef);
     } else {
       // Fallback: Om inga vägar hittas i närheten, rita rak linje men varna i panelen
       const fallback = new Polyline({
@@ -248,23 +272,22 @@ require([
         spatialReference: { wkid: 4326 }
       });
       finalDist = geometryEngine.geodesicLength(fallback, "kilometers") * 1.3;
-      analysisLayer.add(new Graphic({
+      routeGraphicRef = new Graphic({
         geometry: fallback,
         symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" }
-      }));
+      });
+      analysisLayer.add(routeGraphicRef);
     }
 
-    // 3. Räkna ut tid och hastighet
-    const mode = document.getElementById("transportMode").value;
-    let speed = mode === "Cycling" ? 15 : mode === "Driving" ? 40 : 5;
-    
-    document.getElementById("res-dist").innerText = finalDist.toFixed(2) + " km";
-    document.getElementById("res-time").innerText = ((finalDist / speed) * 60).toFixed(1) + " min";
-    document.getElementById("res-speed").innerText = speed + " km/h";
+    lastRouteDistanceKm = finalDist;
+    updateAnalysisSummary(finalDist);
   }
 
   window.clearAnalysis = function() {
-    points = []; analysisLayer.removeAll();
+    points = [];
+    routeGraphicRef = null;
+    lastRouteDistanceKm = null;
+    analysisLayer.removeAll();
     document.getElementById("res-dist").innerText = "-"; 
     document.getElementById("res-time").innerText = "-"; 
     document.getElementById("res-speed").innerText = "-";
@@ -279,6 +302,12 @@ require([
 
     applyDynamicIconSizing(view);
     view.watch("scale", () => applyDynamicIconSizing(view));
+    const modeSelect = document.getElementById("transportMode");
+    if (modeSelect) {
+      modeSelect.addEventListener("change", () => {
+        if (lastRouteDistanceKm != null) updateAnalysisSummary(lastRouteDistanceKm);
+      });
+    }
 
     layersInfo.forEach(info => {
       const cb = document.getElementById(info.id);
