@@ -227,9 +227,7 @@ require([
         material: { color: color },
         size: 10,
         outline: { color: [255, 255, 255, 0.95], size: 1.6 }
-      }],
-      verticalOffset: { screenLength: 8, maxWorldLength: 25, minWorldLength: 2 },
-      callout: { type: "line", size: 0.9, color: [255, 255, 255, 0.85] }
+      }]
     };
   }
 
