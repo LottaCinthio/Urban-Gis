@@ -273,96 +273,79 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     <script>
         entitiesExtendedData = {}; var showEntityPropsOnHover, lastHoverPick, hovertimer, splitInstance, pickEntity, modelVisibilityaction, html, secStartX, secStartY, secStartZ, secStartXtranslated, secStartYtranslated, secStartZtranslated, lengthX, lengthY, lengthZ, modelVisibilitySelections = {}, mouseaction = "noaction", sectionClip = !1; const viewer = new Viewer("viewer"); viewer.background = [0, 0, 0, 0]; var cube = new NavigationCube; cube.passiveAlpha = .8, cube.ratio = .08, viewer.addPlugin(cube), viewer.hoverPickEnabled = !0; const envelope = baseToBlob(modelgeo); function showHoverPopup(e, t, i) { let l = viewer.getProductType(t, i.Model), r = '<div id="attsTitleDiv"> Entity Properties</div>'; r += '<table style="width: 100%">', r += "<tr><td>Entity Type</td><td>" + ProductType[l] + "</td></tr>"; let n = e.Properties; for (let s in n) { r += '<tr ><th colspan="3">' + s + "</th></tr>"; let o = n[s]; for (let a in o) { let c; r += "<tr><td>" + o[a].Name + "</td><td>" + o[a].Value + "</td></tr>" } } r += "</table>"; let d = document.getElementById("attrprop"); d.style.visibility = "hidden", d.innerHTML = r, Object.assign(d.style, { left: `${i.event.clientX + 5}px`, top: `${i.event.clientY + 5}px`, display: "block", visibility: "visible" }) } function buildModelTree() { let e = document.getElementById("modelTree"); html = '<ul id="myUL">'; let t; addTreeNode(entitiesExtendedData[Object.keys(entitiesExtendedData)[0]], []), html += "</ul >", e.innerHTML = html; var i, l = document.getElementsByClassName("caret"); for (i = 0; i < l.length; i++)l[i].addEventListener("click", function () { this.parentElement.querySelector(".nested").classList.toggle("active"), this.classList.toggle("caret-down") }) } function addTreeNode(e, t) { e && e.Children && e.Children.length > 0 ? (html += '<li><span class="caret">' + e.Name + "</span>", html += '<ul class="nested">', e.Children.forEach(function (e) { t.push(e.Id), addTreeNode(e, t, html) }), html += "</ul ></li>") : html += "<li>" + e.Name + "</li>" } function applyModelVisibility() { switch (mouseaction = "noaction", modelVisibilityaction) { case "hide": for (let e in modelVisibilitySelections) viewer.setState(State.HIDDEN, [e], modelVisibilitySelections[e].model); break; case "isolate": for (let t in hideModel(), modelVisibilitySelections) viewer.resetState([t], modelVisibilitySelections[t].model); break; case "isolateType": for (let i in hideModel(), modelVisibilitySelections) { let l = viewer.getProductType(i); viewer.resetState(l) } break; case "hideType": for (let r in modelVisibilitySelections) { let n = viewer.getProductType(r); viewer.setState(State.HIDDEN, n) } break; case "hideFloor": case "isolateFloor": "isolateFloor" == modelVisibilityaction && hideModel(); let s = []; for (let o in modelVisibilitySelections) { let a = modelVisibilitySelections[o].model, c = getParentFloorId(o); c > 0 && (getAllChildren(c, s), "isolateFloor" == modelVisibilityaction ? viewer.resetState(s, a) : viewer.setState(State.HIDDEN, s, a), viewer.setState(State.HIDDEN, ProductType.IFCSPACE), viewer.setState(State.HIDDEN, ProductType.IFCGRID)) } }document.getElementById("viewer-container").style.cursor = "default", modelVisibilitySelections = {} } function selectElementForModelVisibility(e) { modelVisibilitySelections = {}, mouseaction = "select", modelVisibilityaction = e; document.getElementById("viewer-container").style.cursor = "crosshair" } function zoomExtents() { let e = []; viewer.getModelState(1).map(function (e) { return e[0] }).forEach(function (t) { viewer.getState(t, 1) != State.HIDDEN && e.push({ id: t, model: 1 }) }), viewer.zoomTo(e, null, !1, !1) } function reset() { viewer && (viewer.resetState(), viewer.setState(State.HIDDEN, ProductType.IFCSPACE), viewer.resetStyles(), viewer.camera = CameraType.PERSPECTIVE), $("#attrprop").html(""), mouseaction = "noaction", modelVisibilitySelections = {} } function hideModel() { viewer.setState(State.HIDDEN, viewer.getModelState(1).map(function (e) { return e[0] })) } function getAllChildren(e, t) { entitiesExtendedData && getChildrenUsingIfcData(entitiesExtendedData[e], t) } function getParentFloorId(e) { return getParentFloorIdUsingIfcData(e) } function getParentFloorIdUsingIfcData(e) { let t = entitiesExtendedData; if (!t) return -1; for (let i in entitiesExtendedData) { let l = t[i]; if (parseInt(i) == e) { if ("IFCBUILDINGSTOREY" == l.PType.toUpperCase()) return l.PId; return getParentFloorIdUsingIfcData(l.PId) } } return -1 } function getChildrenUsingIfcData(e, t) { e && e.Children && e.Children.length > 0 && e.Children.forEach(function (e) { t.push(e.Id), getChildrenUsingIfcData(e, t) }) } function base64ToByteArray(e) { let t = atob(e), i = new Uint8Array(t.length); for (let l = 0; l < t.length; l++)i[l] = t.charCodeAt(l); return i } function baseToBlob(e) { for (var t = atob(e), i = new ArrayBuffer(t.length), l = new Uint8Array(i), r = 0; r < t.length; r++)l[r] = t.charCodeAt(r); return new Blob([l]) } async function unzipByteArray(e) { let t = new JSZip, i = await t.loadAsync(e), l = await i.files["data.json"].async("text"); return l } function getEntitiesExtendedData(e) { let t = e.EntitiesExtendedData; if (!t) { console.log("EntitiesExtendedData is not defined"); return } let i = {}; for (let l = 0; l < t.length; l++) { let r = {}; r.Id = t[l].Id, r.Name = t[l].Name, r.PId = t[l].PId, r.PType = t[l].PType, r.Properties = t[l].Properties, r.Children = [], i[t[l].Id] = r } for (let n in i) { var s = i[n]; i[s.PId]?.Children.push(s) } return i } function removeSvg() { } function IntClip() { var e, t, i, l, r, n, s, o, a, c, d, v, u, g = {}, b = !1, h = {}, m = (e = viewer.canvas, t = e.getBoundingClientRect(), i = document.body, l = document.documentElement, r = window.pageYOffset || l.scrollTop || i.scrollTop, n = window.pageXOffset || l.scrollLeft || i.scrollLeft, s = l.clientTop || i.clientTop || 0, o = l.clientLeft || i.clientLeft || 0, a = l.clientBottom || i.clientBottom || 0, c = l.clientRight || i.clientRight || 0, d = Math.round(t.top + r - s), v = Math.round(t.left + n - o), u = Math.round(t.top + r - a), { top: d, left: v, width: Math.round(t.left + n - c) - v, height: u - d }), p = getSVGOverlay(); p.style.top = m.top + "px", p.style.left = m.left + "px"; var f = function (e) { if (!b) { b = !0, viewer.disableTextSelection(); var t = p.getBoundingClientRect(); g.x = e.clientX - t.left, g.y = e.clientY - t.top, g.angle = 0, (h = document.createElementNS(ns, "g")).setAttribute("id", "section"), p.appendChild(h); var i = document.createElementNS(ns, "line"); h.appendChild(i), i.setAttribute("style", "stroke:rgb(255,0,0);stroke-width:2"), i.setAttribute("x1", g.x), i.setAttribute("y1", 99999), i.setAttribute("x2", g.x), i.setAttribute("y2", -99999) } }, y = function (e) { if (b) { var t = p.getBoundingClientRect(); if (g.x != e.clientX - t.left || g.y != e.clientY - t.top) { b = !1, viewer.enableTextSelection(); var i = mat4.create(); mat4.multiply(i, viewer.pMatrix, viewer.mvMatrix); var l = mat4.create(); mat4.invert(l, i); var r = g.x / (viewer.width / 2) - 1, n = 1 - g.y / (viewer.height / 2), s = vec3.create(); vec3.transformMat4(s, [r, n, -1], l); var o = vec3.create(); vec3.transformMat4(o, [r, n, 1], l); var a = g.angle * Math.PI / 180, c = vec3.create(); vec3.transformMat4(c, [r + Math.cos(a), n + Math.sin(a), 1], l); var d = vec3.subtract(vec3.create(), s, o), v = vec3.subtract(vec3.create(), c, o), u = vec3.cross(vec3.create(), d, v); viewer.unclip(), viewer.clip(o, vec3.normalize(vec3.create(), u)), p.parentNode.removeChild(p), $(p).find("g").remove(), p.removeEventListener("mousedown", f, !0), window.removeEventListener("mouseup", y, !0), window.removeEventListener("mousemove", w, !0) } } }, w = function (e) { if (b) { var t, i = p.getBoundingClientRect(), l = e.clientX - i.left, r = e.clientY - i.top, n = -180 * Math.atan2(l - g.x, r - g.y) / Math.PI + 90; n = 5 * Math.round((n = 5 * Math.round(n / 5)) / 5), g.angle = 360 - n + 90, h.setAttribute("transform", "rotate(" + n + " " + g.x + " " + g.y + ")") } }; document.documentElement.appendChild(p), p.addEventListener("mousedown", f, !0), window.addEventListener("mouseup", y, !0), window.addEventListener("mousemove", w, !0) } function getStartBboxCoordinates() { for (var e = viewer._handles[0]._region.bbox[0], t = viewer._handles[0]._region.bbox[0] + 2 * viewer._handles[0]._region.bbox[3], i = viewer._handles[0]._region.bbox[1], l = viewer._handles[0]._region.bbox[1] + 2 * viewer._handles[0]._region.bbox[4], r = viewer._handles[0]._region.bbox[2], n = viewer._handles[0]._region.bbox[2] + 2 * viewer._handles[0]._region.bbox[5], s = 1; s < viewer._handles.length; s++) { var o = viewer._handles[s]; o._region.bbox[0] + 2 * o._region.bbox[3] > t ? t = o._region.bbox[0] + 2 * o._region.bbox[3] + Math.abs(o._region.bbox[0] - e) : t += Math.abs(o._region.bbox[0] - e), o._region.bbox[1] + 2 * o._region.bbox[4] > l ? l = o._region.bbox[1] + 2 * o._region.bbox[4] + Math.abs(o._region.bbox[1] - i) : l += Math.abs(o._region.bbox[1] - i), o._region.bbox[2] + 2 * o._region.bbox[5] > n ? n = o._region.bbox[2] + 2 * o._region.bbox[5] + Math.abs(o._region.bbox[2] - r) : n += Math.abs(o._region.bbox[2] - r), o._region.bbox[0] < e && (e = o._region.bbox[0]), o._region.bbox[1] < i && (i = o._region.bbox[1]), o._region.bbox[2] < r && (r = o._region.bbox[2]) } lengthX = t - e, lengthY = l - i, lengthZ = n - r, secStartX = e, secStartY = i, secStartZ = r, secStartXtranslated = e + (t - e / 4), secStartYtranslated = i + (l - i / 4), secStartZtranslated = r + (n - r / 4) } function IntSectionBox() { sectionClip = !0, $("#clippingopt").show() } splitInstance = Split(["#attrprop-container", "#viewer-container"], { sizes: [25, 75], minSize: [0, 0], gutterSize: 10, gutterAlign: "Center", onDragEnd: function (e) { localStorage.setItem("split-sizes", JSON.stringify(e)) } }), unzipByteArray(base64ToByteArray(model)).then(e => { entitiesExtendedData = getEntitiesExtendedData(JSON.parse(e)), buildModelTree() }).catch(e => { console.error("Error:", e) }), viewer.loadAsync(envelope), viewer.on("hoverpick", function (e) { if (e && e.model && e.id) { clearTimeout(hovertimer); hovertimer = setTimeout(function () { showHoverPopup(entitiesExtendedData[e.id], e.id, e) }, 200) } else clearTimeout(hovertimer) }), viewer.on("loaded", e => { try { viewer.start(), viewer.show(ViewType.DEFAULT, void 0, void 0, !1), getStartBboxCoordinates(), $("#clippingopt button").button(), $("#slider-sec-x").slider({ range: !0, min: 0, max: lengthX, values: [0, lengthX], slide: function (e, t) { $("#seclenX").val(t.values[0] + " - " + t.values[1]), secStartXtranslated = secStartX + (t.values[0] + t.values[1]) / 2 / 2, viewer.sectionBox.location = [secStartXtranslated, secStartYtranslated, secStartZtranslated], viewer.sectionBox.lengthX = (t.values[1] - t.values[0]) / 2 } }), $("#seclenX").val($("#slider-sec-x").slider("values", 0) + " - " + $("#slider-sec-x").slider("values", 1)), $("#slider-sec-y").slider({ range: !0, min: 0, max: lengthY, values: [0, lengthY], slide: function (e, t) { $("#seclenY").val(t.values[0] + " - " + t.values[1]), secStartYtranslated = secStartY + (t.values[0] + t.values[1]) / 2 / 2, viewer.sectionBox.location = [secStartXtranslated, secStartYtranslated, secStartZtranslated], viewer.sectionBox.lengthY = (t.values[1] - t.values[0]) / 2 } }), $("#seclenY").val($("#slider-sec-y").slider("values", 0) + " - " + $("#slider-sec-y").slider("values", 1)), $("#slider-sec-z").slider({ range: !0, min: 0, max: lengthZ, values: [0, lengthZ], slide: function (e, t) { $("#seclenZ").val(t.values[0] + " - " + t.values[1]), secStartZtranslated = secStartZ + (t.values[0] + t.values[1]) / 2 / 2, viewer.sectionBox.location = [secStartXtranslated, secStartYtranslated, secStartZtranslated], viewer.sectionBox.lengthZ = (t.values[1] - t.values[0]) / 2 } }), $("#seclenZ").val($("#slider-sec-z").slider("values", 0) + " - " + $("#slider-sec-z").slider("values", 1)) } catch (t) { } }), viewer.on("pick", function (e) { e.model && e.id && "select" == mouseaction && (viewer.setState(State.HIGHLIGHTED, [e.id], e.model), modelVisibilitySelections[e.id] = e) }), $("#btnUnclip").click(function () { removeSvg(), viewer.unclip(), $("#slider-sec-x").slider({ values: [0, lengthX] }), $("#slider-sec-y").slider({ values: [0, lengthY] }), $("#slider-sec-z").slider({ values: [0, lengthZ] }), $("#seclenX").val($("#slider-sec-x").slider("values", 0) + " - " + $("#slider-sec-x").slider("values", 1)), $("#seclenY").val($("#slider-sec-y").slider("values", 0) + " - " + $("#slider-sec-y").slider("values", 1)), $("#seclenZ").val($("#slider-sec-z").slider("values", 0) + " - " + $("#slider-sec-z").slider("values", 1)), viewer.sectionBox.setToInfinity() }), $("#btnSectionUnclip").click(function (e) { $("#slider-sec-x").slider({ values: [0, lengthX] }), $("#slider-sec-y").slider({ values: [0, lengthY] }), $("#slider-sec-z").slider({ values: [0, lengthZ] }), $("#seclenX").val($("#slider-sec-x").slider("values", 0) + " - " + $("#slider-sec-x").slider("values", 1)), $("#seclenY").val($("#slider-sec-y").slider("values", 0) + " - " + $("#slider-sec-y").slider("values", 1)), $("#seclenZ").val($("#slider-sec-z").slider("values", 0) + " - " + $("#slider-sec-z").slider("values", 1)), viewer.sectionBox.setToInfinity(), viewer.unclip() }), $("#btnSectionClose").click(function (e) { viewer.sectionBox.setToInfinity(), viewer.unclip(), $("#slider-sec-x").slider({ values: [0, lengthX] }), $("#slider-sec-y").slider({ values: [0, lengthY] }), $("#slider-sec-z").slider({ values: [0, lengthZ] }), $("#seclenX").val($("#slider-sec-x").slider("values", 0) + " - " + $("#slider-sec-x").slider("values", 1)), $("#seclenY").val($("#slider-sec-y").slider("values", 0) + " - " + $("#slider-sec-y").slider("values", 1)), $("#seclenZ").val($("#slider-sec-z").slider("values", 0) + " - " + $("#slider-sec-z").slider("values", 1)), sectionClip = !1, $("#clippingopt").hide();});
 
-  </script>
-<script>
-(function() {
-    const TARGET_ID = 8052;
-    const BUILDINGS_URL = './data/buildings_with_id.geojson';
-    const ROADS_URL = './data/roads.geojson';
 
-    async function syncModelToMap(v) {
-        try {
-            // 1. Hämta koordinaterna för Building 8052 från din GeoJSON
-            const response = await fetch(BUILDINGS_URL);
-            const data = await response.json();
-            const target = data.features.find(f => f.properties.Building_ID == TARGET_ID);
-            
-            if (!target) return console.error("Hittade inte Building 8052 i GeoJSON");
+    // --- NY KOD FÖR KARTA (VÄGAR + GRANNBYGGNADER) ---
+    (function() {
+        const TARGET_ID = 8052;
+        const FILES = {
+            buildings: './data/buildings_with_id.geojson',
+            roads: './data/roads.geojson'
+        };
 
-            // GPS-position för 8052
-            const lon = target.geometry.coordinates[0][0][0];
-            const lat = target.geometry.coordinates[0][0][1];
-            
-            // 2. FLYTTA IFC-MODELLEN
-            // Vi hämtar den första modellen i viewern och flyttar den till GPS-positionen
-            // xBIM använder meter, så vi räknar om grader till meter
-            const scale = 111320;
-            const posX = lon * (scale * Math.cos(lat * Math.PI / 180));
-            const posZ = lat * scale;
+        async function loadMap(v) {
+            console.log("Ansluter till xBIM scen...");
+            // Hittar Three.js scenen i din viewer
+            const scene = v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
+            if (!scene) return;
 
-            // Flytta kameran och modellen så de matchar kartan
-            if (v._models && v._models[0]) {
-                // Här sätter vi modellens "translation" för att matcha kartan
-                // OBS: Beroende på din xBIM-version kan detta behöva justeras
-                console.log("Flyttar modell till:", posX, posZ);
-            }
+            try {
+                // 1. Hämta data
+                const [bRes, rRes] = await Promise.all([fetch(FILES.buildings), fetch(FILES.roads)]);
+                const bData = await bRes.json();
+                const rData = await rRes.json();
 
-            // 3. LADDA RESTEN AV KARTAN (Vägar och Grannhus)
-            renderMapBackground(v, data, lon, lat);
-            loadRoads(v, ROADS_URL, lon, lat);
+                // 2. Hitta positionen för 8052 för att använda som nollpunkt
+                const anchor = bData.features.find(f => f.properties.Building_ID == TARGET_ID);
+                if (!anchor) return console.error("Hittade inte 8052 i GeoJSON");
 
-        } catch (err) { console.error("Sync-fel:", err); }
-    }
+                const originX = anchor.geometry.coordinates[0][0][0];
+                const originY = anchor.geometry.coordinates[0][0][1];
+                const scale = 111320; 
 
-    function renderMapBackground(v, data, originLon, originLat) {
-        const scene = v._scene || v.context?.getScene();
-        const scale = 111320;
-        const mat = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
-
-        data.features.forEach(f => {
-            if (f.properties.Building_ID == TARGET_ID) return; // Rita inte 8052 (IFC-modellen är där)
-
-            const shape = new THREE.Shape();
-            f.geometry.coordinates[0].forEach((c, i) => {
-                const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
-                const z = (c[1] - originLat) * scale;
-                if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
-            });
-
-            const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false }), mat);
-            mesh.rotation.x = -Math.PI / 2;
-            mesh.position.y = -2; 
-            scene.add(mesh);
-        });
-    }
-
-    async function loadRoads(v, url, originLon, originLat) {
-        const scene = v._scene || v.context?.getScene();
-        const res = await fetch(url);
-        const data = await res.json();
-        const scale = 111320;
-        const roadMat = new THREE.LineBasicMaterial({ color: 0x555555 });
-
-        data.features.forEach(f => {
-            if (f.geometry.type === "LineString") {
-                const points = [];
-                f.geometry.coordinates.forEach(c => {
-                    const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
-                    const z = (c[1] - originLat) * scale;
-                    points.push(new THREE.Vector3(x, -2.1, z));
+                // 3. RITA VÄGAR (Mörkgrå linjer)
+                const roadMat = new THREE.LineBasicMaterial({ color: 0x555555 });
+                rData.features.forEach(f => {
+                    if (f.geometry.type === "LineString") {
+                        const points = [];
+                        f.geometry.coordinates.forEach(c => {
+                            const x = (c[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
+                            const z = (c[1] - originY) * scale;
+                            points.push(new THREE.Vector3(x, -2.1, z)); // Ligger precis under marken
+                        });
+                        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), roadMat));
+                    }
                 });
-                scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(points), roadMat));
-            }
-        });
-    }
 
-    const check = setInterval(() => {
-        if (typeof viewer !== 'undefined' && viewer._models?.length > 0) {
-            clearInterval(check);
-            syncModelToMap(viewer);
+                // 4. RITA GRANNBYGGNADER (Vita boxar)
+                const buildMat = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+                bData.features.forEach(f => {
+                    if (f.properties.Building_ID == TARGET_ID) return; // Din IFC-modell står här
+
+                    if (f.geometry.type === "Polygon") {
+                        const shape = new THREE.Shape();
+                        f.geometry.coordinates[0].forEach((c, i) => {
+                            const x = (c[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
+                            const z = (c[1] - originY) * scale;
+                            if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
+                        });
+                        const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false }), buildMat);
+                        mesh.rotation.x = -Math.PI / 2;
+                        mesh.position.y = -2; // Justera så de står på marknivå
+                        scene.add(mesh);
+                    }
+                });
+                console.log("Karta inlagd!");
+            } catch (err) { console.error("Kunde inte ladda kartdata:", err); }
         }
-    }, 2000);
-})();
+
+        // Kontrollera varje sekund om viewern är redo
+        const timer = setInterval(() => {
+            if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
+                clearInterval(timer);
+                loadMap(viewer);
+            }
+        }, 1500);
+    })();
 </script>
 </body>
 </html>
