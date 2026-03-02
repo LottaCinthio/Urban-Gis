@@ -280,43 +280,55 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
     async function loadNeighborBuildings(viewerInstance) {
         try {
+            // Se till att filnamnet är exakt buildings.geojson
             const response = await fetch('./data/buildings.geojson');
+            if (!response.ok) {
+                console.error("Hittade inte buildings.geojson. Kontrollera att den ligger i mappen 'data'.");
+                return;
+            }
             const data = await response.json();
 
-            // Vi behöver Three.js som ofta finns inuti viewer-objektet eller globalt
-            const T = window.THREE; 
+            // xBIM har ofta THREE inbyggt i objektet eller i window
+            const T = window.THREE || viewerInstance.THREE; 
             if (!T) {
-                console.error("Three.js hittades inte. Väntar...");
+                console.error("Three.js biblioteket hittades inte.");
                 return;
             }
 
-            // Hitta den interna Three.js-scenen i xBIM
-            const scene = viewerInstance._scene || viewerInstance.context?.getScene();
-            if (!scene) return;
+            // Vi hämtar scenen via xBIM:s interna 'context'
+            const scene = viewerInstance._scene || (viewerInstance.context && viewerInstance.context.getScene ? viewerInstance.context.getScene() : null);
+            
+            if (!scene) {
+                console.error("Kunde inte hitta 3D-scenen i viewern.");
+                return;
+            }
 
+            // Material: Ljusblå färg för att det ska synas tydligt mot svart bakgrund
             const material = new T.MeshPhongMaterial({ 
-                color: 0xaaaaaa, 
+                color: 0x00aaff, 
                 transparent: true, 
-                opacity: 0.5,
+                opacity: 0.6,
                 side: T.DoubleSide 
             });
 
-            // Koordinater för att centrera på Öxnehaga
-            // originX/Y är longitud/latitud för byggnad 8052
-            const originX = 14.242; 
-            const originY = 57.782;
+            // KOORDINATER FÖR JÖNKÖPING / ÖXNEHAGA (Huvudfokus vid byggnad 8052)
+            const originX = 14.2429; 
+            const originY = 57.7825;
             const scale = 111320; 
 
             data.features.forEach(feature => {
-                // Hoppa över huvudbyggnaden
-                if (feature.properties.FID === 24597 || feature.properties.Building_ID == TARGET_ID) return;
+                const props = feature.properties;
+                const bID = props.Building_ID || props.id || props.FID;
+
+                // Hoppa över huvudbyggnaden och den specifika krocken i datan
+                if (bID == TARGET_ID || props.FID === 24597) return;
 
                 if (feature.geometry.type === "Polygon") {
                     const coords = feature.geometry.coordinates[0];
                     const shape = new T.Shape();
 
                     coords.forEach((coord, index) => {
-                        // Projektion till meter
+                        // Projektion från GPS till 3D-meter (Mercator-ish)
                         const x = (coord[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
                         const y = (coord[1] - originY) * scale;
                         
@@ -324,29 +336,37 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                         else shape.lineTo(x, y);
                     });
 
-                    const geometry = new T.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false });
+                    // Skapa 3D-boxen för huset
+                    const geometry = new T.ExtrudeGeometry(shape, { 
+                        depth: props.height || 10, 
+                        bevelEnabled: false 
+                    });
+                    
                     const mesh = new T.Mesh(geometry, material);
                     
-                    // xBIM använder ofta andra axlar, vi roterar för att ligga på "marken"
+                    // xBIM rotation (Z är uppåt i GIS, men i Three.js är det ofta Y)
                     mesh.rotation.x = -Math.PI / 2;
                     
+                    // Justera höjden (Y-axel) så de inte ligger under modellen
+                    mesh.position.y = -2; 
+
                     scene.add(mesh);
-                }
-            });
-            console.log("Grannbyggnader inlagda.");
+                });
+            }
+            console.log("Grannbyggnader har lagts till framgångsrikt.");
         } catch (e) {
-            console.log("Kunde inte ladda GeoJSON:", e);
+            console.error("Fel vid laddning:", e);
         }
     }
 
-    // Vänta på att viewer-objektet är skapat och redo
-    const timer = setInterval(() => {
+    // Vi väntar på att xBIM-viewern ska ha startat ordentligt
+    const checkViewer = setInterval(() => {
         if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
             loadNeighborBuildings(viewer);
-            clearInterval(timer);
+            clearInterval(checkViewer);
         }
     }, 1000);
 })();
-// --- SLUT ---
+// --- SLUT PÅ XBIM-TILLÄGG ---
 </body>
 </html>
