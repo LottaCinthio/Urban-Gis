@@ -275,93 +275,92 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </script>
 
 <script>
-        (function() {
-            const TARGET_BUILDING_ID = 8052;
+        // --- START: UPPDATERAD KOORDINAT- OCH ID-FIX ---
+    (function() {
+        const TARGET_ID = 8052; // Din huvudbyggnad
 
-            async function loadNeighborBuildings(viewerInstance) {
-                console.log("xBIM hittad! Laddar grannbyggnader...");
-                try {
-                    const response = await fetch('./data/buildings.geojson');
-                    if (!response.ok) {
-                        console.error("Kunde inte hitta './data/buildings.geojson'");
-                        return;
-                    }
-                    const data = await response.json();
-
-                    // Hämta Three.js biblioteket som xBIM använder
-                    const T = window.THREE;
-                    if (!T) {
-                        console.error("Three.js (THREE) hittades inte i fönstret.");
-                        return;
-                    }
-
-                    // Hitta scenen (xBIM placerar den oftast i _scene eller via context)
-                    const scene = viewerInstance._scene || 
-                                 (viewerInstance.context && viewerInstance.context.getScene ? viewerInstance.context.getScene() : null);
-                    
-                    if (!scene) {
-                        console.error("Kunde inte lokalisera 3D-scenen inuti viewern.");
-                        return;
-                    }
-
-                    const material = new T.MeshPhongMaterial({ 
-                        color: 0x00aaff, 
-                        transparent: true, 
-                        opacity: 0.6,
-                        side: T.DoubleSide 
-                    });
-
-                    // Koordinatinställningar för att matcha Öxnehaga
-                    const originX = 14.2429; 
-                    const originY = 57.7825;
-                    const scale = 111320; 
-
-                    data.features.forEach(feature => {
-                        const props = feature.properties;
-                        // Hoppa över huvudbyggnaden
-                        if (props.Building_ID == TARGET_BUILDING_ID || props.FID === 24597) return;
-
-                        if (feature.geometry && feature.geometry.type === "Polygon") {
-                            const coords = feature.geometry.coordinates[0];
-                            const shape = new T.Shape();
-
-                            coords.forEach((coord, index) => {
-                                const x = (coord[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
-                                const y = (coord[1] - originY) * scale;
-                                
-                                if (index === 0) shape.moveTo(x, y);
-                                else shape.lineTo(x, y);
-                            });
-
-                            const geometry = new T.ExtrudeGeometry(shape, { 
-                                depth: props.height || 10, 
-                                bevelEnabled: false 
-                            });
-                            
-                            const mesh = new T.Mesh(geometry, material);
-                            mesh.rotation.x = -Math.PI / 2;
-                            
-                            // Justera så att de inte "svävar" eller hamnar under golvet
-                            mesh.position.y = -2; 
-
-                            scene.add(mesh);
-                        }
-                    });
-                    console.log("Grannbyggnader inlagda!");
-                } catch (e) {
-                    console.error("Fel vid laddning av omgivning:", e);
+        async function loadNeighborBuildings(viewerInstance) {
+            try {
+                // VIKTIGT: Kontrollera att filnamnet matchar din uppladdade fil
+                const response = await fetch('./data/buildings_with_id.geojson');
+                if (!response.ok) {
+                    console.error("Kunde inte hitta ./data/buildings_with_id.geojson");
+                    return;
                 }
+                const data = await response.json();
+
+                const T = window.THREE || viewerInstance.THREE;
+                const scene = viewerInstance._scene || (viewerInstance.context && viewerInstance.context.getScene());
+                
+                if (!scene || !T) return;
+
+                // Material för omgivningen: Vita boxar (lite genomskinliga)
+                const whiteMaterial = new T.MeshPhongMaterial({ 
+                    color: 0xffffff, 
+                    transparent: true, 
+                    opacity: 0.7,
+                    side: T.DoubleSide 
+                });
+
+                // EXAKTA KOORDINATER FÖR BYGGNAD 8052 (Öxnehaga)
+                // Vi centrerar allt runt denna punkt så att de hamnar rätt i din vy
+                const originX = 14.2429; 
+                const originY = 57.7825;
+                const scale = 111320; 
+
+                data.features.forEach(feature => {
+                    const props = feature.properties;
+                    // Vi hoppar över 8052 eftersom den redan finns som din snygga IFC-modell
+                    if (props.Building_ID == TARGET_ID || props.FID === 24597) return;
+
+                    if (feature.geometry && feature.geometry.type === "Polygon") {
+                        const coords = feature.geometry.coordinates[0];
+                        const shape = new T.Shape();
+
+                        coords.forEach((coord, index) => {
+                            // Omvandling från Long/Lat till lokala meter
+                            const x = (coord[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
+                            const y = (coord[1] - originY) * scale;
+                            
+                            if (index === 0) shape.moveTo(x, y);
+                            else shape.lineTo(x, y);
+                        });
+
+                        const geometry = new T.ExtrudeGeometry(shape, { 
+                            depth: props.height || 12, 
+                            bevelEnabled: false 
+                        });
+                        
+                        const mesh = new T.Mesh(geometry, whiteMaterial);
+                        
+                        // Rotera för att matcha xBIM:s golvplan
+                        mesh.rotation.x = -Math.PI / 2;
+                        
+                        // Justera höjden (Y) så de står på samma marknivå som din modell
+                        mesh.position.y = -1.5; 
+
+                        scene.add(mesh);
+                    }
+                });
+
+                // Tvinga viewern att rita om scenen så de nya husen syns direkt
+                if (viewerInstance.forceRender) viewerInstance.forceRender();
+                console.log("Omgivning med vita boxar har laddats!");
+
+            } catch (e) {
+                console.error("Ett fel uppstod:", e);
             }
+        }
 
-            // Denna loop kollar varje sekund om viewern har startat
-            const checkViewer = setInterval(() => {
-                // Vi kollar om 'viewer' variabeln finns och om den har laddat en modell
-                if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
-                    loadNeighborBuildings(viewer);
-                    clearInterval(checkViewer);
-                }
-            }, 1000);
-        })();
+        // Vänta tills viewern är redo
+        const checkViewer = setInterval(() => {
+            if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
+                loadNeighborBuildings(viewer);
+                clearInterval(checkViewer);
+            }
+        }, 1500);
+    })();
+    // --- SLUT ---
     </script>
     ```
 
