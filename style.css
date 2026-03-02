@@ -62,3 +62,7 @@ input:checked + .slider:before { transform: translateX(14px); }
 
 .layer-group { background: #f9f9f9; padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #eee; }
 .group-header { font-size: 0.75em; text-transform: uppercase; color: #888; margin-bottom: 10px; font-weight: bold; }
+.group-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0; }
+.group-header-row .switch { margin-left: 10px; }
+.accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
+.accordion-content.open { max-height: 1200px; margin-top: 10px; }

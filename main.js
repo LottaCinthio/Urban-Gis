@@ -41,6 +41,46 @@ require([
   });
 
   let roadsLayerRef;
+  const iconLayerRefs = [];
+
+  function iconSizeForScale(scale) {
+    const minScale = 2500;
+    const maxScale = 1200000;
+    const minSize = 4;
+    const maxSize = 30;
+    const s = Math.max(minScale, Math.min(maxScale, scale || maxScale));
+    const t = (maxScale - s) / (maxScale - minScale);
+    return minSize + (maxSize - minSize) * t;
+  }
+
+  function applyDynamicIconSizing(view) {
+    const size = iconSizeForScale(view.scale);
+    iconLayerRefs.forEach((layer) => {
+      if (!layer || !layer.renderer || !layer.renderer.symbol || !layer.renderer.symbol.symbolLayers) return;
+      const rendererJson = layer.renderer.toJSON();
+      if (
+        rendererJson &&
+        rendererJson.symbol &&
+        rendererJson.symbol.symbolLayers &&
+        rendererJson.symbol.symbolLayers[0]
+      ) {
+        rendererJson.symbol.symbolLayers[0].size = size;
+        layer.renderer = rendererJson;
+      }
+    });
+  }
+
+  function setupAccordionPanel(toggleId, contentId) {
+    const toggle = document.getElementById(toggleId);
+    const content = document.getElementById(contentId);
+    if (!toggle || !content) return;
+
+    toggle.checked = false;
+    content.classList.remove("open");
+    toggle.addEventListener("change", () => {
+      content.classList.toggle("open", toggle.checked);
+    });
+  }
 
   layersInfo.forEach(info => {
     let renderer;
@@ -115,10 +155,28 @@ require([
     });
 
     if (info.name === "Road Network") roadsLayerRef = layer;
+    if (
+      info.type.endsWith("-icon") ||
+      info.type === "fire-incident-house" ||
+      info.type === "hospital-incident-icon" ||
+      info.type === "crime-icon"
+    ) {
+      iconLayerRefs.push(layer);
+    }
     map.add(layer);
   });
 
   const view = new SceneView({ container: "viewDiv", map: map, camera: { position: { x: 14.242, y: 57.782, z: 1200 }, tilt: 45 } });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => {
+      setupAccordionPanel("toggleEmergencyPanel", "emergencyPanelContent");
+      setupAccordionPanel("toggleAccessibilityPanel", "accessibilityPanelContent");
+    });
+  } else {
+    setupAccordionPanel("toggleEmergencyPanel", "emergencyPanelContent");
+    setupAccordionPanel("toggleAccessibilityPanel", "accessibilityPanelContent");
+  }
 
   // --- KORRIGERAD MÄTNINGSLOGIK FÖR EXAKT PLACERING ---
   let points = [];
@@ -202,6 +260,9 @@ require([
   };
 
   view.when(() => {
+    applyDynamicIconSizing(view);
+    view.watch("scale", () => applyDynamicIconSizing(view));
+
     layersInfo.forEach(info => {
       const cb = document.getElementById(info.id);
       if (cb) cb.addEventListener("change", (e) => {
