@@ -5,9 +5,8 @@ require([
   "esri/Graphic",
   "esri/layers/GraphicsLayer",
   "esri/geometry/geometryEngine",
-  "esri/geometry/Polyline",
-  "esri/geometry/Point"
-], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline, Point) {
+  "esri/geometry/Polyline"
+], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline) {
 
   const layersInfo = [
     { name: "Road Network", file: "roads.geojson", type: "road-network", id: "toggleRoads" },
@@ -249,12 +248,11 @@ require([
     
     const mapPoint = event.mapPoint ? event.mapPoint.clone() : view.toMap(event);
     if (!mapPoint) return;
-    const snappedPoint = await snapPointToRoad(mapPoint);
 
     if (points.length >= 2) { clearAnalysis(); }
 
     const marker = new Graphic({
-      geometry: snappedPoint,
+      geometry: mapPoint,
       symbol: analysisPointSymbol(points.length === 0 ? [76, 175, 80, 1] : [244, 67, 54, 1]),
       elevationInfo: { mode: "relative-to-ground", offset: 1.2 }
     });
@@ -275,8 +273,8 @@ require([
       return;
     }
 
-    const startCandidates = nearestGraphNodeKeys(start, roadGraph, 10, 180);
-    const endCandidates = nearestGraphNodeKeys(end, roadGraph, 10, 180);
+    const startCandidates = nearestGraphNodeKeys(start, roadGraph, 8, 80);
+    const endCandidates = nearestGraphNodeKeys(end, roadGraph, 8, 80);
     if (!startCandidates.length || !endCandidates.length) {
       document.getElementById("res-dist").innerText = "No route";
       document.getElementById("res-time").innerText = "-";
@@ -315,27 +313,6 @@ require([
       spatialReference: roadGraph.spatialReference
     });
 
-    const startNode = roadGraph.nodes.get(best.s.key);
-    const endNode = roadGraph.nodes.get(best.e.key);
-    if (points[0] && startNode) {
-      points[0].geometry = new Point({
-        x: startNode.x,
-        y: startNode.y,
-        spatialReference: roadGraph.spatialReference
-      });
-      points[0].symbol = analysisPointSymbol([76, 175, 80, 1]);
-      points[0].elevationInfo = { mode: "relative-to-ground", offset: 1.2 };
-    }
-    if (points[1] && endNode) {
-      points[1].geometry = new Point({
-        x: endNode.x,
-        y: endNode.y,
-        spatialReference: roadGraph.spatialReference
-      });
-      points[1].symbol = analysisPointSymbol([244, 67, 54, 1]);
-      points[1].elevationInfo = { mode: "relative-to-ground", offset: 1.2 };
-    }
-
     routeGraphicRef = new Graphic({
       geometry: routeGeometry,
       symbol: analysisRouteSymbol(),
@@ -356,23 +333,6 @@ require([
     document.getElementById("res-time").innerText = "-"; 
     document.getElementById("res-speed").innerText = "-";
   };
-
-  async function snapPointToRoad(point) {
-    if (!point) return point;
-    if (!roadsLayerRef) return point;
-    if (!roadGraph) roadGraph = await buildRoadGraph();
-    if (!roadGraph || !roadGraph.nodes || !roadGraph.nodes.size) return point;
-
-    const nearest = nearestGraphNodeKeys(point, roadGraph, 1, 180);
-    if (!nearest.length) return point;
-    const node = roadGraph.nodes.get(nearest[0].key);
-    if (!node) return point;
-    return new Point({
-      x: node.x,
-      y: node.y,
-      spatialReference: roadGraph.spatialReference
-    });
-  }
 
   async function buildRoadGraph() {
     const query = roadsLayerRef.createQuery();
