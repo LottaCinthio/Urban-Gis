@@ -87,21 +87,89 @@
                 console.log("Kartan är på plats!");
             } catch (e) { console.error("Karta-fel:", e); }
         }
-
-        // Starta viewern
+// Starta viewern
         $(document).ready(function() {
             if (typeof Viewer !== 'undefined') {
                 const viewer = new Viewer("viewer");
-                viewer.on("loaded", () => {
-                    viewer.start();
-                    loadContext(viewer);
+                
+                viewer.on("loaded", e => { 
+                    try { 
+                        viewer.start();
+                        // Här anropar vi kart-funktionen
+                        loadMapContext(viewer); 
+                    } catch (err) {
+                        console.error("Fel vid start av viewer:", err);
+                    }
                 });
-                // Ladda din modell här (unzip/loadAsync)
-                // viewer.loadAsync(envelope);
-            } else {
-                console.error("xBIM Viewer hittades inte. Kontrollera skript-referenser.");
+
+                // Här laddas din befintliga IFC-modell (behåll din unzip-kod här)
+                const envelope = baseToBlob(modelgeo);
+                viewer.loadAsync(envelope);
             }
         });
+        async function loadMapContext(v) {
+    console.log("Synkroniserar karta med byggnad 8052...");
+    try {
+        const [bRes, rRes] = await Promise.all([
+            fetch('./data/buildings_with_id.geojson'),
+            fetch('./data/roads.geojson')
+        ]);
+        
+        if (!bRes.ok || !rRes.ok) throw new Error("Kunde inte ladda GeoJSON-filerna från /data/");
+        
+        const buildings = await bRes.json();
+        const roads = await rRes.json();
+
+        const scene = v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
+        if (!scene) return;
+
+        // HITTA ANKARE (Building 8052)
+        const anchor = buildings.features.find(f => f.properties.Building_ID == 8052);
+        if (!anchor) {
+            console.error("Hittade inte byggnad 8052 i GeoJSON.");
+            return;
+        }
+
+        const lon0 = anchor.geometry.coordinates[0][0][0];
+        const lat0 = anchor.geometry.coordinates[0][0][1];
+        const scale = 111320;
+
+        // RITA VÄGAR (Gråa linjer)
+        const roadMat = new THREE.LineBasicMaterial({ color: 0x666666 });
+        roads.features.forEach(f => {
+            if (f.geometry.type === "LineString") {
+                const pts = f.geometry.coordinates.map(c => {
+                    const x = (c[0] - lon0) * (scale * Math.cos(lat0 * Math.PI / 180));
+                    const z = (c[1] - lat0) * scale;
+                    return new THREE.Vector3(x, -1.8, z); 
+                });
+                scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), roadMat));
+            }
+        });
+
+        // RITA BYGGNADER (Vita boxar)
+        const buildMat = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
+        buildings.features.forEach(f => {
+            if (f.properties.Building_ID == 8052) return; 
+
+            if (f.geometry.type === "Polygon") {
+                const shape = new THREE.Shape();
+                f.geometry.coordinates[0].forEach((c, i) => {
+                    const x = (c[0] - lon0) * (scale * Math.cos(lat0 * Math.PI / 180));
+                    const z = (c[1] - lat0) * scale;
+                    if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
+                });
+                const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false }), buildMat);
+                mesh.rotation.x = -Math.PI / 2;
+                mesh.position.y = -2;
+                scene.add(mesh);
+            }
+        });
+        console.log("Kartan laddad!");
+    } catch (err) {
+        console.error("Fel i kart-motorn:", err);
+    }
+}
     </script>
 </body>
 </html>
