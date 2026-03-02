@@ -275,22 +275,30 @@ https://github.com/nodeca/pako/blob/main/LICENSE
  </script>
  <script>
 (function() {
-    // 1. DE EXAKTA KOORDINATERNA (Vi testar Perplexitys baslinje men med dynamisk kontroll)
-    const refLon = 14.1610664; 
-    const refLat = 57.7818451;
-    const targetId = 8052;
+    const TARGET_ID = 8052;
+    const FILE_PATH = 'data/buildings_with_id.geojson';
 
-    async function injectContext() {
-        console.log("Försöker injicera kontext...");
-        
-        // Hitta scenen (xBIM context)
-        const scene = viewer._scene || (viewer.context && viewer.context.getScene ? viewer.context.getScene() : null);
-        if (!scene) return console.error("Hittade inte 3D-scenen");
-
+    async function injectContext(v) {
+        console.log("xBIM klar. Påbörjar synkronisering av grannhus...");
         try {
-            const response = await fetch("data/buildings_with_id.geojson");
-            const data = await response.json();
-            
+            const res = await fetch(FILE_PATH);
+            const data = await res.json();
+
+            // 1. Hitta rätt scen
+            const scene = v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
+            if (!scene) return console.error("Kunde inte hitta 3D-scenen");
+
+            // 2. HITTA ANKARE (Hitta byggnad 8052 i GeoJSON för att få nollpunkten)
+            const anchor = data.features.find(f => f.properties.Building_ID == TARGET_ID || f.properties.BuildingID == TARGET_ID);
+            if (!anchor) return console.error("Hittade inte byggnad 8052 i GeoJSON-filen. Kontrollera ID!");
+
+            // Vi sätter nollpunkten till byggnad 8052:s första hörn
+            const refLon = anchor.geometry.coordinates[0][0][0];
+            const refLat = anchor.geometry.coordinates[0][0][1];
+            const scale = 111320; 
+
+            console.log("Ankarpunkt hittad vid:", refLon, refLat);
+
             const whiteMat = new THREE.MeshPhongMaterial({ 
                 color: 0xffffff, 
                 transparent: true, 
@@ -299,44 +307,43 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             });
 
             data.features.forEach(f => {
-                // Hoppa över huvudbyggnaden
-                if (f.properties.Building_ID == targetId || f.properties.BuildingID == targetId) return;
+                // Rita inte 8052 (IFC-modellen är redan där)
+                if (f.properties.Building_ID == TARGET_ID || f.properties.BuildingID == TARGET_ID) return;
 
                 if (f.geometry && f.geometry.type === "Polygon") {
-                    const coords = f.geometry.coordinates[0];
                     const shape = new THREE.Shape();
+                    const coords = f.geometry.coordinates[0];
 
                     coords.forEach((c, i) => {
-                        // MATEMATIK: Beräkna meter från referenspunkten
-                        // X = Longitud, Z = Latitud (i 3D-rymden är Y ofta "upp")
-                        const x = (c[0] - refLon) * 111320 * Math.cos(refLat * Math.PI / 180);
+                        // Beräkna meter relativt till byggnad 8052
+                        const x = (c[0] - refLon) * scale * Math.cos(refLat * Math.PI / 180);
                         const z = (c[1] - refLat) * 110574;
 
-                        if (i === 0) shape.moveTo(x, -z); // Vi vänder på Z för att matcha kart-orientering
+                        if (i === 0) shape.moveTo(x, -z);
                         else shape.lineTo(x, -z);
                     });
 
                     const geo = new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false });
                     const mesh = new THREE.Mesh(geo, whiteMat);
                     
-                    // ROTATION: Lägg husen platt på marken
+                    // xBIM-justering: Lägg dem på marken
                     mesh.rotation.x = -Math.PI / 2; 
-                    mesh.position.y = -1; // Placera precis vid "golvet"
+                    mesh.position.y = -1; 
                     
                     scene.add(mesh);
                 }
             });
-            console.log("Kontext injicerad!");
+            console.log("KLART: Omgivande byggnader har lagts till runt 8052.");
         } catch (err) {
-            console.error("Fel vid laddning av GeoJSON:", err);
+            console.error("Kunde inte ladda GeoJSON:", err);
         }
     }
 
-    // Vänta på att viewern är redo
+    // Vänta tills viewern är helt redo
     const timer = setInterval(() => {
         if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
             clearInterval(timer);
-            injectContext();
+            injectContext(viewer);
         }
     }, 2000);
 })();
