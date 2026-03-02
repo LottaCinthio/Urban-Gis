@@ -57,16 +57,17 @@ require([
   function applyDynamicIconSizing(view) {
     const size = iconSizeForScale(view.scale);
     iconLayerRefs.forEach((layer) => {
-      if (!layer || !layer.renderer || !layer.renderer.symbol || !layer.renderer.symbol.symbolLayers) return;
-      const rendererJson = layer.renderer.toJSON();
-      if (
-        rendererJson &&
-        rendererJson.symbol &&
-        rendererJson.symbol.symbolLayers &&
-        rendererJson.symbol.symbolLayers[0]
-      ) {
-        rendererJson.symbol.symbolLayers[0].size = size;
-        layer.renderer = rendererJson;
+      try {
+        if (!layer || !layer.renderer || !layer.renderer.clone) return;
+        const rendererClone = layer.renderer.clone();
+        if (!rendererClone.symbol || !rendererClone.symbol.symbolLayers || !rendererClone.symbol.symbolLayers.length) return;
+        const symbolLayer = rendererClone.symbol.symbolLayers.getItemAt
+          ? rendererClone.symbol.symbolLayers.getItemAt(0)
+          : rendererClone.symbol.symbolLayers[0];
+        if (!symbolLayer) return;
+        symbolLayer.size = size;
+        layer.renderer = rendererClone;
+      } catch (_) {
       }
     });
   }
@@ -153,6 +154,12 @@ require([
       if (checkbox) checkbox.checked = true; 
     }
 
+    const isIconLayer =
+      info.type.endsWith("-icon") ||
+      info.type === "fire-incident-house" ||
+      info.type === "hospital-incident-icon" ||
+      info.type === "crime-icon";
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
@@ -160,16 +167,11 @@ require([
       outFields: ["*"],
       popupTemplate: popupTemplate,
       visible: isVisible,
-      elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : 0.5 }
+      elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : (isIconLayer ? 25 : 0.5) }
     });
 
     if (info.name === "Road Network") roadsLayerRef = layer;
-    if (
-      info.type.endsWith("-icon") ||
-      info.type === "fire-incident-house" ||
-      info.type === "hospital-incident-icon" ||
-      info.type === "crime-icon"
-    ) {
+    if (isIconLayer) {
       iconLayerRefs.push(layer);
     }
     map.add(layer);
