@@ -31,7 +31,7 @@ require([
 
   // VIKTIGT: Sätt elevationInfo så att mätningen alltid syns ovanpå marken
   const analysisLayer = new GraphicsLayer({ 
-    elevationInfo: { mode: "relative-to-ground", offset: 5 } 
+    elevationInfo: { mode: "relative-to-ground", offset: 0.3 } 
   });
   
   const map = new Map({ 
@@ -246,20 +246,37 @@ require([
       return;
     }
 
-    const startKey = nearestGraphNodeKey(start, roadGraph);
-    const endKey = nearestGraphNodeKey(end, roadGraph);
-    if (!startKey || !endKey) {
-      window.clearAnalysis();
+    const startCandidates = nearestGraphNodeKeys(start, roadGraph, 10, 180);
+    const endCandidates = nearestGraphNodeKeys(end, roadGraph, 10, 180);
+    if (!startCandidates.length || !endCandidates.length) {
+      document.getElementById("res-dist").innerText = "No route";
+      document.getElementById("res-time").innerText = "-";
+      document.getElementById("res-speed").innerText = "-";
       return;
     }
 
-    const pathResult = shortestPathDijkstra(roadGraph, startKey, endKey);
-    if (!pathResult || !pathResult.path || pathResult.path.length < 2) {
-      window.clearAnalysis();
+    let best = null;
+    for (let i = 0; i < startCandidates.length; i++) {
+      for (let j = 0; j < endCandidates.length; j++) {
+        const s = startCandidates[i];
+        const e = endCandidates[j];
+        const pathResult = shortestPathDijkstra(roadGraph, s.key, e.key);
+        if (!pathResult || !pathResult.path || pathResult.path.length < 2) continue;
+        const totalCost = pathResult.distanceMeters + s.snapDistance + e.snapDistance;
+        if (!best || totalCost < best.totalCost) {
+          best = { ...pathResult, totalCost, s, e };
+        }
+      }
+    }
+
+    if (!best) {
+      document.getElementById("res-dist").innerText = "No route";
+      document.getElementById("res-time").innerText = "-";
+      document.getElementById("res-speed").innerText = "-";
       return;
     }
 
-    const routePath = pathResult.path.map((k) => {
+    const routePath = best.path.map((k) => {
       const n = roadGraph.nodes.get(k);
       return [n.x, n.y];
     });
@@ -275,7 +292,7 @@ require([
     });
     analysisLayer.add(routeGraphicRef);
 
-    lastRouteDistanceKm = pathResult.distanceMeters / 1000;
+    lastRouteDistanceKm = best.totalCost / 1000;
     updateAnalysisSummary(lastRouteDistanceKm);
   }
 
@@ -297,7 +314,7 @@ require([
     const { features } = await roadsLayerRef.queryFeatures(query);
 
     const nodes = new Map();
-    const keyFor = (x, y) => `${x.toFixed(1)}|${y.toFixed(1)}`;
+    const keyFor = (x, y) => `${(Math.round(x / 2) * 2).toFixed(0)}|${(Math.round(y / 2) * 2).toFixed(0)}`;
 
     function ensureNode(x, y) {
       const key = keyFor(x, y);
@@ -344,6 +361,17 @@ require([
       }
     });
     return bestKey;
+  }
+
+  function nearestGraphNodeKeys(point, graph, limit, maxDistMeters) {
+    if (!point || !graph || !graph.nodes || !graph.nodes.size) return [];
+    const candidates = [];
+    graph.nodes.forEach((n, key) => {
+      const d = Math.hypot(point.x - n.x, point.y - n.y);
+      if (d <= maxDistMeters) candidates.push({ key, snapDistance: d });
+    });
+    candidates.sort((a, b) => a.snapDistance - b.snapDistance);
+    return candidates.slice(0, limit);
   }
 
   function shortestPathDijkstra(graph, startKey, endKey) {
