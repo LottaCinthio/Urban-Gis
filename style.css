@@ -24,6 +24,11 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
   border: 1px solid #ccc; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 20px;
 }
 
+/* Flytta ArcGIS-kontrollerna nedåt så de inte krockar med rubriken */
+#viewDiv .esri-ui-top-left {
+  top: 80px;
+}
+
 .row-container { display: flex; align-items: center; width: 100%; margin-bottom: 8px; }
 .indent-text { padding-left: 20px; display: flex; align-items: center; }
 .no-toggle { font-style: italic; color: #888; margin-top: -4px; padding-left: 20px; display: flex; align-items: center; }
