@@ -280,9 +280,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const TARGET_ID = 8052;
             const BUILDINGS_FILE = "./data/buildings.geojson";
             const BUILDINGS_WITH_ID_FILE = "./data/buildings_with_id.geojson";
+            const ROADS_FILE = "./data/roads.geojson";
             const DEG_TO_M = 111320;
             const CUBE_HEIGHT_M = 8;
             const MAX_RADIUS_M = 300;
+            const ROAD_RADIUS_M = 450;
             const MIN_SIZE = 1;
             // xBIM här beter sig som Z-up i din vy, så vi mappar geo till XY-plan och höjd till Z.
             const SECOND_AXIS_SIGN = 1;
@@ -427,16 +429,19 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }
 
             async function initContext(v) {
-                const [allBuildingsRes, buildingsWithIdRes] = await Promise.all([
+                const [allBuildingsRes, buildingsWithIdRes, roadsRes] = await Promise.all([
                     fetch(BUILDINGS_FILE),
-                    fetch(BUILDINGS_WITH_ID_FILE)
+                    fetch(BUILDINGS_WITH_ID_FILE),
+                    fetch(ROADS_FILE)
                 ]);
                 if (!allBuildingsRes.ok) throw new Error("Hittade inte data/buildings.geojson");
                 if (!buildingsWithIdRes.ok) throw new Error("Hittade inte data/buildings_with_id.geojson");
+                if (!roadsRes.ok) throw new Error("Hittade inte data/roads.geojson");
 
-                const [allBuildings, buildingsWithId] = await Promise.all([
+                const [allBuildings, buildingsWithId, roads] = await Promise.all([
                     allBuildingsRes.json(),
-                    buildingsWithIdRes.json()
+                    buildingsWithIdRes.json(),
+                    roadsRes.json()
                 ]);
 
                 const anchor = buildingsWithId.features.find((f) => f.properties && f.properties.Building_ID == TARGET_ID);
@@ -462,6 +467,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
                 return {
                     allBuildings,
+                    roads,
                     originLon,
                     originLat,
                     skipIndex,
@@ -512,12 +518,51 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 console.log("Omgivande byggnader ritade:", drawn, "Skala:", context.scale, "Radius(m):", MAX_RADIUS_M, "Radius(skalad):", maxRadiusScaled);
             }
 
+            function addRoadLines(scene, context) {
+                const roads = (context.roads && context.roads.features) || [];
+                const material = new THREE.LineBasicMaterial({
+                    color: 0xd9d9d9,
+                    transparent: true,
+                    opacity: 0.85
+                });
+
+                let drawn = 0;
+                roads.forEach((feature) => {
+                    if (!feature || !feature.geometry || feature.geometry.type !== "LineString") return;
+                    const coords = feature.geometry.coordinates || [];
+                    if (coords.length < 2) return;
+
+                    const points = [];
+                    let isNear = false;
+                    for (let i = 0; i < coords.length; i++) {
+                        const c = coords[i];
+                        const p = toLocalMeters(c[0], c[1], context.originLon, context.originLat);
+                        const dist = Math.sqrt(p.x * p.x + p.z * p.z);
+                        if (dist <= ROAD_RADIUS_M) isNear = true;
+                        points.push(new THREE.Vector3(
+                            context.ifcBounds.centerX + (p.x * context.scale),
+                            context.ifcBounds.centerY + ((p.z * context.scale) * SECOND_AXIS_SIGN),
+                            context.ifcBounds.minZ + 0.5
+                        ));
+                    }
+                    if (!isNear) return;
+
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const line = new THREE.Line(geometry, material);
+                    scene.add(line);
+                    drawn += 1;
+                });
+
+                console.log("Vägar ritade:", drawn, "Radius(m):", ROAD_RADIUS_M);
+            }
+
             async function initMap(v) {
                 try {
                     if (typeof THREE === "undefined") throw new Error("Three.js saknas");
                     const overlay = createOverlay(v);
                     const context = await initContext(v);
                     addBuildingCubes(overlay.scene, context);
+                    addRoadLines(overlay.scene, context);
                     startOverlayRenderLoop(v, overlay);
                 } catch (err) {
                     console.error("Karta-fel:", err.message);
