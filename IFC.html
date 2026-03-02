@@ -283,6 +283,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const CUBE_HEIGHT_M = 8;
             const MAX_RADIUS_M = 300;
             const MIN_SIZE = 1;
+            // xBIM här beter sig som Z-up i din vy, så vi mappar geo till XY-plan och höjd till Z.
+            const SECOND_AXIS_SIGN = 1;
             const OVERLAY_ID = "surrounding-buildings-overlay";
             let overlayState = null;
 
@@ -494,13 +496,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     const cubeHeight = Math.max(MIN_SIZE, CUBE_HEIGHT_M * context.scale * 0.3);
 
                     const cube = new THREE.Mesh(
-                        new THREE.BoxGeometry(width, cubeHeight, depth),
+                        new THREE.BoxGeometry(width, depth, cubeHeight),
                         material
                     );
                     cube.position.set(
                         context.ifcBounds.centerX + centerX,
-                        context.ifcBounds.minY + cubeHeight / 2,
-                        context.ifcBounds.centerZ + centerZ
+                        context.ifcBounds.centerY + (centerZ * SECOND_AXIS_SIGN),
+                        context.ifcBounds.minZ + cubeHeight / 2
                     );
                     scene.add(cube);
                     drawn += 1;
