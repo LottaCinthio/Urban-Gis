@@ -45,6 +45,20 @@ require([
   const alwaysOnToggleIds = ["toggleHospital", "toggleFirestation", "togglePolice", "toggleSchools", "toggleHealthcare"];
   let roadGraph = null;
 
+  function iconOffsetByType(type) {
+    if (type === "hospital-icon") return 1.8;
+    if (type === "fire-icon") return 2.0;
+    if (type === "police-icon") return 2.2;
+    if (type === "hospital-incident-icon") return 2.4;
+    if (type === "fire-incident-house") return 2.6;
+    if (type === "crime-icon") return 2.8;
+    if (type === "health-icon") return 1.9;
+    if (type === "school-icon") return 1.9;
+    if (type === "bus-icon") return 1.7;
+    if (type === "play-icon") return 1.7;
+    return 1.8;
+  }
+
   function iconSizeForScale(scale) {
     const minScale = 3000;
     const maxScale = 2500000;
@@ -166,7 +180,7 @@ require([
     const layerElevationInfo = info.type.includes("route")
       ? { mode: "relative-to-ground", offset: 5 }
       : (isIconLayer
-        ? { mode: "relative-to-scene", offset: 1.8 }
+        ? { mode: "relative-to-scene", offset: iconOffsetByType(info.type) }
         : { mode: "relative-to-ground", offset: 0.5 });
 
     const layer = new GeoJSONLayer({
