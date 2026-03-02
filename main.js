@@ -163,6 +163,12 @@ require([
       info.type === "hospital-incident-icon" ||
       info.type === "crime-icon";
 
+    const layerElevationInfo = info.type.includes("route")
+      ? { mode: "relative-to-ground", offset: 5 }
+      : (isIconLayer
+        ? { mode: "relative-to-scene", offset: 1.8 }
+        : { mode: "relative-to-ground", offset: 0.5 });
+
     const layer = new GeoJSONLayer({
       url: "./data/" + info.file + "?v=" + new Date().getTime(),
       title: info.name,
@@ -170,7 +176,7 @@ require([
       outFields: ["*"],
       popupTemplate: popupTemplate,
       visible: isVisible,
-      elevationInfo: { mode: "relative-to-ground", offset: info.type.includes("route") ? 5 : (isIconLayer ? 25 : 0.5) }
+      elevationInfo: layerElevationInfo
     });
 
     if (info.name === "Road Network") roadsLayerRef = layer;
