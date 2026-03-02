@@ -22,7 +22,7 @@ require([
     { name: "Hospital Incidents", file: "Incidents_hospital.geojson", type: "hospital-incident-icon", id: "toggleIncidents" },
     { name: "Hospital Routes", file: "Routes_from_hospital.geojson", type: "route", id: "toggleRoutes" },
     { name: "Fire Station", file: "Firestation.geojson", type: "fire-icon", id: "toggleFirestation" },
-    { name: "Fire Incidents", file: "Incidents_hospital.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
+    { name: "Fire Incidents", file: "fire-incedents.geojson", type: "fire-incident-house", id: "toggleFireIncidents" },
     { name: "Fire Routes", file: "firestation_routes.geojson", type: "fire-route", id: "toggleFireRoutes" },
     { name: "Police Station", file: "policestation.geojson", type: "police-icon", id: "togglePolice" },
     { name: "Crimes", file: "crime.geojson", type: "crime-icon", id: "toggleCrimes" },
