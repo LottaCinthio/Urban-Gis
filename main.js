@@ -43,6 +43,7 @@ require([
   let roadsLayerRef;
   const iconLayerRefs = [];
   const alwaysOnToggleIds = ["toggleHospital", "toggleFirestation", "togglePolice", "toggleSchools", "toggleHealthcare"];
+  let roadGraph = null;
 
   function iconSizeForScale(scale) {
     const minScale = 3000;
@@ -219,8 +220,7 @@ require([
   view.on("click", function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
     
-    // Tvinga SceneView att hitta den geografiska punkten på marken
-    const mapPoint = view.toMap(event);
+    const mapPoint = event.mapPoint ? event.mapPoint.clone() : view.toMap(event);
     if (!mapPoint) return;
 
     if (points.length >= 2) { clearAnalysis(); }
@@ -239,48 +239,44 @@ require([
   });
 
   async function calculateABRoute(start, end) {
-    // 1. Hitta vägsegment i närheten av klickpunkterna
-    const query = roadsLayerRef.createQuery();
-    query.geometry = geometryEngine.buffer(geometryEngine.union([start, end]), 500, "meters").extent;
-    query.returnGeometry = true;
-    
-    const { features } = await roadsLayerRef.queryFeatures(query);
-
-    // 2. Skapa en korridor för att filtrera vägar mellan A och B
-    const corridor = geometryEngine.geodesicBuffer(new Polyline({
-      paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]],
-      spatialReference: { wkid: 4326 }
-    }), 60, "meters");
-
-    const segments = features.filter(f => geometryEngine.intersects(corridor, f.geometry));
-    
-    let finalDist = 0;
-
-    if (segments.length > 0) {
-      // Slå ihop segmenten för att rita ut dem
-      const combinedRoute = geometryEngine.union(segments.map(s => s.geometry));
-      finalDist = geometryEngine.geodesicLength(combinedRoute, "kilometers");
-      routeGraphicRef = new Graphic({
-        geometry: combinedRoute,
-        symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
-      });
-      analysisLayer.add(routeGraphicRef);
-    } else {
-      // Fallback: Om inga vägar hittas i närheten, rita rak linje men varna i panelen
-      const fallback = new Polyline({
-        paths: [[[start.longitude, start.latitude], [end.longitude, end.latitude]]],
-        spatialReference: { wkid: 4326 }
-      });
-      finalDist = geometryEngine.geodesicLength(fallback, "kilometers") * 1.3;
-      routeGraphicRef = new Graphic({
-        geometry: fallback,
-        symbol: { type: "simple-line", color: [0, 122, 255, 0.7], width: 4, style: "dash" }
-      });
-      analysisLayer.add(routeGraphicRef);
+    if (!roadsLayerRef) return;
+    if (!roadGraph) roadGraph = await buildRoadGraph();
+    if (!roadGraph || !roadGraph.nodes.size) {
+      window.clearAnalysis();
+      return;
     }
 
-    lastRouteDistanceKm = finalDist;
-    updateAnalysisSummary(finalDist);
+    const startKey = nearestGraphNodeKey(start, roadGraph);
+    const endKey = nearestGraphNodeKey(end, roadGraph);
+    if (!startKey || !endKey) {
+      window.clearAnalysis();
+      return;
+    }
+
+    const pathResult = shortestPathDijkstra(roadGraph, startKey, endKey);
+    if (!pathResult || !pathResult.path || pathResult.path.length < 2) {
+      window.clearAnalysis();
+      return;
+    }
+
+    const routePath = pathResult.path.map((k) => {
+      const n = roadGraph.nodes.get(k);
+      return [n.x, n.y];
+    });
+
+    const routeGeometry = new Polyline({
+      paths: [routePath],
+      spatialReference: roadGraph.spatialReference
+    });
+
+    routeGraphicRef = new Graphic({
+      geometry: routeGeometry,
+      symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
+    });
+    analysisLayer.add(routeGraphicRef);
+
+    lastRouteDistanceKm = pathResult.distanceMeters / 1000;
+    updateAnalysisSummary(lastRouteDistanceKm);
   }
 
   window.clearAnalysis = function() {
@@ -293,7 +289,139 @@ require([
     document.getElementById("res-speed").innerText = "-";
   };
 
+  async function buildRoadGraph() {
+    const query = roadsLayerRef.createQuery();
+    query.where = "1=1";
+    query.returnGeometry = true;
+    query.outSpatialReference = view.spatialReference;
+    const { features } = await roadsLayerRef.queryFeatures(query);
+
+    const nodes = new Map();
+    const keyFor = (x, y) => `${x.toFixed(1)}|${y.toFixed(1)}`;
+
+    function ensureNode(x, y) {
+      const key = keyFor(x, y);
+      if (!nodes.has(key)) {
+        nodes.set(key, { x, y, edges: new Map() });
+      }
+      return key;
+    }
+
+    function addUndirectedEdge(aKey, bKey) {
+      if (aKey === bKey) return;
+      const a = nodes.get(aKey);
+      const b = nodes.get(bKey);
+      const w = Math.hypot(a.x - b.x, a.y - b.y);
+      if (!a.edges.has(bKey) || a.edges.get(bKey) > w) a.edges.set(bKey, w);
+      if (!b.edges.has(aKey) || b.edges.get(aKey) > w) b.edges.set(aKey, w);
+    }
+
+    features.forEach((f) => {
+      const paths = f && f.geometry && f.geometry.paths ? f.geometry.paths : [];
+      paths.forEach((path) => {
+        for (let i = 1; i < path.length; i++) {
+          const p0 = path[i - 1];
+          const p1 = path[i];
+          const k0 = ensureNode(p0[0], p0[1]);
+          const k1 = ensureNode(p1[0], p1[1]);
+          addUndirectedEdge(k0, k1);
+        }
+      });
+    });
+
+    return { nodes, spatialReference: view.spatialReference };
+  }
+
+  function nearestGraphNodeKey(point, graph) {
+    if (!point || !graph || !graph.nodes || !graph.nodes.size) return null;
+    let bestKey = null;
+    let bestDist = Infinity;
+    graph.nodes.forEach((n, key) => {
+      const d = Math.hypot(point.x - n.x, point.y - n.y);
+      if (d < bestDist) {
+        bestDist = d;
+        bestKey = key;
+      }
+    });
+    return bestKey;
+  }
+
+  function shortestPathDijkstra(graph, startKey, endKey) {
+    const dist = new Map();
+    const prev = new Map();
+    const visited = new Set();
+    const heap = [];
+
+    function push(item) {
+      heap.push(item);
+      let i = heap.length - 1;
+      while (i > 0) {
+        const p = (i - 1) >> 1;
+        if (heap[p].d <= heap[i].d) break;
+        [heap[p], heap[i]] = [heap[i], heap[p]];
+        i = p;
+      }
+    }
+
+    function pop() {
+      if (!heap.length) return null;
+      const top = heap[0];
+      const last = heap.pop();
+      if (heap.length) {
+        heap[0] = last;
+        let i = 0;
+        while (true) {
+          const l = 2 * i + 1;
+          const r = l + 1;
+          let s = i;
+          if (l < heap.length && heap[l].d < heap[s].d) s = l;
+          if (r < heap.length && heap[r].d < heap[s].d) s = r;
+          if (s === i) break;
+          [heap[i], heap[s]] = [heap[s], heap[i]];
+          i = s;
+        }
+      }
+      return top;
+    }
+
+    dist.set(startKey, 0);
+    push({ key: startKey, d: 0 });
+
+    while (heap.length) {
+      const cur = pop();
+      if (!cur || visited.has(cur.key)) continue;
+      visited.add(cur.key);
+      if (cur.key === endKey) break;
+
+      const node = graph.nodes.get(cur.key);
+      if (!node) continue;
+      node.edges.forEach((w, nextKey) => {
+        if (visited.has(nextKey)) return;
+        const nd = cur.d + w;
+        if (nd < (dist.get(nextKey) ?? Infinity)) {
+          dist.set(nextKey, nd);
+          prev.set(nextKey, cur.key);
+          push({ key: nextKey, d: nd });
+        }
+      });
+    }
+
+    if (!dist.has(endKey)) return null;
+    const path = [];
+    let cur = endKey;
+    while (cur) {
+      path.push(cur);
+      cur = prev.get(cur);
+    }
+    path.reverse();
+    return { path, distanceMeters: dist.get(endKey) };
+  }
+
   view.when(() => {
+    if (roadsLayerRef) {
+      buildRoadGraph().then((g) => { roadGraph = g; }).catch(() => {});
+    }
+
     alwaysOnToggleIds.forEach((id) => {
       const cb = document.getElementById(id);
       if (!cb) return;
