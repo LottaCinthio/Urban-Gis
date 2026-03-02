@@ -5,8 +5,9 @@ require([
   "esri/Graphic",
   "esri/layers/GraphicsLayer",
   "esri/geometry/geometryEngine",
-  "esri/geometry/Polyline"
-], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline) {
+  "esri/geometry/Polyline",
+  "esri/geometry/Point"
+], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline, Point) {
 
   const layersInfo = [
     { name: "Road Network", file: "roads.geojson", type: "road-network", id: "toggleRoads" },
@@ -216,6 +217,34 @@ require([
     document.getElementById("res-time").innerText = ((distanceKm / speed) * 60).toFixed(1) + " min";
     document.getElementById("res-speed").innerText = speed + " km/h";
   }
+
+  function analysisPointSymbol(color) {
+    return {
+      type: "point-3d",
+      symbolLayers: [{
+        type: "icon",
+        resource: { primitive: "circle" },
+        material: { color: color },
+        size: 10,
+        outline: { color: [255, 255, 255, 0.95], size: 1.6 }
+      }],
+      verticalOffset: { screenLength: 8, maxWorldLength: 25, minWorldLength: 2 },
+      callout: { type: "line", size: 0.9, color: [255, 255, 255, 0.85] }
+    };
+  }
+
+  function analysisRouteSymbol() {
+    return {
+      type: "line-3d",
+      symbolLayers: [{
+        type: "line",
+        size: 4,
+        material: { color: [0, 122, 255, 0.95] },
+        cap: "round",
+        join: "round"
+      }]
+    };
+  }
   
   view.on("click", function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
@@ -227,7 +256,8 @@ require([
 
     const marker = new Graphic({
       geometry: mapPoint,
-      symbol: { type: "simple-marker", style: "circle", color: points.length === 0 ? [76, 175, 80] : [244, 67, 54], size: "12px", outline: { color: "white", width: 2 } }
+      symbol: analysisPointSymbol(points.length === 0 ? [76, 175, 80, 1] : [244, 67, 54, 1]),
+      elevationInfo: { mode: "relative-to-ground", offset: 1.2 }
     });
 
     points.push(marker);
@@ -286,9 +316,31 @@ require([
       spatialReference: roadGraph.spatialReference
     });
 
+    const startNode = roadGraph.nodes.get(best.s.key);
+    const endNode = roadGraph.nodes.get(best.e.key);
+    if (points[0] && startNode) {
+      points[0].geometry = new Point({
+        x: startNode.x,
+        y: startNode.y,
+        spatialReference: roadGraph.spatialReference
+      });
+      points[0].symbol = analysisPointSymbol([76, 175, 80, 1]);
+      points[0].elevationInfo = { mode: "relative-to-ground", offset: 1.2 };
+    }
+    if (points[1] && endNode) {
+      points[1].geometry = new Point({
+        x: endNode.x,
+        y: endNode.y,
+        spatialReference: roadGraph.spatialReference
+      });
+      points[1].symbol = analysisPointSymbol([244, 67, 54, 1]);
+      points[1].elevationInfo = { mode: "relative-to-ground", offset: 1.2 };
+    }
+
     routeGraphicRef = new Graphic({
       geometry: routeGeometry,
-      symbol: { type: "simple-line", color: [0, 122, 255, 0.9], width: 5 }
+      symbol: analysisRouteSymbol(),
+      elevationInfo: { mode: "relative-to-ground", offset: 0.8 }
     });
     analysisLayer.add(routeGraphicRef);
 
