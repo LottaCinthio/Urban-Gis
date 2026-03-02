@@ -275,102 +275,75 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     </script>
 
 <script>
-        // --- START: UPPDATERAD KOORDINAT- OCH ID-FIX ---
-    (function() {
-        const TARGET_ID = 8052; // Din huvudbyggnad
+        (function() {
+            // Inställningar
+            const TARGET_ID = 8052; 
+            const GEOJSON_URL = './data/buildings_with_id.geojson';
 
-        async function loadNeighborBuildings(viewerInstance) {
-            try {
-                // VIKTIGT: Kontrollera att filnamnet matchar din uppladdade fil
-                const response = await fetch('./data/buildings_with_id.geojson');
-                if (!response.ok) {
-                    console.error("Kunde inte hitta ./data/buildings_with_id.geojson");
-                    return;
+            async function initContext() {
+                console.log("Försöker ladda omgivning...");
+                try {
+                    const res = await fetch(GEOJSON_URL);
+                    if (!res.ok) throw new Error("Hittade inte GeoJSON-filen");
+                    const data = await res.json();
+
+                    // Vänta tills xBIM och Three.js är redo
+                    const check = setInterval(() => {
+                        if (typeof viewer !== 'undefined' && viewer._scene) {
+                            clearInterval(check);
+                            renderBuildings(viewer, data);
+                        }
+                    }, 1000);
+                } catch (e) {
+                    console.error("Fel:", e.message);
                 }
-                const data = await response.json();
+            }
 
-                const T = window.THREE || viewerInstance.THREE;
-                const scene = viewerInstance._scene || (viewerInstance.context && viewerInstance.context.getScene());
+            function renderBuildings(v, data) {
+                const T = window.THREE;
+                const scene = v._scene;
                 
-                if (!scene || !T) return;
-
-                // Material för omgivningen: Vita boxar (lite genomskinliga)
-                const whiteMaterial = new T.MeshPhongMaterial({ 
+                // Material: Vita boxar
+                const mat = new T.MeshPhongMaterial({ 
                     color: 0xffffff, 
                     transparent: true, 
-                    opacity: 0.7,
-                    side: T.DoubleSide 
+                    opacity: 0.6 
                 });
 
-                // EXAKTA KOORDINATER FÖR BYGGNAD 8052 (Öxnehaga)
-                // Vi centrerar allt runt denna punkt så att de hamnar rätt i din vy
+                // Koordinater för Öxnehaga
                 const originX = 14.2429; 
                 const originY = 57.7825;
-                const scale = 111320; 
+                const scale = 111320;
 
-                data.features.forEach(feature => {
-                    const props = feature.properties;
-                    // Vi hoppar över 8052 eftersom den redan finns som din snygga IFC-modell
-                    if (props.Building_ID == TARGET_ID || props.FID === 24597) return;
+                data.features.forEach(f => {
+                    if (f.properties.Building_ID == TARGET_ID) return;
 
-                    if (feature.geometry && feature.geometry.type === "Polygon") {
-                        const coords = feature.geometry.coordinates[0];
+                    if (f.geometry.type === "Polygon") {
                         const shape = new T.Shape();
+                        const coords = f.geometry.coordinates[0];
 
-                        coords.forEach((coord, index) => {
-                            // Omvandling från Long/Lat till lokala meter
-                            const x = (coord[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
-                            const y = (coord[1] - originY) * scale;
-                            
-                            if (index === 0) shape.moveTo(x, y);
+                        coords.forEach((c, i) => {
+                            const x = (c[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
+                            const y = (c[1] - originY) * scale;
+                            if (i === 0) shape.moveTo(x, y);
                             else shape.lineTo(x, y);
                         });
 
-                        const geometry = new T.ExtrudeGeometry(shape, { 
-                            depth: props.height || 12, 
-                            bevelEnabled: false 
-                        });
+                        const geo = new T.ExtrudeGeometry(shape, { depth: 12, bevelEnabled: false });
+                        const mesh = new T.Mesh(geo, mat);
                         
-                        const mesh = new T.Mesh(geometry, whiteMaterial);
-                        
-                        // Rotera för att matcha xBIM:s golvplan
                         mesh.rotation.x = -Math.PI / 2;
+                        mesh.position.y = -1; // Placera på marken
                         
-                        // Justera höjden (Y) så de står på samma marknivå som din modell
-                        mesh.position.y = -1.5; 
-
                         scene.add(mesh);
                     }
                 });
-
-                // Tvinga viewern att rita om scenen så de nya husen syns direkt
-                if (viewerInstance.forceRender) viewerInstance.forceRender();
-                console.log("Omgivning med vita boxar har laddats!");
-
-            } catch (e) {
-                console.error("Ett fel uppstod:", e);
+                console.log("Vita boxar tillagda runt modell 8052.");
             }
-        }
 
-        // Vänta tills viewern är redo
-        const checkViewer = setInterval(() => {
-            if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
-                loadNeighborBuildings(viewer);
-                clearInterval(checkViewer);
-            }
-        }, 1500);
-    })();
-    // --- SLUT ---
+            initContext();
+        })();
     </script>
-    ```
 
-
-
-### Varför detta kommer att fungera nu:
-* **Oberoende:** Den letar inte efter specifika rader som "btnSectionClose", utan den letar efter själva `viewer`-objektet i datorns minne.
-* **Vänteläge:** Eftersom din fil är stor och texten är vit (minifierad), tar det tid för datorn att läsa in allt. `setInterval` gör att koden väntar tålmodigt tills allt är redo innan den försöker rita.
-* **Tydlighet:** Jag satte färgen till **ljusblå** (`0x00aaff`). Det gör det extremt lätt att se om de nya byggnaderna har dykt upp runt din vita modell.
-
-**Kom ihåg:** Dubbelkolla att din fil i mappen `data` heter exakt `buildings.geojson` (inte `buildings_with_id.geojson` och inte `geojason`).
 </body>
 </html>
