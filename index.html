@@ -133,6 +133,25 @@
       </div>
     </div>
 
+    <div class="layer-group" style="background: #f0f7ff; border: 1px solid #bae7ff; margin-top: 20px;">
+      <div class="group-header" style="color: #0050b3; display: flex; justify-content: space-between; align-items: center;">
+        Interactive Analysis <label class="switch small"><input type="checkbox" id="enableABTool"><span class="slider"></span></label>
+      </div>
+      <div id="analysisPanelContent" class="accordion-content">
+        <div class="row-container" style="margin-top: 10px;">
+          <span style="font-size: 0.85em;">Mode:</span>
+          <select id="transportMode" style="font-size: 0.8em;"><option value="Walking">Walking</option><option value="Cycling">Cycling</option><option value="Driving">Driving</option></select>
+        </div>
+        <div style="font-size: 0.8em; margin-top: 10px; background: white; padding: 8px; border-radius: 4px;">
+          <div style="display: flex; justify-content: space-between;"><span>Distance:</span> <b id="res-dist">-</b></div>
+          <div style="display: flex; justify-content: space-between;"><span>Est. Time:</span> <b id="res-time">-</b></div>
+          <div style="display: flex; justify-content: space-between;"><span>Avg. Speed:</span> <b id="res-speed">-</b></div>
+        </div>
+        <button onclick="clearAnalysis()" style="margin-top: 10px; width: 100%; background: #ff4d4f; color: white; border: none; padding: 6px; border-radius: 4px; font-weight: bold; cursor: pointer;">Reset Analysis</button>
+        <p style="font-size: 0.75em; color: #4d4d4d; margin: 10px 0 0 0;">Click out two points on the map.</p>
+      </div>
+    </div>
+
     <div class="layer-group">
       <div class="group-header">Infrastructure & BIM</div>
       <div class="row-container">
@@ -161,24 +180,6 @@
           <b>Project Building (8052)</b><br>
           <i>Digital Twin integration active.</i>
         </span>
-      </div>
-    </div>
-
-    <div class="layer-group" style="background: #f0f7ff; border: 1px solid #bae7ff; margin-top: 20px;">
-      <div class="group-header" style="color: #0050b3; display: flex; justify-content: space-between; align-items: center;">
-        Interactive Analysis <label class="switch small"><input type="checkbox" id="enableABTool"><span class="slider"></span></label>
-      </div>
-      <div id="analysisPanelContent" class="accordion-content">
-        <div class="row-container" style="margin-top: 10px;">
-          <span style="font-size: 0.85em;">Mode:</span>
-          <select id="transportMode" style="font-size: 0.8em;"><option value="Walking">Walking</option><option value="Cycling">Cycling</option><option value="Driving">Driving</option></select>
-        </div>
-        <div style="font-size: 0.8em; margin-top: 10px; background: white; padding: 8px; border-radius: 4px;">
-          <div style="display: flex; justify-content: space-between;"><span>Distance:</span> <b id="res-dist">-</b></div>
-          <div style="display: flex; justify-content: space-between;"><span>Est. Time:</span> <b id="res-time">-</b></div>
-          <div style="display: flex; justify-content: space-between;"><span>Avg. Speed:</span> <b id="res-speed">-</b></div>
-        </div>
-        <button onclick="clearAnalysis()" style="margin-top: 10px; width: 100%; background: #ff4d4f; color: white; border: none; padding: 6px; border-radius: 4px; font-weight: bold; cursor: pointer;">Reset Analysis</button>
       </div>
     </div>
   </div>
