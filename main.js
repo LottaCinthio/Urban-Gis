@@ -42,11 +42,12 @@ require([
 
   let roadsLayerRef;
   const iconLayerRefs = [];
+  const alwaysOnToggleIds = ["toggleHospital", "toggleFirestation", "togglePolice", "toggleSchools", "toggleHealthcare"];
 
   function iconSizeForScale(scale) {
     const minScale = 2500;
     const maxScale = 1200000;
-    const minSize = 4;
+    const minSize = 10;
     const maxSize = 30;
     const s = Math.max(minScale, Math.min(maxScale, scale || maxScale));
     const t = (maxScale - s) / (maxScale - minScale);
@@ -79,6 +80,14 @@ require([
     content.classList.remove("open");
     toggle.addEventListener("change", () => {
       content.classList.toggle("open", toggle.checked);
+      if (!toggle.checked) {
+        alwaysOnToggleIds.forEach((id) => {
+          const cb = document.getElementById(id);
+          if (!cb) return;
+          cb.checked = true;
+          cb.dispatchEvent(new Event("change"));
+        });
+      }
     });
   }
 
@@ -260,6 +269,12 @@ require([
   };
 
   view.when(() => {
+    alwaysOnToggleIds.forEach((id) => {
+      const cb = document.getElementById(id);
+      if (!cb) return;
+      cb.checked = true;
+    });
+
     applyDynamicIconSizing(view);
     view.watch("scale", () => applyDynamicIconSizing(view));
 
@@ -269,6 +284,12 @@ require([
           const lyr = map.layers.find(l => l.title === info.name);
           if (lyr) lyr.visible = e.target.checked;
       });
+    });
+
+    alwaysOnToggleIds.forEach((id) => {
+      const cb = document.getElementById(id);
+      if (!cb) return;
+      cb.dispatchEvent(new Event("change"));
     });
   });
 });
