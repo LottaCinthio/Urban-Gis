@@ -294,17 +294,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             });
 
             // KOORDINAT-FIX FÖR JÖNKÖPING / ÖXNEHAGA:
-            // Dessa värden flyttar GeoJSON-koordinaterna till 3D-scenens mittpunkt
             const originX = 14.242; 
             const originY = 57.782;
-            const scale = 111320; // Meter per grad longitud/latitud vid denna breddgrad
+            const scale = 111320; 
 
             geojson.features.forEach(feature => {
                 const props = feature.properties;
                 const bID = props.Building_ID || props.id || props.FID;
                 
-                // Vi laddar BARA omgivningen om huvudbyggnaden är 8052
-                // Och vi hoppar över 8052 i GeoJSON eftersom den redan finns som IFC
                 if (bID == TARGET_BUILDING_ID) return;
 
                 if (feature.geometry.type === "Polygon") {
@@ -312,35 +309,29 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     const shape = new THREE.Shape();
 
                     coords.forEach((coord, index) => {
-                        // Matematisk projektion för att omvandla kart-koordinater till 3D-meter
                         const x = (coord[0] - originX) * (scale * Math.cos(originY * Math.PI / 180));
-                        const z = (coord[1] - originY) * scale;
+                        const y = (coord[1] - originY) * scale;
                         
-                        if (index === 0) shape.moveTo(x, z);
-                        else shape.lineTo(x, z);
+                        if (index === 0) shape.moveTo(x, y);
+                        else shape.lineTo(x, y);
                     });
 
-                    // Skapa byggnadens höjd (vi använder 'height' från data eller sätter 15m)
                     const h = props.height || 15;
                     const extrudeSettings = { depth: h, bevelEnabled: false };
                     
                     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
                     const mesh = new THREE.Mesh(geometry, contextMaterial);
                     
-                    // Korrigera Three.js rotation (Z är framåt, Y är uppåt)
                     mesh.rotation.x = -Math.PI / 2;
-                    
-                    // Lägg till i scenen
                     scene.add(mesh);
                 }
             });
-            console.log("Kontext-byggnader för 8052 har laddats framgångsrikt.");
+            console.log("Kontext-byggnader för 8052 har laddats.");
         } catch (error) {
             console.error("Fel vid laddning av omgivande byggnader:", error);
         }
     }
 
-    // Vänta tills viewern är redo
     const checkViewer = setInterval(() => {
         if (typeof viewer !== 'undefined' && viewer.context) {
             const scene = viewer.context.getScene();
@@ -350,7 +341,6 @@ https://github.com/nodeca/pako/blob/main/LICENSE
     }, 500);
 })();
 // --- SLUT: TILLÄGG ---
-</skript>
+</script>
 </body>
-
 </html>
