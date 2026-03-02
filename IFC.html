@@ -275,70 +275,141 @@ https://github.com/nodeca/pako/blob/main/LICENSE
  </script>
  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        (function() {
+        (function () {
             const TARGET_ID = 8052;
-            const FILE_PATH = './data/buildings_with_id.geojson';
+            const BUILDINGS_FILE = "./data/buildings.geojson";
+            const BUILDINGS_WITH_ID_FILE = "./data/buildings_with_id.geojson";
+            const DEG_TO_M = 111320;
+            const CUBE_HEIGHT = 8;
 
-            async function initMap(v) {
-                console.log("xBIM klar. Synkroniserar omgivning...");
-                try {
-                    const response = await fetch(FILE_PATH);
-                    if (!response.ok) throw new Error("Hittade inte GeoJSON-filen i mappen 'data'");
-                    const data = await response.json();
-
-                    // Hitta xBIM-scenen (Three.js)
-                    const scene = v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
-                    if (!scene || typeof THREE === 'undefined') return;
-
-                    // 1. AUTOMATISK KALIBRERING (Hitta Building 8052)
-                    const anchor = data.features.find(f => f.properties.Building_ID == TARGET_ID);
-                    if (!anchor) return console.error("Byggnad 8052 saknas i GeoJSON-filen.");
-
-                    // Vi använder 8052:s koordinater som nollpunkt (0,0,0)
-                    const originLon = anchor.geometry.coordinates[0][0][0];
-                    const originLat = anchor.geometry.coordinates[0][0][1];
-                    const scale = 111320; 
-
-                    const buildMat = new THREE.MeshPhongMaterial({ 
-                        color: 0xffffff, transparent: true, opacity: 0.6, side: THREE.DoubleSide 
-                    });
-
-                    // 2. RITA BYGGNADERNA
-                    data.features.forEach(f => {
-                        if (f.properties.Building_ID == TARGET_ID) return; // Skippa 8052 (redan där)
-
-                        if (f.geometry && f.geometry.type === "Polygon") {
-                            const shape = new THREE.Shape();
-                            const coords = f.geometry.coordinates[0];
-
-                            coords.forEach((c, i) => {
-                                // Omvandla GPS till meter relativt 8052
-                                const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
-                                const z = (c[1] - originLat) * scale;
-                                if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
-                            });
-
-                            const geo = new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false });
-                            const mesh = new THREE.Mesh(geo, buildMat);
-                            
-                            // Rotera för att matcha xBIM:s golv
-                            mesh.rotation.x = -Math.PI / 2;
-                            mesh.position.y = -2; // Placera på marken
-                            
-                            scene.add(mesh);
-                        }
-                    });
-                    console.log("Omgivande byggnader inlagda!");
-                } catch (err) { console.error("Karta-fel:", err.message); }
+            function getScene(v) {
+                return v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
             }
 
-            // Vänta tills xBIM har laddat klart modellen
+            function toLocalMeters(lon, lat, originLon, originLat) {
+                const x = (lon - originLon) * (DEG_TO_M * Math.cos(originLat * Math.PI / 180));
+                const z = (lat - originLat) * DEG_TO_M;
+                return { x, z };
+            }
+
+            function getFootprintVertices(feature, originLon, originLat) {
+                if (!feature || !feature.geometry || feature.geometry.type !== "Polygon") return [];
+                const ring = feature.geometry.coordinates && feature.geometry.coordinates[0];
+                if (!ring || ring.length < 4) return [];
+                return ring.map((c) => toLocalMeters(c[0], c[1], originLon, originLat));
+            }
+
+            function centroid(points) {
+                if (!points.length) return { x: 0, z: 0 };
+                let sx = 0;
+                let sz = 0;
+                points.forEach((p) => {
+                    sx += p.x;
+                    sz += p.z;
+                });
+                return { x: sx / points.length, z: sz / points.length };
+            }
+
+            function bbox(points) {
+                let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+                points.forEach((p) => {
+                    if (p.x < minX) minX = p.x;
+                    if (p.x > maxX) maxX = p.x;
+                    if (p.z < minZ) minZ = p.z;
+                    if (p.z > maxZ) maxZ = p.z;
+                });
+                return { minX, maxX, minZ, maxZ };
+            }
+
+            function findNearestFeatureIndex(features, targetCenter, originLon, originLat) {
+                let nearest = -1;
+                let bestDist = Infinity;
+                features.forEach((feature, index) => {
+                    const verts = getFootprintVertices(feature, originLon, originLat);
+                    if (!verts.length) return;
+                    const c = centroid(verts);
+                    const dx = c.x - targetCenter.x;
+                    const dz = c.z - targetCenter.z;
+                    const d2 = dx * dx + dz * dz;
+                    if (d2 < bestDist) {
+                        bestDist = d2;
+                        nearest = index;
+                    }
+                });
+                return nearest;
+            }
+
+            async function initContext() {
+                const [allBuildingsRes, buildingsWithIdRes] = await Promise.all([
+                    fetch(BUILDINGS_FILE),
+                    fetch(BUILDINGS_WITH_ID_FILE)
+                ]);
+                if (!allBuildingsRes.ok) throw new Error("Hittade inte data/buildings.geojson");
+                if (!buildingsWithIdRes.ok) throw new Error("Hittade inte data/buildings_with_id.geojson");
+
+                const [allBuildings, buildingsWithId] = await Promise.all([
+                    allBuildingsRes.json(),
+                    buildingsWithIdRes.json()
+                ]);
+
+                const anchor = buildingsWithId.features.find((f) => f.properties && f.properties.Building_ID == TARGET_ID);
+                if (!anchor) throw new Error("Byggnad 8052 saknas i buildings_with_id.geojson");
+                const anchorRing = anchor.geometry && anchor.geometry.coordinates && anchor.geometry.coordinates[0];
+                if (!anchorRing || !anchorRing.length) throw new Error("Byggnad 8052 saknar geometri");
+
+                const originLon = anchorRing[0][0];
+                const originLat = anchorRing[0][1];
+                const anchorVerts = getFootprintVertices(anchor, originLon, originLat);
+                const anchorCenter = centroid(anchorVerts);
+                const skipIndex = findNearestFeatureIndex(allBuildings.features || [], anchorCenter, originLon, originLat);
+
+                return { allBuildings, originLon, originLat, skipIndex };
+            }
+
+            function addBuildingCubes(scene, context) {
+                const material = new THREE.MeshPhongMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.85
+                });
+
+                (context.allBuildings.features || []).forEach((feature, index) => {
+                    if (index === context.skipIndex) return;
+                    const verts = getFootprintVertices(feature, context.originLon, context.originLat);
+                    if (!verts.length) return;
+                    const b = bbox(verts);
+                    const width = Math.max(1, b.maxX - b.minX);
+                    const depth = Math.max(1, b.maxZ - b.minZ);
+                    const centerX = (b.minX + b.maxX) / 2;
+                    const centerZ = (b.minZ + b.maxZ) / 2;
+
+                    const cube = new THREE.Mesh(
+                        new THREE.BoxGeometry(width, CUBE_HEIGHT, depth),
+                        material
+                    );
+                    cube.position.set(centerX, CUBE_HEIGHT / 2, centerZ);
+                    scene.add(cube);
+                });
+            }
+
+            async function initMap(v) {
+                try {
+                    const scene = getScene(v);
+                    if (!scene || typeof THREE === "undefined") return;
+                    const context = await initContext();
+                    addBuildingCubes(scene, context);
+                    console.log("Omgivande byggnader (vita kuber) inlagda.");
+                } catch (err) {
+                    console.error("Karta-fel:", err.message);
+                }
+            }
+
             const checkViewer = setInterval(() => {
-                if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
+                if (typeof viewer !== "undefined" && viewer._models && viewer._models.length > 0) {
                     clearInterval(checkViewer);
                     initMap(viewer);
                 }
-            }, 2000);
+            }, 500);
         })();
     </script>
 </body>
