@@ -275,82 +275,72 @@ https://github.com/nodeca/pako/blob/main/LICENSE
  </script>
  <script>
 (function() {
-    const targetBuildingId = 8052;
-    // EXAKTA KOORDINATER FÖR ÖXNEHAGA (Byggnad 8052)
-    const originLon = 14.2429; 
-    const originLat = 57.7825;
+    // 1. DE EXAKTA KOORDINATERNA (Vi testar Perplexitys baslinje men med dynamisk kontroll)
+    const refLon = 14.1610664; 
+    const refLat = 57.7818451;
+    const targetId = 8052;
 
-    // Perplexitys konverteringslogik (med justering för din scen)
-    function lonLatToMeter(lon, lat) {
-        const x = (lon - originLon) * 111320 * Math.cos(originLat * Math.PI / 180);
-        const z = (lat - originLat) * 110574;
-        return { x: x, z: -z }; 
-    }
-
-    function setupContextBuildings() {
-        if (typeof viewer === "undefined" || typeof THREE === "undefined") {
-            setTimeout(setupContextBuildings, 1000);
-            return;
-        }
-
-        // Hämta scenen
+    async function injectContext() {
+        console.log("Försöker injicera kontext...");
+        
+        // Hitta scenen (xBIM context)
         const scene = viewer._scene || (viewer.context && viewer.context.getScene ? viewer.context.getScene() : null);
-        if (!scene) {
-            setTimeout(setupContextBuildings, 1000);
-            return;
+        if (!scene) return console.error("Hittade inte 3D-scenen");
+
+        try {
+            const response = await fetch("data/buildings_with_id.geojson");
+            const data = await response.json();
+            
+            const whiteMat = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff, 
+                transparent: true, 
+                opacity: 0.5,
+                side: THREE.DoubleSide 
+            });
+
+            data.features.forEach(f => {
+                // Hoppa över huvudbyggnaden
+                if (f.properties.Building_ID == targetId || f.properties.BuildingID == targetId) return;
+
+                if (f.geometry && f.geometry.type === "Polygon") {
+                    const coords = f.geometry.coordinates[0];
+                    const shape = new THREE.Shape();
+
+                    coords.forEach((c, i) => {
+                        // MATEMATIK: Beräkna meter från referenspunkten
+                        // X = Longitud, Z = Latitud (i 3D-rymden är Y ofta "upp")
+                        const x = (c[0] - refLon) * 111320 * Math.cos(refLat * Math.PI / 180);
+                        const z = (c[1] - refLat) * 110574;
+
+                        if (i === 0) shape.moveTo(x, -z); // Vi vänder på Z för att matcha kart-orientering
+                        else shape.lineTo(x, -z);
+                    });
+
+                    const geo = new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false });
+                    const mesh = new THREE.Mesh(geo, whiteMat);
+                    
+                    // ROTATION: Lägg husen platt på marken
+                    mesh.rotation.x = -Math.PI / 2; 
+                    mesh.position.y = -1; // Placera precis vid "golvet"
+                    
+                    scene.add(mesh);
+                }
+            });
+            console.log("Kontext injicerad!");
+        } catch (err) {
+            console.error("Fel vid laddning av GeoJSON:", err);
         }
-
-        fetch("data/buildings_with_id.geojson")
-            .then(r => r.json())
-            .then(geo => {
-                const mat = new THREE.MeshPhongMaterial({
-                    color: 0xffffff,
-                    transparent: true,
-                    opacity: 0.6,
-                    side: THREE.DoubleSide
-                });
-
-                geo.features.forEach(f => {
-                    const props = f.properties || {};
-                    // Skippa huvudbyggnaden
-                    if (props.Building_ID == targetBuildingId) return;
-
-                    if (f.geometry && f.geometry.type === "Polygon") {
-                        const ring = f.geometry.coordinates[0];
-                        const shape = new THREE.Shape();
-
-                        ring.forEach((c, i) => {
-                            const p = lonLatToMeter(c[0], c[1]);
-                            if (i === 0) shape.moveTo(p.x, p.z);
-                            else shape.lineTo(x, p.z);
-                        });
-
-                        const geom = new THREE.ExtrudeGeometry(shape, { depth: 10, bevelEnabled: false });
-                        const mesh = new THREE.Mesh(geom, mat);
-
-                        // Perplexitys föreslagna rotation
-                        mesh.rotation.x = Math.PI / 2;
-                        // Vi sätter positionen till -2 för att den inte ska krocka med IFC-modellen
-                        mesh.position.y = -2;
-
-                        scene.add(mesh);
-                    }
-                });
-                console.log("Kontext-byggnader laddade med Perplexity-metoden.");
-            })
-            .catch(err => console.error("Kunde inte ladda GeoJSON:", err));
     }
 
-    // Vänta tills viewern är redo
-    const checkReady = setInterval(() => {
-        if (typeof viewer !== "undefined" && viewer._models && viewer._models.length > 0) {
-            clearInterval(checkReady);
-            setupContextBuildings();
+    // Vänta på att viewern är redo
+    const timer = setInterval(() => {
+        if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
+            clearInterval(timer);
+            injectContext();
         }
     }, 2000);
 })();
-
-    </script>
+</script>
 
 </body>
 
