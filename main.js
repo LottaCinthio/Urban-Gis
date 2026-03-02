@@ -248,13 +248,14 @@ require([
     
     const mapPoint = event.mapPoint ? event.mapPoint.clone() : view.toMap(event);
     if (!mapPoint) return;
+    const snappedPoint = await snapPointToRoadGeometry(mapPoint, 120);
 
     if (points.length >= 2) { clearAnalysis(); }
 
     const marker = new Graphic({
-      geometry: mapPoint,
+      geometry: snappedPoint,
       symbol: analysisPointSymbol(points.length === 0 ? [76, 175, 80, 1] : [244, 67, 54, 1]),
-      elevationInfo: { mode: "relative-to-ground", offset: 1.2 }
+      elevationInfo: { mode: "relative-to-ground", offset: 0.8 }
     });
 
     points.push(marker);
@@ -273,8 +274,8 @@ require([
       return;
     }
 
-    const startCandidates = nearestGraphNodeKeys(start, roadGraph, 8, 80);
-    const endCandidates = nearestGraphNodeKeys(end, roadGraph, 8, 80);
+    const startCandidates = nearestGraphNodeKeys(start, roadGraph, 8, 120);
+    const endCandidates = nearestGraphNodeKeys(end, roadGraph, 8, 120);
     if (!startCandidates.length || !endCandidates.length) {
       document.getElementById("res-dist").innerText = "No route";
       document.getElementById("res-time").innerText = "-";
@@ -307,6 +308,8 @@ require([
       const n = roadGraph.nodes.get(k);
       return [n.x, n.y];
     });
+    routePath.unshift([start.x, start.y]);
+    routePath.push([end.x, end.y]);
 
     const routeGeometry = new Polyline({
       paths: [routePath],
@@ -333,6 +336,36 @@ require([
     document.getElementById("res-time").innerText = "-"; 
     document.getElementById("res-speed").innerText = "-";
   };
+
+  async function snapPointToRoadGeometry(point, maxSnapMeters) {
+    if (!point || !roadsLayerRef) return point;
+    const q = roadsLayerRef.createQuery();
+    q.returnGeometry = true;
+    q.geometry = geometryEngine.buffer(point, maxSnapMeters, "meters");
+    q.spatialRelationship = "intersects";
+    q.outSpatialReference = view.spatialReference;
+    const res = await roadsLayerRef.queryFeatures(q);
+    const features = (res && res.features) ? res.features : [];
+    if (!features.length) return point;
+
+    let bestCoord = null;
+    let bestDist = Infinity;
+    features.forEach((f) => {
+      if (!f || !f.geometry) return;
+      const near = geometryEngine.nearestCoordinate(f.geometry, point);
+      if (!near || !near.coordinate) return;
+      const dx = near.coordinate.x - point.x;
+      const dy = near.coordinate.y - point.y;
+      const d = Math.hypot(dx, dy);
+      if (d < bestDist) {
+        bestDist = d;
+        bestCoord = near.coordinate;
+      }
+    });
+
+    if (!bestCoord || bestDist > maxSnapMeters) return point;
+    return bestCoord;
+  }
 
   async function buildRoadGraph() {
     const query = roadsLayerRef.createQuery();
