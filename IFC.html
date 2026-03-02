@@ -275,87 +275,100 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 </script>
 
   <script>
-    (function() {
-        const TARGET_ID = 8052; // Ditt ankare
-        const DATA = {
-            buildings: './data/buildings_with_id.geojson',
-            roads: './data/roads.geojson'
-        };
+        (function() {
+            const TARGET_ID = 8052; // Ditt ankare
+            const FILES = {
+                buildings: './data/buildings_with_id.geojson',
+                roads: './data/roads.geojson'
+            };
 
-        async function initEnvironment(v) {
-            console.log("xBIM Viewer upptäckt. Synkroniserar koordinater...");
-            
-            try {
-                // 1. Ladda GeoJSON
-                const [bRes, rRes] = await Promise.all([fetch(DATA.buildings), fetch(DATA.roads)]);
-                const bData = await bRes.json();
-                const rData = await rRes.json();
-
-                // 2. HITTA ANKARET (Building 8052)
-                // Vi letar upp den exakta GPS-punkten för ditt hus i GeoJSON-filen
-                const anchorFeature = bData.features.find(f => f.properties.Building_ID == TARGET_ID);
-                if (!anchorFeature) {
-                    console.error("Kunde inte hitta byggnad 8052 i GeoJSON för synkning.");
-                    return;
-                }
-
-                // Vi använder den första koordinaten i byggnad 8052 som 0,0,0
-                const originLon = anchorFeature.geometry.coordinates[0][0][0];
-                const originLat = anchorFeature.geometry.coordinates[0][0][1];
-                const scale = 111320; // Meter per grad
-
-                // 3. Hitta 3D-scenen
+            async function startMapEngine(v) {
+                console.log("Ansluter till 3D-scenen...");
+                
+                // Hämta Three.js och scenen från xBIM-viewern
+                const T = window.THREE;
                 const scene = v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
-                if (!scene) return;
+                if (!scene || !T) return;
 
-                // 4. RITA VÄGAR (Mörkgrå linjer)
-                const roadMat = new THREE.LineBasicMaterial({ color: 0x444444 });
-                rData.features.forEach(f => {
-                    if (f.geometry.type === "LineString") {
-                        const points = [];
-                        f.geometry.coordinates.forEach(c => {
-                            // Här sker magin: vi räknar ut avståndet från ankaret i meter
-                            const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
-                            const z = (c[1] - originLat) * scale;
-                            points.push(new THREE.Vector3(x, -2.1, z)); 
-                        });
-                        const geo = new THREE.BufferGeometry().setFromPoints(points);
-                        scene.add(new THREE.Line(geo, roadMat));
+                try {
+                    // 1. Ladda GeoJSON-filer
+                    const [bRes, rRes] = await Promise.all([
+                        fetch(FILES.buildings),
+                        fetch(FILES.roads)
+                    ]);
+                    const bData = await bRes.json();
+                    const rData = await rRes.json();
+
+                    // 2. AUTOMATISK KALIBRERING (Hitta Building 8052)
+                    // Vi letar upp 8052 i GeoJSON för att veta var "nollpunkten" är i din 3D-vy
+                    const anchor = bData.features.find(f => f.properties.Building_ID == TARGET_ID);
+                    if (!anchor) {
+                        console.error("Kunde inte hitta byggnad 8052 i GeoJSON-filen.");
+                        return;
                     }
-                });
 
-                // 5. RITA BYGGNADER (Vita boxar)
-                const buildMat = new THREE.MeshPhongMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 });
-                bData.features.forEach(f => {
-                    if (f.properties.Building_ID == TARGET_ID) return; // Din modell står redan här
+                    const originLon = anchor.geometry.coordinates[0][0][0];
+                    const originLat = anchor.geometry.coordinates[0][0][1];
+                    const scale = 111320; // Omvandling till meter
 
-                    const shape = new THREE.Shape();
-                    f.geometry.coordinates[0].forEach((c, i) => {
-                        const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
-                        const z = (c[1] - originLat) * scale;
-                        if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
+                    // 3. RITA VÄGAR (Mörkgrå linjer på marken)
+                    const roadMat = new T.LineBasicMaterial({ color: 0x444444 });
+                    rData.features.forEach(f => {
+                        if (f.geometry.type === "LineString") {
+                            const points = [];
+                            f.geometry.coordinates.forEach(c => {
+                                const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
+                                const z = (c[1] - originLat) * scale;
+                                points.push(new T.Vector3(x, -2.1, z)); // Ligger precis under markplanet
+                            });
+                            const geo = new T.BufferGeometry().setFromPoints(points);
+                            scene.add(new T.Line(geo, roadMat));
+                        }
                     });
 
-                    const mesh = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 8, bevelEnabled: false }), buildMat);
-                    mesh.rotation.x = -Math.PI / 2; // Lägg ner på marken
-                    mesh.position.y = -2; // Justera höjd så den matchar din modell
-                    scene.add(mesh);
-                });
+                    // 4. RITA BYGGNADER (Vita transparenta boxar)
+                    const buildMat = new T.MeshPhongMaterial({ 
+                        color: 0xffffff, 
+                        transparent: true, 
+                        opacity: 0.6,
+                        side: T.DoubleSide 
+                    });
 
-                console.log("Kartan är nu synkad med 3D-modellen!");
-            } catch (err) {
-                console.error("Kunde inte synka data:", err);
-            }
-        }
+                    bData.features.forEach(f => {
+                        if (f.properties.Building_ID == TARGET_ID) return; // Din IFC-modell står här
 
-        // Kontrollera att viewern är startad
-        const check = setInterval(() => {
-            if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
-                clearInterval(check);
-                initEnvironment(viewer);
+                        if (f.geometry.type === "Polygon") {
+                            const shape = new T.Shape();
+                            f.geometry.coordinates[0].forEach((c, i) => {
+                                const x = (c[0] - originLon) * (scale * Math.cos(originLat * Math.PI / 180));
+                                const z = (c[1] - originLat) * scale;
+                                if (i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
+                            });
+
+                            const extrudeSettings = { depth: f.properties.height || 10, bevelEnabled: false };
+                            const mesh = new T.Mesh(new T.ExtrudeGeometry(shape, extrudeSettings), buildMat);
+                            
+                            mesh.rotation.x = -Math.PI / 2; // Lägg ner på marken
+                            mesh.position.y = -2; // Justera höjden så de matchar IFC-modellen
+                            scene.add(mesh);
+                        }
+                    });
+
+                    console.log("Kartan är nu synkad med din 3D-modell!");
+
+                } catch (err) {
+                    console.error("Kunde inte ladda kartdata:", err);
+                }
             }
-        }, 1500);
-    })();
-</script>
+
+            // Vänta på att viewern startar och modellen laddas
+            const check = setInterval(() => {
+                if (typeof viewer !== 'undefined' && viewer._models && viewer._models.length > 0) {
+                    clearInterval(check);
+                    startMapEngine(viewer);
+                }
+            }, 2000);
+        })();
+    </script>
 </body>
 </html>
