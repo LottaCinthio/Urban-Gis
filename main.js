@@ -244,16 +244,17 @@ require([
     };
   }
   
-  view.on("click", function(event) {
+  view.on("click", async function(event) {
     if (!document.getElementById("enableABTool") || !document.getElementById("enableABTool").checked) return;
     
     const mapPoint = event.mapPoint ? event.mapPoint.clone() : view.toMap(event);
     if (!mapPoint) return;
+    const snappedPoint = await snapPointToRoad(mapPoint);
 
     if (points.length >= 2) { clearAnalysis(); }
 
     const marker = new Graphic({
-      geometry: mapPoint,
+      geometry: snappedPoint,
       symbol: analysisPointSymbol(points.length === 0 ? [76, 175, 80, 1] : [244, 67, 54, 1]),
       elevationInfo: { mode: "relative-to-ground", offset: 1.2 }
     });
@@ -355,6 +356,23 @@ require([
     document.getElementById("res-time").innerText = "-"; 
     document.getElementById("res-speed").innerText = "-";
   };
+
+  async function snapPointToRoad(point) {
+    if (!point) return point;
+    if (!roadsLayerRef) return point;
+    if (!roadGraph) roadGraph = await buildRoadGraph();
+    if (!roadGraph || !roadGraph.nodes || !roadGraph.nodes.size) return point;
+
+    const nearest = nearestGraphNodeKeys(point, roadGraph, 1, 180);
+    if (!nearest.length) return point;
+    const node = roadGraph.nodes.get(nearest[0].key);
+    if (!node) return point;
+    return new Point({
+      x: node.x,
+      y: node.y,
+      spatialReference: roadGraph.spatialReference
+    });
+  }
 
   async function buildRoadGraph() {
     const query = roadsLayerRef.createQuery();
