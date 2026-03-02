@@ -284,8 +284,52 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const MAX_RADIUS_M = 300;
             const MIN_SIZE = 1;
 
+            function findSceneInObject(root) {
+                const queue = [{ value: root, depth: 0 }];
+                const seen = new Set();
+                let inspected = 0;
+                while (queue.length && inspected < 3000) {
+                    const item = queue.shift();
+                    const obj = item.value;
+                    const depth = item.depth;
+                    if (!obj || typeof obj !== "object" || seen.has(obj)) continue;
+                    seen.add(obj);
+                    inspected += 1;
+
+                    if (
+                        Array.isArray(obj.children) &&
+                        typeof obj.add === "function" &&
+                        (obj.isScene === true || obj.type === "Scene")
+                    ) {
+                        return obj;
+                    }
+
+                    if (depth >= 4) continue;
+                    const keys = Object.keys(obj);
+                    for (let i = 0; i < keys.length; i++) {
+                        const k = keys[i];
+                        let val;
+                        try {
+                            val = obj[k];
+                        } catch (_) {
+                            continue;
+                        }
+                        if (!val || typeof val !== "object") continue;
+                        queue.push({ value: val, depth: depth + 1 });
+                    }
+                }
+                return null;
+            }
+
             function getScene(v) {
-                return v._scene || (v.context && v.context.getScene ? v.context.getScene() : null);
+                if (!v) return null;
+                const direct = v._scene || v.scene || (v.context && v.context.getScene ? v.context.getScene() : null);
+                if (direct) return direct;
+                if (v._handles && v._handles[0]) {
+                    const handleScene = findSceneInObject(v._handles[0]);
+                    if (handleScene) return handleScene;
+                }
+                return findSceneInObject(v);
             }
 
             function getIfcBounds(v) {
@@ -460,8 +504,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
             async function initMap(v) {
                 try {
+                    console.error("[MAP_DEBUG] initMap called");
                     const scene = getScene(v);
-                    if (!scene || typeof THREE === "undefined") return;
+                    if (typeof THREE === "undefined") throw new Error("Three.js saknas");
+                    if (!scene) throw new Error("Kunde inte hitta Three.js scene i viewer");
                     const context = await initContext(v);
                     addBuildingCubes(scene, context);
                 } catch (err) {
@@ -469,12 +515,34 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 }
             }
 
+            let mapInitStarted = false;
+            function startMapIfReady(reason) {
+                if (mapInitStarted) return;
+                if (typeof viewer === "undefined") return;
+                if (!viewer._handles || !viewer._handles.length) return;
+                mapInitStarted = true;
+                console.error("[MAP_DEBUG] startMapIfReady:", reason);
+                initMap(viewer);
+            }
+
+            if (typeof viewer !== "undefined" && typeof viewer.on === "function") {
+                viewer.on("loaded", function () {
+                    startMapIfReady("viewer.loaded");
+                });
+            }
+
             const checkViewer = setInterval(() => {
-                if (typeof viewer !== "undefined" && viewer._models && viewer._models.length > 0) {
-                    clearInterval(checkViewer);
+                startMapIfReady("poll");
+            }, 500);
+
+            setTimeout(() => {
+                clearInterval(checkViewer);
+                if (!mapInitStarted && typeof viewer !== "undefined") {
+                    console.error("[MAP_DEBUG] forcing init after timeout");
+                    mapInitStarted = true;
                     initMap(viewer);
                 }
-            }, 500);
+            }, 12000);
         })();
     </script>
 </body>
