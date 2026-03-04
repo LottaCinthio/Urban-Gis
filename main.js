@@ -5,8 +5,9 @@ require([
   "esri/Graphic",
   "esri/layers/GraphicsLayer",
   "esri/geometry/geometryEngine",
-  "esri/geometry/Polyline"
-], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline) {
+  "esri/geometry/Polyline",
+  "esri/layers/SceneLayer"
+], function (EsriMap, SceneView, GeoJSONLayer, Graphic, GraphicsLayer, geometryEngine, Polyline, SceneLayer) {
 
   const layersInfo = [
     { name: "Road Network", file: "roads.geojson", type: "road-network", id: "toggleRoads" },
@@ -39,6 +40,13 @@ require([
     ground: "world-elevation", 
     layers: [analysisLayer] 
   });
+  
+  const buildings3D = new SceneLayer({
+    url: "https://basemaps3d.arcgis.com/arcgis/rest/services/OpenStreetMap3D_Buildings_v1/SceneServer",
+    visible: true
+  });
+  map.add(buildings3D);
+
 
   let roadsLayerRef;
   const iconLayerRefs = [];
