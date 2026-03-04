@@ -770,5 +770,166 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 })();
 </script>
 
+
+<script>
+(function(){
+  function ensureBounds() {
+    try {
+      if (!Number.isFinite(lengthX) || !Number.isFinite(lengthY) || !Number.isFinite(lengthZ) || lengthX <= 0 || lengthY <= 0 || lengthZ <= 0) {
+        if (typeof getStartBboxCoordinates === 'function') getStartBboxCoordinates();
+      }
+    } catch (e) {
+      console.warn('ensureBounds failed', e);
+    }
+  }
+
+  function setSectionFromXY(xVal, yVal) {
+    if (!viewer || !viewer.sectionBox) return;
+    ensureBounds();
+    if (!Number.isFinite(lengthX) || !Number.isFinite(lengthY) || !Number.isFinite(lengthZ)) return;
+
+    const x = Math.max(0.001, Math.min(lengthX, Number(xVal || 0)));
+    const y = Math.max(0.001, Math.min(lengthY, Number(yVal || 0)));
+    const z = Math.max(0.001, lengthZ);
+
+    // Use same geometry convention as original jQuery range sliders
+    secStartXtranslated = secStartX + ((0 + x) / 2 / 2);
+    secStartYtranslated = secStartY + ((0 + y) / 2 / 2);
+    secStartZtranslated = secStartZ + ((0 + z) / 2 / 2);
+
+    viewer.sectionBox.location = [secStartXtranslated, secStartYtranslated, secStartZtranslated];
+    viewer.sectionBox.lengthX = x / 2;
+    viewer.sectionBox.lengthY = y / 2;
+    viewer.sectionBox.lengthZ = z / 2;
+  }
+
+  function buildXYControls() {
+    const box = document.getElementById('clippingopt');
+    if (!box) return;
+
+    Object.assign(box.style, {
+      position: 'absolute',
+      left: '8px',
+      top: '64px',
+      width: '360px',
+      zIndex: '450',
+      background: '#f5f5f5',
+      padding: '10px'
+    });
+
+    const sxDiv = document.getElementById('slider-sec-x');
+    const syDiv = document.getElementById('slider-sec-y');
+    const szDiv = document.getElementById('slider-sec-z');
+    const zLabel = document.querySelector('label[for="seclenZ"]');
+    const zInput = document.getElementById('seclenZ');
+    if (sxDiv) sxDiv.style.display = 'none';
+    if (syDiv) syDiv.style.display = 'none';
+    if (szDiv) szDiv.style.display = 'none';
+    if (zLabel) zLabel.style.display = 'none';
+    if (zInput) zInput.style.display = 'none';
+
+    let wrap = document.getElementById('xy-range-controls');
+    if (wrap) wrap.remove();
+    wrap = document.createElement('div');
+    wrap.id = 'xy-range-controls';
+    wrap.style.marginTop = '8px';
+
+    const xRow = document.createElement('div');
+    xRow.style.marginBottom = '10px';
+    const xText = document.createElement('div');
+    xText.style.fontWeight = '700';
+    xText.style.marginBottom = '4px';
+    xText.textContent = 'Section X';
+    const xRange = document.createElement('input');
+    xRange.type = 'range';
+    xRange.min = '0';
+    xRange.max = String(Math.max(1, lengthX));
+    xRange.step = String(Math.max(0.1, lengthX / 500));
+    xRange.value = String(Math.max(1, lengthX));
+    xRange.style.width = '100%';
+    xRow.appendChild(xText);
+    xRow.appendChild(xRange);
+
+    const yRow = document.createElement('div');
+    yRow.style.marginBottom = '10px';
+    const yText = document.createElement('div');
+    yText.style.fontWeight = '700';
+    yText.style.marginBottom = '4px';
+    yText.textContent = 'Section Y';
+    const yRange = document.createElement('input');
+    yRange.type = 'range';
+    yRange.min = '0';
+    yRange.max = String(Math.max(1, lengthY));
+    yRange.step = String(Math.max(0.1, lengthY / 500));
+    yRange.value = String(Math.max(1, lengthY));
+    yRange.style.width = '100%';
+    yRow.appendChild(yText);
+    yRow.appendChild(yRange);
+
+    wrap.appendChild(xRow);
+    wrap.appendChild(yRow);
+
+    const firstP = box.querySelector('p');
+    if (firstP && firstP.parentNode) {
+      firstP.parentNode.insertBefore(wrap, firstP.nextSibling);
+    } else {
+      box.appendChild(wrap);
+    }
+
+    const update = () => {
+      const xv = Number(xRange.value || 0);
+      const yv = Number(yRange.value || 0);
+      xText.textContent = `Section X (${xv.toFixed(0)})`;
+      yText.textContent = `Section Y (${yv.toFixed(0)})`;
+      setSectionFromXY(xv, yv);
+    };
+
+    xRange.addEventListener('input', update);
+    yRange.addEventListener('input', update);
+
+    // Default = full model (no immediate heavy clipping)
+    update();
+  }
+
+  window.IntSectionBox = function() {
+    ensureBounds();
+    const box = document.getElementById('clippingopt');
+    if (!box) return;
+
+    const isOpen = box.style.display !== 'none';
+    if (isOpen) {
+      box.style.display = 'none';
+      return;
+    }
+
+    box.style.display = 'block';
+    buildXYControls();
+  };
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const clipBtn = document.querySelector('button[title="Clip"]');
+    if (clipBtn) clipBtn.setAttribute('onclick', 'removeSvg();IntSectionBox();');
+
+    const unclip = document.getElementById('btnSectionUnclip');
+    if (unclip) {
+      unclip.onclick = function() {
+        if (viewer && viewer.sectionBox) viewer.sectionBox.setToInfinity();
+        if (viewer) viewer.unclip();
+        const box = document.getElementById('clippingopt');
+        if (box) box.style.display = 'none';
+      };
+    }
+
+    const close = document.getElementById('btnSectionClose');
+    if (close) {
+      close.onclick = function() {
+        const box = document.getElementById('clippingopt');
+        if (box) box.style.display = 'none';
+      };
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
