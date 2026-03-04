@@ -624,5 +624,202 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             }, 12000);
         })();
     </script>
+
+    <script>
+        (function () {
+            let clipModeActive = false;
+            let dragging = false;
+            let dragStart = null;
+            let overlay = null;
+            let line = null;
+            let viewerContainer = null;
+
+            function ensureSectionBounds() {
+                try {
+                    if (!Number.isFinite(lengthX) || lengthX <= 0 || !Number.isFinite(lengthY) || lengthY <= 0 || !Number.isFinite(lengthZ) || lengthZ <= 0) {
+                        if (typeof getStartBboxCoordinates === 'function') getStartBboxCoordinates();
+                    }
+                } catch (e) {
+                    console.warn('Section bounds kunde inte initieras:', e);
+                }
+            }
+
+            function createOverlay() {
+                if (overlay) return overlay;
+                viewerContainer = document.getElementById('viewer-container');
+                if (!viewerContainer) return null;
+
+                overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                overlay.setAttribute('id', 'section-drag-overlay');
+                Object.assign(overlay.style, {
+                    position: 'absolute',
+                    inset: '0',
+                    width: '100%',
+                    height: '100%',
+                    zIndex: '350',
+                    pointerEvents: 'none',
+                    display: 'none'
+                });
+
+                line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('stroke', '#ff2d2d');
+                line.setAttribute('stroke-width', '3');
+                line.setAttribute('stroke-linecap', 'round');
+                line.style.display = 'none';
+                overlay.appendChild(line);
+                viewerContainer.appendChild(overlay);
+                return overlay;
+            }
+
+            function toLocalPoint(evt) {
+                const rect = viewerContainer.getBoundingClientRect();
+                return {
+                    x: evt.clientX - rect.left,
+                    y: evt.clientY - rect.top,
+                    rect
+                };
+            }
+
+            function clamp01(v) {
+                return Math.max(0, Math.min(1, v));
+            }
+
+            function applySectionFromLine(start, end, rect) {
+                if (!viewer || !viewer.sectionBox) return;
+                ensureSectionBounds();
+                if (!Number.isFinite(lengthX) || !Number.isFinite(lengthY) || !Number.isFinite(lengthZ)) return;
+
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                const horizontal = Math.abs(dx) >= Math.abs(dy);
+
+                const minX = secStartX;
+                const maxX = secStartX + lengthX;
+                const minY = secStartY;
+                const maxY = secStartY + lengthY;
+                const fullZHalf = Math.max(0.001, lengthZ / 2);
+
+                if (horizontal) {
+                    const t = clamp01(end.x / rect.width);
+                    const cut = minX + (t * lengthX);
+                    const keepFromMin = dx >= 0;
+                    const a = keepFromMin ? minX : cut;
+                    const b = keepFromMin ? cut : maxX;
+                    const half = Math.max(0.001, (b - a) / 2);
+                    const cx = (a + b) / 2;
+
+                    viewer.sectionBox.location = [cx, secStartY + (lengthY / 2), secStartZ + (lengthZ / 2)];
+                    viewer.sectionBox.lengthX = half;
+                    viewer.sectionBox.lengthY = Math.max(0.001, lengthY / 2);
+                    viewer.sectionBox.lengthZ = fullZHalf;
+                } else {
+                    const t = clamp01(end.y / rect.height);
+                    const cut = minY + (t * lengthY);
+                    const keepFromMin = dy >= 0;
+                    const a = keepFromMin ? minY : cut;
+                    const b = keepFromMin ? cut : maxY;
+                    const half = Math.max(0.001, (b - a) / 2);
+                    const cy = (a + b) / 2;
+
+                    viewer.sectionBox.location = [secStartX + (lengthX / 2), cy, secStartZ + (lengthZ / 2)];
+                    viewer.sectionBox.lengthX = Math.max(0.001, lengthX / 2);
+                    viewer.sectionBox.lengthY = half;
+                    viewer.sectionBox.lengthZ = fullZHalf;
+                }
+            }
+
+            function drawLine(start, end) {
+                if (!line) return;
+                line.style.display = 'block';
+                line.setAttribute('x1', String(start.x));
+                line.setAttribute('y1', String(start.y));
+                line.setAttribute('x2', String(end.x));
+                line.setAttribute('y2', String(end.y));
+            }
+
+            function onMouseDown(evt) {
+                if (!clipModeActive || evt.button !== 0) return;
+                dragging = true;
+                const p = toLocalPoint(evt);
+                dragStart = p;
+                drawLine(p, p);
+                evt.preventDefault();
+            }
+
+            function onMouseMove(evt) {
+                if (!clipModeActive || !dragging || !dragStart) return;
+                const p = toLocalPoint(evt);
+                drawLine(dragStart, p);
+                applySectionFromLine(dragStart, p, p.rect);
+                evt.preventDefault();
+            }
+
+            function onMouseUp(evt) {
+                if (!clipModeActive || !dragging || !dragStart) return;
+                const p = toLocalPoint(evt);
+                drawLine(dragStart, p);
+                applySectionFromLine(dragStart, p, p.rect);
+                dragging = false;
+                dragStart = null;
+                evt.preventDefault();
+            }
+
+            function enableDragSection() {
+                ensureSectionBounds();
+                createOverlay();
+                if (!overlay || !viewerContainer) return;
+                viewer.unclip();
+                overlay.style.display = 'block';
+                overlay.style.pointerEvents = 'none';
+                clipModeActive = true;
+                viewerContainer.style.cursor = 'crosshair';
+                viewerContainer.addEventListener('mousedown', onMouseDown, true);
+                window.addEventListener('mousemove', onMouseMove, true);
+                window.addEventListener('mouseup', onMouseUp, true);
+            }
+
+            function disableDragSection() {
+                clipModeActive = false;
+                dragging = false;
+                dragStart = null;
+                if (line) line.style.display = 'none';
+                if (overlay) {
+                    overlay.style.display = 'none';
+                    overlay.style.pointerEvents = 'none';
+                }
+                if (viewerContainer) viewerContainer.style.cursor = 'default';
+                if (viewerContainer) viewerContainer.removeEventListener('mousedown', onMouseDown, true);
+                window.removeEventListener('mousemove', onMouseMove, true);
+                window.removeEventListener('mouseup', onMouseUp, true);
+            }
+
+            window.removeSvg = function () {
+                disableDragSection();
+            };
+
+            window.IntClip = function () {
+                if (clipModeActive) {
+                    disableDragSection();
+                } else {
+                    enableDragSection();
+                }
+            };
+
+            document.addEventListener('DOMContentLoaded', function () {
+                const clipBtn = document.querySelector('button[title="Clip"]');
+                if (clipBtn) clipBtn.setAttribute('onclick', 'IntClip();');
+
+                const sectionUnclip = document.getElementById('btnSectionUnclip');
+                if (sectionUnclip) {
+                    sectionUnclip.addEventListener('click', function () {
+                        if (viewer && viewer.sectionBox) viewer.sectionBox.setToInfinity();
+                        if (viewer) viewer.unclip();
+                        disableDragSection();
+                    });
+                }
+            });
+        })();
+    </script>
+
 </body>
 </html>
