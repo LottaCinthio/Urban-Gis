@@ -286,8 +286,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const MAX_RADIUS_M = 300;
             const ROAD_RADIUS_M = 450;
             const MIN_SIZE = 1;
-            const MAX_BUILDING_FOOTPRINT = 220;
-            const MAX_BUILDING_HEIGHT = 60;
+            const MAX_BUILDING_FOOTPRINT = 100000;
+            const MAX_BUILDING_HEIGHT = 100000;
             // xBIM här beter sig som Z-up i din vy, så vi mappar geo till XY-plan och höjd till Z.
             const SECOND_AXIS_SIGN = 1;
             const OVERLAY_ID = "surrounding-buildings-overlay";
@@ -498,8 +498,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             function addBuildingCubes(scene, context) {
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xffffff,
-                    transparent: false,
-                    opacity: 1,
+                    transparent: true,
+                    opacity: 0.85,
                     depthTest: true,
                     depthWrite: true
                 });
@@ -508,7 +508,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 const maxRadiusScaled = MAX_RADIUS_M * context.scale;
                 const dynamicMaxFootprint = Math.max(
                     MAX_BUILDING_FOOTPRINT,
-                    Math.max(context.ifcBounds.width, context.ifcBounds.depth) * 12
+                    Math.max(context.ifcBounds.width, context.ifcBounds.depth) * 50
                 );
                 let drawn = 0;
 
@@ -526,10 +526,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     if (width > dynamicMaxFootprint || depth > dynamicMaxFootprint) return;
                     const centerX = c.x * context.scale;
                     const centerZ = c.z * context.scale;
-                    const cubeHeight = Math.min(
-                        MAX_BUILDING_HEIGHT,
-                        Math.max(MIN_SIZE, CUBE_HEIGHT_M * context.scale * 0.3)
-                    );
+                    const cubeHeight = Math.max(MIN_SIZE, CUBE_HEIGHT_M * context.scale * 0.3);
 
                     const cube = new THREE.Mesh(
                         new THREE.BoxGeometry(width, depth, cubeHeight),
