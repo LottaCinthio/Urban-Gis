@@ -289,6 +289,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             // xBIM här beter sig som Z-up i din vy, så vi mappar geo till XY-plan och höjd till Z.
             const SECOND_AXIS_SIGN = 1;
             const OVERLAY_ID = "surrounding-buildings-overlay";
+            const ENABLE_SURROUNDINGS = true;
             let overlayState = null;
 
             function createOverlay(v) {
@@ -305,14 +306,20 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     ifcCanvas.style.background = "transparent";
                 }
 
-                const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                const renderer = new THREE.WebGLRenderer({
+                    alpha: true,
+                    antialias: true,
+                    premultipliedAlpha: true
+                });
                 renderer.setClearColor(0x000000, 0);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
                 renderer.domElement.id = OVERLAY_ID;
                 renderer.domElement.style.position = "absolute";
                 renderer.domElement.style.left = "0";
                 renderer.domElement.style.top = "0";
                 renderer.domElement.style.width = "100%";
                 renderer.domElement.style.height = "100%";
+                renderer.domElement.style.background = "transparent";
                 renderer.domElement.style.pointerEvents = "none";
                 renderer.domElement.style.zIndex = "1";
                 container.appendChild(renderer.domElement);
@@ -322,9 +329,11 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 camera.matrixAutoUpdate = false;
 
                 const syncSize = () => {
-                    const w = Math.max(1, v.canvas ? v.canvas.clientWidth : container.clientWidth);
-                    const h = Math.max(1, v.canvas ? v.canvas.clientHeight : container.clientHeight);
-                    renderer.setSize(w, h, false);
+                    const rect = container.getBoundingClientRect();
+                    const w = Math.max(1, Math.floor(rect.width));
+                    const h = Math.max(1, Math.floor(rect.height));
+                    renderer.setSize(w, h, true);
+                    renderer.setViewport(0, 0, w, h);
                 };
                 syncSize();
 
@@ -487,8 +496,8 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             function addBuildingCubes(scene, context) {
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xffffff,
-                    transparent: true,
-                    opacity: 0.55,
+                    transparent: false,
+                    opacity: 1,
                     depthTest: true,
                     depthWrite: true
                 });
@@ -568,6 +577,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
             async function initMap(v) {
                 try {
+                    if (!ENABLE_SURROUNDINGS) return;
                     if (typeof THREE === "undefined") throw new Error("Three.js saknas");
                     const overlay = createOverlay(v);
                     const context = await initContext(v);
