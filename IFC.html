@@ -188,7 +188,7 @@
                 <button id="zoomExtents" onclick="zoomExtents();" title="Zoom extents">
                     <svg  viewBox="0 0 448 512"><path d="M0 160v96C0 379.7 100.3 480 224 480s224-100.3 224-224V160H320v96c0 53-43 96-96 96s-96-43-96-96V160H0zm0-32H128V64c0-17.7-14.3-32-32-32H32C14.3 32 0 46.3 0 64v64zm320 0H448V64c0-17.7-14.3-32-32-32H352c-17.7 0-32 14.3-32 32v64z" /></svg>
                 </button>
-                <button id="zoomExtents" onclick="removeSvg();IntClip();" title="Clip">
+                <button id="zoomExtents" onclick="removeSvg();IntSectionBox();" title="Clip">
                     <svg viewBox="0 0 512 512"><path d="M256 192l-39.5-39.5c4.9-12.6 7.5-26.2 7.5-40.5C224 50.1 173.9 0 112 0S0 50.1 0 112s50.1 112 112 112c14.3 0 27.9-2.7 40.5-7.5L192 256l-39.5 39.5c-12.6-4.9-26.2-7.5-40.5-7.5C50.1 288 0 338.1 0 400s50.1 112 112 112s112-50.1 112-112c0-14.3-2.7-27.9-7.5-40.5L499.2 76.8c7.1-7.1 7.1-18.5 0-25.6c-28.3-28.3-74.1-28.3-102.4 0L256 192zm22.6 150.6L396.8 460.8c28.3 28.3 74.1 28.3 102.4 0c7.1-7.1 7.1-18.5 0-25.6L342.6 278.6l-64 64zM64 112a48 48 0 1 1 96 0 48 48 0 1 1 -96 0zm48 240a48 48 0 1 1 0 96 48 48 0 1 1 0-96z" /></svg>                </button>
                 <label style=>Filters:</label>
                 <button id="hide-element" onclick="selectElementForModelVisibility('hide')" title="Hide elements">
@@ -214,7 +214,7 @@
                 </button>
             </div>
             <div id="clippingopt" style="display:none;" class="ui-widget-header ui-corner-all">
-                <p>Slide to clip the model in specific direction</p>
+                <p>Drag X/Y lines to control section cut on the model</p>
                 <div>
                     <p>
                         <label for="seclenX">Length X:</label>
@@ -227,10 +227,10 @@
                     </p>
                     <div id="slider-sec-y"></div>
                     <p>
-                        <label for="seclenZ">Length Z:</label>
-                        <input type="text" id="seclenZ" readonly style="border:0; color:#f6931f; font-weight:bold;">
+                        <label for="seclenZ" style="display:none;">Length Z:</label>
+                        <input type="text" id="seclenZ" readonly style="display:none; border:0; color:#f6931f; font-weight:bold;">
                     </p>
-                    <div id="slider-sec-z"></div>
+                    <div id="slider-sec-z" style="display:none;"></div>
                 </div>
                 <button id="btnSectionUnclip" onclick="">Unclip</button>
                 <button id="btnSectionClose" onclick="">Close</button>
@@ -625,201 +625,150 @@ https://github.com/nodeca/pako/blob/main/LICENSE
         })();
     </script>
 
-    <script>
-        (function () {
-            let clipModeActive = false;
-            let dragging = false;
-            let dragStart = null;
-            let overlay = null;
-            let line = null;
-            let viewerContainer = null;
 
-            function ensureSectionBounds() {
-                try {
-                    if (!Number.isFinite(lengthX) || lengthX <= 0 || !Number.isFinite(lengthY) || lengthY <= 0 || !Number.isFinite(lengthZ) || lengthZ <= 0) {
-                        if (typeof getStartBboxCoordinates === 'function') getStartBboxCoordinates();
-                    }
-                } catch (e) {
-                    console.warn('Section bounds kunde inte initieras:', e);
-                }
-            }
+<script>
+(function(){
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
 
-            function createOverlay() {
-                if (overlay) return overlay;
-                viewerContainer = document.getElementById('viewer-container');
-                if (!viewerContainer) return null;
+  function ensureBounds(){
+    try {
+      if (!Number.isFinite(lengthX) || !Number.isFinite(lengthY) || lengthX <= 0 || lengthY <= 0) {
+        if (typeof getStartBboxCoordinates === 'function') getStartBboxCoordinates();
+      }
+    } catch (e) {}
+  }
 
-                overlay = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                overlay.setAttribute('id', 'section-drag-overlay');
-                Object.assign(overlay.style, {
-                    position: 'absolute',
-                    inset: '0',
-                    width: '100%',
-                    height: '100%',
-                    zIndex: '350',
-                    pointerEvents: 'none',
-                    display: 'none'
-                });
+  function applySectionByXY(xVal, yVal){
+    if (!viewer || !viewer.sectionBox) return;
+    ensureBounds();
+    if (!Number.isFinite(lengthX) || !Number.isFinite(lengthY) || !Number.isFinite(lengthZ)) return;
 
-                line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-                line.setAttribute('stroke', '#ff2d2d');
-                line.setAttribute('stroke-width', '3');
-                line.setAttribute('stroke-linecap', 'round');
-                line.style.display = 'none';
-                overlay.appendChild(line);
-                viewerContainer.appendChild(overlay);
-                return overlay;
-            }
+    const x = clamp(xVal, 0, lengthX);
+    const y = clamp(yVal, 0, lengthY);
 
-            function toLocalPoint(evt) {
-                const rect = viewerContainer.getBoundingClientRect();
-                return {
-                    x: evt.clientX - rect.left,
-                    y: evt.clientY - rect.top,
-                    rect
-                };
-            }
+    const xHalf = Math.max(0.001, x / 2);
+    const yHalf = Math.max(0.001, y / 2);
+    const zHalf = Math.max(0.001, lengthZ / 2);
 
-            function clamp01(v) {
-                return Math.max(0, Math.min(1, v));
-            }
+    const cx = secStartX + xHalf;
+    const cy = secStartY + yHalf;
+    const cz = secStartZ + zHalf;
 
-            function applySectionFromLine(start, end, rect) {
-                if (!viewer || !viewer.sectionBox) return;
-                ensureSectionBounds();
-                if (!Number.isFinite(lengthX) || !Number.isFinite(lengthY) || !Number.isFinite(lengthZ)) return;
+    viewer.sectionBox.location = [cx, cy, cz];
+    viewer.sectionBox.lengthX = xHalf;
+    viewer.sectionBox.lengthY = yHalf;
+    viewer.sectionBox.lengthZ = zHalf;
+  }
 
-                const dx = end.x - start.x;
-                const dy = end.y - start.y;
-                const horizontal = Math.abs(dx) >= Math.abs(dy);
+  function setupPopupUI(){
+    const box = document.getElementById('clippingopt');
+    if (!box) return;
+    Object.assign(box.style, {
+      position: 'absolute',
+      left: '8px',
+      top: '64px',
+      width: '320px',
+      zIndex: '400',
+      background: '#f5f5f5'
+    });
 
-                const minX = secStartX;
-                const maxX = secStartX + lengthX;
-                const minY = secStartY;
-                const maxY = secStartY + lengthY;
-                const fullZHalf = Math.max(0.001, lengthZ / 2);
+    const sx = document.getElementById('slider-sec-x');
+    const sy = document.getElementById('slider-sec-y');
+    const sz = document.getElementById('slider-sec-z');
+    const zInput = document.getElementById('seclenZ');
+    if (sz) sz.style.display = 'none';
+    if (zInput) zInput.style.display = 'none';
 
-                if (horizontal) {
-                    const t = clamp01(end.x / rect.width);
-                    const cut = minX + (t * lengthX);
-                    const keepFromMin = dx >= 0;
-                    const a = keepFromMin ? minX : cut;
-                    const b = keepFromMin ? cut : maxX;
-                    const half = Math.max(0.001, (b - a) / 2);
-                    const cx = (a + b) / 2;
+    const lx = document.querySelector('label[for="seclenX"]');
+    const ly = document.querySelector('label[for="seclenY"]');
+    if (lx) lx.textContent = 'Section X:';
+    if (ly) ly.textContent = 'Section Y:';
 
-                    viewer.sectionBox.location = [cx, secStartY + (lengthY / 2), secStartZ + (lengthZ / 2)];
-                    viewer.sectionBox.lengthX = half;
-                    viewer.sectionBox.lengthY = Math.max(0.001, lengthY / 2);
-                    viewer.sectionBox.lengthZ = fullZHalf;
-                } else {
-                    const t = clamp01(end.y / rect.height);
-                    const cut = minY + (t * lengthY);
-                    const keepFromMin = dy >= 0;
-                    const a = keepFromMin ? minY : cut;
-                    const b = keepFromMin ? cut : maxY;
-                    const half = Math.max(0.001, (b - a) / 2);
-                    const cy = (a + b) / 2;
+    // Rebind as single-handle "line" sliders
+    if (window.jQuery && sx && sy) {
+      const $sx = window.jQuery(sx);
+      const $sy = window.jQuery(sy);
+      const $xTxt = window.jQuery('#seclenX');
+      const $yTxt = window.jQuery('#seclenY');
 
-                    viewer.sectionBox.location = [secStartX + (lengthX / 2), cy, secStartZ + (lengthZ / 2)];
-                    viewer.sectionBox.lengthX = Math.max(0.001, lengthX / 2);
-                    viewer.sectionBox.lengthY = half;
-                    viewer.sectionBox.lengthZ = fullZHalf;
-                }
-            }
+      ensureBounds();
 
-            function drawLine(start, end) {
-                if (!line) return;
-                line.style.display = 'block';
-                line.setAttribute('x1', String(start.x));
-                line.setAttribute('y1', String(start.y));
-                line.setAttribute('x2', String(end.x));
-                line.setAttribute('y2', String(end.y));
-            }
+      try { $sx.slider('destroy'); } catch(e){}
+      try { $sy.slider('destroy'); } catch(e){}
 
-            function onMouseDown(evt) {
-                if (!clipModeActive || evt.button !== 0) return;
-                dragging = true;
-                const p = toLocalPoint(evt);
-                dragStart = p;
-                drawLine(p, p);
-                evt.preventDefault();
-            }
+      $sx.slider({
+        min: 0,
+        max: Math.max(1, lengthX || 1),
+        value: Math.max(1, lengthX || 1),
+        slide: function(_, ui){
+          $xTxt.val((ui.value || 0).toFixed(2));
+          const yv = Number($sy.slider('value') || 0);
+          applySectionByXY(ui.value || 0, yv);
+        },
+        change: function(_, ui){
+          const yv = Number($sy.slider('value') || 0);
+          applySectionByXY(ui.value || 0, yv);
+        }
+      });
 
-            function onMouseMove(evt) {
-                if (!clipModeActive || !dragging || !dragStart) return;
-                const p = toLocalPoint(evt);
-                drawLine(dragStart, p);
-                applySectionFromLine(dragStart, p, p.rect);
-                evt.preventDefault();
-            }
+      $sy.slider({
+        min: 0,
+        max: Math.max(1, lengthY || 1),
+        value: Math.max(1, lengthY || 1),
+        slide: function(_, ui){
+          $yTxt.val((ui.value || 0).toFixed(2));
+          const xv = Number($sx.slider('value') || 0);
+          applySectionByXY(xv, ui.value || 0);
+        },
+        change: function(_, ui){
+          const xv = Number($sx.slider('value') || 0);
+          applySectionByXY(xv, ui.value || 0);
+        }
+      });
 
-            function onMouseUp(evt) {
-                if (!clipModeActive || !dragging || !dragStart) return;
-                const p = toLocalPoint(evt);
-                drawLine(dragStart, p);
-                applySectionFromLine(dragStart, p, p.rect);
-                dragging = false;
-                dragStart = null;
-                evt.preventDefault();
-            }
+      $xTxt.val(($sx.slider('value') || 0).toFixed(2));
+      $yTxt.val(($sy.slider('value') || 0).toFixed(2));
+      applySectionByXY(Number($sx.slider('value') || 0), Number($sy.slider('value') || 0));
+    }
+  }
 
-            function enableDragSection() {
-                ensureSectionBounds();
-                createOverlay();
-                if (!overlay || !viewerContainer) return;
-                viewer.unclip();
-                overlay.style.display = 'block';
-                overlay.style.pointerEvents = 'none';
-                clipModeActive = true;
-                viewerContainer.style.cursor = 'crosshair';
-                viewerContainer.addEventListener('mousedown', onMouseDown, true);
-                window.addEventListener('mousemove', onMouseMove, true);
-                window.addEventListener('mouseup', onMouseUp, true);
-            }
+  window.IntSectionBox = function(){
+    ensureBounds();
+    const box = document.getElementById('clippingopt');
+    if (!box) return;
+    const open = box.style.display !== 'none';
+    if (open) {
+      box.style.display = 'none';
+      return;
+    }
+    box.style.display = 'block';
+    setupPopupUI();
+  };
 
-            function disableDragSection() {
-                clipModeActive = false;
-                dragging = false;
-                dragStart = null;
-                if (line) line.style.display = 'none';
-                if (overlay) {
-                    overlay.style.display = 'none';
-                    overlay.style.pointerEvents = 'none';
-                }
-                if (viewerContainer) viewerContainer.style.cursor = 'default';
-                if (viewerContainer) viewerContainer.removeEventListener('mousedown', onMouseDown, true);
-                window.removeEventListener('mousemove', onMouseMove, true);
-                window.removeEventListener('mouseup', onMouseUp, true);
-            }
+  document.addEventListener('DOMContentLoaded', function(){
+    const btn = document.querySelector('button[title="Clip"]');
+    if (btn) btn.setAttribute('onclick', 'removeSvg();IntSectionBox();');
 
-            window.removeSvg = function () {
-                disableDragSection();
-            };
+    const unclip = document.getElementById('btnSectionUnclip');
+    if (unclip) {
+      unclip.onclick = function(){
+        if (viewer && viewer.sectionBox) viewer.sectionBox.setToInfinity();
+        if (viewer) viewer.unclip();
+        const box = document.getElementById('clippingopt');
+        if (box) box.style.display = 'none';
+      };
+    }
 
-            window.IntClip = function () {
-                if (clipModeActive) {
-                    disableDragSection();
-                } else {
-                    enableDragSection();
-                }
-            };
-
-            document.addEventListener('DOMContentLoaded', function () {
-                const clipBtn = document.querySelector('button[title="Clip"]');
-                if (clipBtn) clipBtn.setAttribute('onclick', 'IntClip();');
-
-                const sectionUnclip = document.getElementById('btnSectionUnclip');
-                if (sectionUnclip) {
-                    sectionUnclip.addEventListener('click', function () {
-                        if (viewer && viewer.sectionBox) viewer.sectionBox.setToInfinity();
-                        if (viewer) viewer.unclip();
-                        disableDragSection();
-                    });
-                }
-            });
-        })();
-    </script>
+    const close = document.getElementById('btnSectionClose');
+    if (close) {
+      close.onclick = function(){
+        const box = document.getElementById('clippingopt');
+        if (box) box.style.display = 'none';
+      };
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
