@@ -506,6 +506,10 @@ https://github.com/nodeca/pako/blob/main/LICENSE
 
                 const features = context.allBuildings.features || [];
                 const maxRadiusScaled = MAX_RADIUS_M * context.scale;
+                const dynamicMaxFootprint = Math.max(
+                    MAX_BUILDING_FOOTPRINT,
+                    Math.max(context.ifcBounds.width, context.ifcBounds.depth) * 12
+                );
                 let drawn = 0;
 
                 features.forEach((feature, index) => {
@@ -519,7 +523,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     const b = bbox(verts);
                     const width = Math.max(MIN_SIZE, b.width * context.scale);
                     const depth = Math.max(MIN_SIZE, b.depth * context.scale);
-                    if (width > MAX_BUILDING_FOOTPRINT || depth > MAX_BUILDING_FOOTPRINT) return;
+                    if (width > dynamicMaxFootprint || depth > dynamicMaxFootprint) return;
                     const centerX = c.x * context.scale;
                     const centerZ = c.z * context.scale;
                     const cubeHeight = Math.min(
