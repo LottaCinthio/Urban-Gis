@@ -286,10 +286,12 @@ https://github.com/nodeca/pako/blob/main/LICENSE
             const MAX_RADIUS_M = 300;
             const ROAD_RADIUS_M = 450;
             const MIN_SIZE = 1;
+            const MAX_BUILDING_FOOTPRINT = 220;
+            const MAX_BUILDING_HEIGHT = 60;
             // xBIM här beter sig som Z-up i din vy, så vi mappar geo till XY-plan och höjd till Z.
             const SECOND_AXIS_SIGN = 1;
             const OVERLAY_ID = "surrounding-buildings-overlay";
-            const ENABLE_SURROUNDINGS = false;
+            const ENABLE_SURROUNDINGS = true;
             let overlayState = null;
 
             function createOverlay(v) {
@@ -517,9 +519,13 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                     const b = bbox(verts);
                     const width = Math.max(MIN_SIZE, b.width * context.scale);
                     const depth = Math.max(MIN_SIZE, b.depth * context.scale);
+                    if (width > MAX_BUILDING_FOOTPRINT || depth > MAX_BUILDING_FOOTPRINT) return;
                     const centerX = c.x * context.scale;
                     const centerZ = c.z * context.scale;
-                    const cubeHeight = Math.max(MIN_SIZE, CUBE_HEIGHT_M * context.scale * 0.3);
+                    const cubeHeight = Math.min(
+                        MAX_BUILDING_HEIGHT,
+                        Math.max(MIN_SIZE, CUBE_HEIGHT_M * context.scale * 0.3)
+                    );
 
                     const cube = new THREE.Mesh(
                         new THREE.BoxGeometry(width, depth, cubeHeight),
