@@ -40,7 +40,7 @@ require([
     ground: "world-elevation", 
     layers: [analysisLayer] 
   });
-  
+
   const buildings3D = new SceneLayer({
     url: "https://basemaps3d.arcgis.com/arcgis/rest/services/OpenStreetMap3D_Buildings_v1/SceneServer",
     visible: true
@@ -157,7 +157,7 @@ require([
       renderer = { type: "simple", symbol: { type: "point-3d", symbolLayers: [{ type: "icon", resource: { href: "./icons/" + iconFile }, size: 30 }] } };
     }
     else if (info.type === "building") {
-      renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 40, material: { color: "#2ecc71" } }] } }] };
+      renderer = { type: "unique-value", field: "Building_ID", defaultSymbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 15, material: { color: "white" } }] }, uniqueValueInfos: [{ value: 8052, symbol: { type: "polygon-3d", symbolLayers: [{ type: "extrude", size: 20, material: { color: "#2ecc71" } }] } }] };
       popupTemplate = { title: "Building Information", content: function(feature) {
         const bID = feature.graphic.attributes.Building_ID;
         if (bID == 8052 || (bID && bID.toString() === "8052")) {
