@@ -297,6 +297,14 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 const old = document.getElementById(OVERLAY_ID);
                 if (old) old.remove();
 
+                // Keep IFC canvas above the overlay to avoid false front/behind artifacts.
+                const ifcCanvas = document.getElementById("viewer");
+                if (ifcCanvas) {
+                    ifcCanvas.style.position = "relative";
+                    ifcCanvas.style.zIndex = "2";
+                    ifcCanvas.style.background = "transparent";
+                }
+
                 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
                 renderer.setClearColor(0x000000, 0);
                 renderer.domElement.id = OVERLAY_ID;
@@ -306,7 +314,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 renderer.domElement.style.width = "100%";
                 renderer.domElement.style.height = "100%";
                 renderer.domElement.style.pointerEvents = "none";
-                renderer.domElement.style.zIndex = "2";
+                renderer.domElement.style.zIndex = "1";
                 container.appendChild(renderer.domElement);
 
                 const scene = new THREE.Scene();
@@ -480,7 +488,9 @@ https://github.com/nodeca/pako/blob/main/LICENSE
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xffffff,
                     transparent: true,
-                    opacity: 0.92
+                    opacity: 0.55,
+                    depthTest: true,
+                    depthWrite: true
                 });
 
                 const features = context.allBuildings.features || [];
