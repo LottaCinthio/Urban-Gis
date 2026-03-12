@@ -184,8 +184,70 @@
     </div>
   </div>
 
+  <div id="sidebar-desc" class="pane-closed">
+    <h2 style="margin-top:0; font-size: 1.4em;">Content Öxnehaga Descriptions</h2>
+
+    <div class="layer-group">
+      <div class="group-header group-header-row">
+        <span>Emergency Services &amp; Safety</span>
+        <label class="switch small"><input type="checkbox" id="toggleDescEmergencyPanel"><span class="slider"></span></label>
+      </div>
+      <div id="descEmergencyContent" class="accordion-content">
+        <textarea class="description-textarea" placeholder="Paste your text for Emergency Services &amp; Safety here..."></textarea>
+      </div>
+    </div>
+
+    <div class="layer-group">
+      <div class="group-header group-header-row">
+        <span>Accessibility &amp; Amenities</span>
+        <label class="switch small"><input type="checkbox" id="toggleDescAccessibilityPanel"><span class="slider"></span></label>
+      </div>
+      <div id="descAccessibilityContent" class="accordion-content">
+        <textarea class="description-textarea" placeholder="Paste your text for Accessibility &amp; Amenities here..."></textarea>
+      </div>
+    </div>
+
+    <div class="layer-group">
+      <div class="group-header group-header-row">
+        <span>Interactive Analysis</span>
+        <label class="switch small"><input type="checkbox" id="toggleDescAnalysisPanel"><span class="slider"></span></label>
+      </div>
+      <div id="descAnalysisContent" class="accordion-content">
+        <textarea class="description-textarea" placeholder="Paste your text for Interactive Analysis here..."></textarea>
+      </div>
+    </div>
+
+    <div class="layer-group">
+      <div class="group-header group-header-row">
+        <span>BIM</span>
+        <label class="switch small"><input type="checkbox" id="toggleDescBimPanel"><span class="slider"></span></label>
+      </div>
+      <div id="descBimContent" class="accordion-content">
+        <textarea class="description-textarea" placeholder="Paste your text for BIM here..."></textarea>
+      </div>
+    </div>
+  </div>
+
   <script>
-    function togglePane() { document.getElementById("sidebar").classList.toggle("pane-closed"); }
+    function togglePane() {
+      const contentPane = document.getElementById("sidebar");
+      const descPane = document.getElementById("sidebar-desc");
+      if (!contentPane || !descPane) return;
+
+      const contentOpen = !contentPane.classList.contains("pane-closed");
+      const descOpen = !descPane.classList.contains("pane-closed");
+
+      if (contentOpen && !descOpen) {
+        contentPane.classList.add("pane-closed");
+        descPane.classList.remove("pane-closed");
+      } else if (!contentOpen && descOpen) {
+        descPane.classList.add("pane-closed");
+        contentPane.classList.remove("pane-closed");
+      } else {
+        descPane.classList.add("pane-closed");
+        contentPane.classList.remove("pane-closed");
+      }
+    }
   </script>
 </body>
 </html>

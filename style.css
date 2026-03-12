@@ -11,12 +11,12 @@ html, body, #viewDiv { padding: 0; margin: 0; height: 100%; width: 100%; font-fa
   background: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 4px;
 }
 
-#sidebar { 
+#sidebar, #sidebar-desc { 
   position: absolute; top: 0; right: 0; width: 300px; height: 100%; 
   background: white; padding: 20px; z-index: 110; transition: 0.3s; 
   box-sizing: border-box; box-shadow: -2px 0 10px rgba(0,0,0,0.1); overflow-y: auto;
 }
-#sidebar.pane-closed { transform: translateX(300px); }
+#sidebar.pane-closed, #sidebar-desc.pane-closed { transform: translateX(300px); }
 
 #paneToggle { 
   position: absolute; top: 15px; right: 15px; z-index: 120; 
@@ -71,3 +71,16 @@ input:checked + .slider:before { transform: translateX(14px); }
 .group-header-row .switch { margin-left: 10px; }
 .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.25s ease; }
 .accordion-content.open { max-height: 1200px; margin-top: 10px; }
+
+.description-textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 0.85em;
+  line-height: 1.35;
+  box-sizing: border-box;
+  background: #fff;
+}

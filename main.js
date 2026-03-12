@@ -217,6 +217,10 @@ require([
       setupAccordionPanel("enableABTool", "analysisPanelContent", (isOpen) => {
         if (!isOpen && typeof window.clearAnalysis === "function") window.clearAnalysis();
       });
+      setupAccordionPanel("toggleDescEmergencyPanel", "descEmergencyContent");
+      setupAccordionPanel("toggleDescAccessibilityPanel", "descAccessibilityContent");
+      setupAccordionPanel("toggleDescAnalysisPanel", "descAnalysisContent");
+      setupAccordionPanel("toggleDescBimPanel", "descBimContent");
     });
   } else {
     setupAccordionPanel("toggleEmergencyPanel", "emergencyPanelContent");
@@ -224,6 +228,10 @@ require([
     setupAccordionPanel("enableABTool", "analysisPanelContent", (isOpen) => {
       if (!isOpen && typeof window.clearAnalysis === "function") window.clearAnalysis();
     });
+    setupAccordionPanel("toggleDescEmergencyPanel", "descEmergencyContent");
+    setupAccordionPanel("toggleDescAccessibilityPanel", "descAccessibilityContent");
+    setupAccordionPanel("toggleDescAnalysisPanel", "descAnalysisContent");
+    setupAccordionPanel("toggleDescBimPanel", "descBimContent");
   }
 
   // --- KORRIGERAD MÄTNINGSLOGIK FÖR EXAKT PLACERING ---
