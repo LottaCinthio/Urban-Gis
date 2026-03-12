@@ -13,7 +13,10 @@
   <div class="top-label">Urban Information Management TUIS23 T3377</div>
   <div class="bottom-label">Created by Luna Wani & Lotta Cinthio</div>
   <div id="viewDiv"></div>
-  <button id="paneToggle" onclick="togglePane()"><span id="arrowIcon">☰</span></button>
+  <button id="paneToggle" onclick="togglePane()">
+    <span id="arrowIcon">☰</span>
+    <span id="paneToggleLabel">Show Descriptions</span>
+  </button>
 
   <div id="sidebar" class="pane-open">
     <h2 style="margin-top:0; font-size: 1.4em;">Content Öxnehaga</h2>
@@ -193,7 +196,7 @@
         <label class="switch small"><input type="checkbox" id="toggleDescEmergencyPanel"><span class="slider"></span></label>
       </div>
       <div id="descEmergencyContent" class="accordion-content">
-        <textarea class="description-textarea" placeholder="Paste your text for Emergency Services &amp; Safety here..."></textarea>
+        <div class="description-text">Paste your text for Emergency Services &amp; Safety here.</div>
       </div>
     </div>
 
@@ -203,7 +206,7 @@
         <label class="switch small"><input type="checkbox" id="toggleDescAccessibilityPanel"><span class="slider"></span></label>
       </div>
       <div id="descAccessibilityContent" class="accordion-content">
-        <textarea class="description-textarea" placeholder="Paste your text for Accessibility &amp; Amenities here..."></textarea>
+        <div class="description-text">Paste your text for Accessibility &amp; Amenities here.</div>
       </div>
     </div>
 
@@ -213,7 +216,7 @@
         <label class="switch small"><input type="checkbox" id="toggleDescAnalysisPanel"><span class="slider"></span></label>
       </div>
       <div id="descAnalysisContent" class="accordion-content">
-        <textarea class="description-textarea" placeholder="Paste your text for Interactive Analysis here..."></textarea>
+        <div class="description-text">Paste your text for Interactive Analysis here.</div>
       </div>
     </div>
 
@@ -223,7 +226,7 @@
         <label class="switch small"><input type="checkbox" id="toggleDescBimPanel"><span class="slider"></span></label>
       </div>
       <div id="descBimContent" class="accordion-content">
-        <textarea class="description-textarea" placeholder="Paste your text for BIM here..."></textarea>
+        <div class="description-text">Paste your text for BIM here.</div>
       </div>
     </div>
   </div>
@@ -246,6 +249,12 @@
       } else {
         descPane.classList.add("pane-closed");
         contentPane.classList.remove("pane-closed");
+      }
+
+      const label = document.getElementById("paneToggleLabel");
+      if (label) {
+        const nowContentOpen = !contentPane.classList.contains("pane-closed");
+        label.textContent = nowContentOpen ? "Show Descriptions" : "Show Content";
       }
     }
   </script>
