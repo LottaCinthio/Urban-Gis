@@ -221,6 +221,7 @@ require([
       setupAccordionPanel("toggleDescAccessibilityPanel", "descAccessibilityContent");
       setupAccordionPanel("toggleDescAnalysisPanel", "descAnalysisContent");
       setupAccordionPanel("toggleDescBimPanel", "descBimContent");
+      setupAccordionPanel("toggleDescTechNotes", "descTechNotesContent");
     });
   } else {
     setupAccordionPanel("toggleEmergencyPanel", "emergencyPanelContent");
@@ -232,6 +233,7 @@ require([
     setupAccordionPanel("toggleDescAccessibilityPanel", "descAccessibilityContent");
     setupAccordionPanel("toggleDescAnalysisPanel", "descAnalysisContent");
     setupAccordionPanel("toggleDescBimPanel", "descBimContent");
+    setupAccordionPanel("toggleDescTechNotes", "descTechNotesContent");
   }
 
   // --- KORRIGERAD MÄTNINGSLOGIK FÖR EXAKT PLACERING ---

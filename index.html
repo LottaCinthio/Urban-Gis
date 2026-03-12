@@ -234,6 +234,21 @@
         <div class="description-text">
           <p>3D buildings on the map have been exported as geojson files from ArcGis Pro with their height coded using Esris OpenStreetMap 3D Buildings-service.</p> 
           <p>The Project Building with building id 8052 allows to view a 3D model that were generated from IFC (Industry Foundation Classes) file to a HTML -based 3D viewer. The 3D viewer allows users to interact with surrounding buildings and roads exported from ArcGis Pro as geojson files.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="layer-group">
+      <div class="group-header group-header-row">
+        <span>Technical notes</span>
+        <label class="switch small"><input type="checkbox" id="toggleDescTechNotes"><span class="slider"></span></label>
+      </div>
+      <div id="descTechNotesContent" class="accordion-content">
+        <div class="description-text">
+          <p><b>Tools:</b> ArcGIS Pro (Data curation), Visual Studio Code (HTML/JS/CSS), ArcGIS Maps SDK for JavaScript.</p>
+          <p><b>Formats:</b> IFC for BIM data; GeoJSON for spatial layers.</p>
+          <p><b>Assumptions:</b> Walking speeds for accessibility zones are calculated at a constant 4.5 km/h. BIM-GIS alignment assumes a simplified translation of the IFC origin to the projected coordinate system.</p>
+        </div>
       </div>
     </div>
   </div>
