@@ -192,7 +192,7 @@
 
     <div class="layer-group">
       <div class="group-header">General Information</div>
-      <div class="description-text">The right-side panel is the main control interface of the map application. It allows users to manage map layers, choose the basemap, and explore different thematic datasets such as emergency services, infrastructure, and buildings. Users can toggle layers on or off to visualize specific information, analyze spatial relationships and interact with urban data in the Öxnehaga area.</div>
+      <div class="description-text">This viewer serves as an integrated platform for analyzing urban accessibility and emergency response efficiency in the Öxnehaga district. By integrating multi-scale data—from regional GIS layers to site-specific BIM models—the application evaluates how the existing infrastructure supports public services and safety. The curated dataset aims to bridge the gap between macro-level urban planning (GIS) and micro-level building management (BIM) </div>
     </div>
 
     <div class="layer-group">
@@ -201,7 +201,7 @@
         <label class="switch small"><input type="checkbox" id="toggleDescEmergencyPanel"><span class="slider"></span></label>
       </div>
       <div id="descEmergencyContent" class="accordion-content">
-        <div class="description-text">This dataset was created in ArcGIS Pro by mapping locations of emergency facilities such as hospitals, fire stations, and police stations. Incident points and response routes were generated for simulation purposes and exported as GeoJSON for use in the web map. Respone routes give information about service, priority and time when pressed on. The incidents have been simulated.</div>
+        <div class="description-text">To evaluate urban safety, emergency facility locations (hospitals, fire, and police) were mapped alongside simulated incident points. Response routes were modeled in ArcGIS Pro based on the local road topology and exported with embedded attributes for service priority and estimated response times. This allows users to analytically interpret how the road network configuration impacts emergency coverage. </div>
       </div>
     </div>
 
@@ -211,7 +211,7 @@
         <label class="switch small"><input type="checkbox" id="toggleDescAccessibilityPanel"><span class="slider"></span></label>
       </div>
       <div id="descAccessibilityContent" class="accordion-content">
-        <div class="description-text">This dataset includes public amenities and accessibility-related features such as healthcare and schools available in the area. The data was collected from open spatial datasets and GIS sources, processed in ArcGIS Pro, and published as web layers to visualize walking accessibility within the neighborhood. </div>
+        <div class="description-text">This section visualizes key public amenities, including healthcare facilities and primary schools. The data was collected from open spatial datasets and GIS sources, then processed in ArcGIS Pro using Network Analyst to generate service area polygons (isochrones). These zones represent 5, 10, and 15-minute walking distances, allowing for a spatial gap analysis of accessibility within the neighborhood. The results were structured as GeoJSON layers to ensure high-performance rendering within the HTML viewer </div>
       </div>
     </div>
 
@@ -233,22 +233,7 @@
       <div id="descBimContent" class="accordion-content">
         <div class="description-text">
           <p>3D buildings on the map have been exported as geojson files from ArcGis Pro with their height coded using Esris OpenStreetMap 3D Buildings-service.</p> 
-          <p>The Project Building with building id 8052 allows to view a 3D model that were generated from IFC (Industry Foundation Classes) file to a HTML -based 3D viewer. The 3D viewer allows users to interact with surrounding buildings and roads exported from ArcGis Pro as geojson files.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="layer-group">
-      <div class="group-header group-header-row">
-        <span>Technical notes</span>
-        <label class="switch small"><input type="checkbox" id="toggleDescTechNotes"><span class="slider"></span></label>
-      </div>
-      <div id="descTechNotesContent" class="accordion-content">
-        <div class="description-text">
-          <p><b>Tools:</b> ArcGIS Pro (Data curation), Visual Studio Code (HTML/JS/CSS), ArcGIS Maps SDK for JavaScript.</p>
-          <p><b>Formats:</b> IFC for BIM data; GeoJSON for spatial layers.</p>
-          <p><b>Assumptions:</b> Walking speeds for accessibility zones are calculated at a constant 4.5 km/h. BIM-GIS alignment assumes a simplified translation of the IFC origin to the projected coordinate system.</p>
-        </div>
+          <p>The Project Building with building id 8052 allows to view a 3D model that were generated from IFC (Industry Foundation Classes) file to a HTML -based 3D viewer. The project building (ID 8052) was geolocated and aligned with the surrounding GIS environment to ensure spatial consistency between the BIM local coordinate system and SWEREF 99 TM of the viewer.</p>
       </div>
     </div>
   </div>
